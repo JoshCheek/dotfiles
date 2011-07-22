@@ -1,0 +1,13 @@
+[user]
+  name = Josh Cheek
+  email = josh.cheek@gmail.com
+[color]
+  ui = true
+[alias]
+  co = checkout
+  ci = commit
+  st = status
+  br = branch
+  hist = log --pretty=format:\"%Cgreen%h%Creset %Cblue%ad%Creset %s%C(yellow)%d%Creset %Cblue[%an]%Creset\" --graph --date=short
+  type = cat-file -t
+  dump = cat-file -p

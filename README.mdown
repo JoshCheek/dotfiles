@@ -9,7 +9,9 @@ put them in a github repo as I rebuild them.
 Usage
 =====
 
-Coming soon.
+Assuming you are in the dotfiles directory:
+
+* **gitconfig** `ln -s "$(pwd)/gitconfig" "$HOME/.gitconfig"`
 
 
 MIT License
