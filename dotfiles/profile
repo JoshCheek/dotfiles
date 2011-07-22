@@ -19,7 +19,7 @@ function parse_git_branch {
 #   local background="${2:+\[\033[4${2}m\]}"
 #   echo "\[\033[0m\]$foreground$background"
 # }
-PS1="\[\033[37;45m\] \@ \[\033[0m\] \[\033[37;45m\] \w \[\033[0m\] \[\033[37;45m\]\$(parse_git_branch)\[\033[0m\]\n\$ \[\033[0m\]"
+PS1="\[\033[37;45m\] \@ \[\033[0m\] \[\033[37;45m\] \w \[\033[0m\] \[\033[33;45m\]\$(parse_git_branch)\[\033[0m\]\n\$ \[\033[0m\]"
 
 # RVM
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"
