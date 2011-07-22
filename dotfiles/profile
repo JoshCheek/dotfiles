@@ -1,0 +1,14 @@
+# ALIASES
+  # path
+    alias l="ls -lFGgh"
+    alias ..="cd .."
+  # git
+    alias gs="git status"
+    alias gd="git diff"
+    alias go="git checkout"
+    alias ga="git add"
+    alias gcm="git commit -m"
+
+
+# RVM
+[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"
