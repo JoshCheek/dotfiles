@@ -13,6 +13,7 @@ Assuming you are in the dotfiles directory:
 
 * **gitconfig** `ln -s "$(pwd)/gitconfig" "$HOME/.gitconfig"`
 * **profile** `echo "source '$(pwd)/profile'" >> "$HOME/.profile"`
+* **rvm/hooks/after_cd** `ln -s "$(pwd)/rvm_hooks_after_cd" "$HOME/.rvm_hooks_after_cd"`
 
 
 MIT License
