@@ -12,6 +12,7 @@ Usage
 Assuming you are in the dotfiles directory:
 
 * **gitconfig** `ln -s "$(pwd)/gitconfig" "$HOME/.gitconfig"`
+* **profile** `echo "source '$(pwd)/profile'" >> "$HOME/.profile"`
 
 
 MIT License
