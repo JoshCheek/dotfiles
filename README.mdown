@@ -11,7 +11,7 @@ Usage
 
 To load basic env when on a foreign computer:
 
-  eval "$(curl https://raw.github.com/JoshCheek/dotfiles/master/dotfiles/profile 2> /dev/null)"
+    eval "$(curl https://raw.github.com/JoshCheek/dotfiles/master/dotfiles/profile 2> /dev/null)"
 
 Assuming you are in the dotfiles directory:
 
