@@ -15,6 +15,7 @@ To load basic env when on a foreign computer:
 
 Assuming you are in the dotfiles directory:
 
+* **gemrc** `$ ln -s "$(pwd)/gemrc" "$HOME/.gemrc"`
 * **gitconfig** `ln -s "$(pwd)/gitconfig" "$HOME/.gitconfig"`
 * **profile** `echo "source '$(pwd)/profile'" >> "$HOME/.profile"`
 * **rvm/hooks/after_cd** `ln -s "$(pwd)/rvm_hooks_after_cd" "$HOME/.rvm/hooks/after_cd"`
