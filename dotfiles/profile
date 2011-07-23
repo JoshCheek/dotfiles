@@ -8,6 +8,7 @@
     alias go="git checkout"
     alias ga="git add"
     alias gcm="git commit -m"
+    alias gp="git push"
 
 # PROMPT
 function parse_git_branch {
