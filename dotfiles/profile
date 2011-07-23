@@ -9,6 +9,15 @@
     alias ga="git add"
     alias gcm="git commit -m"
     alias gp="git push"
+  # rvm
+    alias rurbx="rvm use \$(rvm list strings | grep -i rbx      | tail -1)"
+    alias rumac="rvm use \$(rvm list strings | grep -i macruby  | tail -1)"
+    alias rujav="rvm use \$(rvm list strings | grep -i jruby    | tail -1)"
+    alias ru186="rvm use \$(rvm list strings | grep -i 1.8.6    | tail -1)"
+    alias ru187="rvm use \$(rvm list strings | grep -i 1.8.7    | tail -1)"
+    alias ru191="rvm use \$(rvm list strings | grep -i 1.9.1    | tail -1)"
+    alias ru192="rvm use \$(rvm list strings | grep -i 1.9.2    | tail -1)"
+    alias ru193="rvm use \$(rvm list strings | grep -i 1.9.3    | tail -1)"
 
 # PROMPT
 function parse_git_branch {
