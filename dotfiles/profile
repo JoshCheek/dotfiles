@@ -10,6 +10,7 @@
     alias gs="git status"
     alias gd="git diff"
     alias go="git checkout"
+    alias gb="git branch"
     alias ga="git add"
     alias gcm="git commit -m"
     alias gp="git push"
