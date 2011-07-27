@@ -1,3 +1,7 @@
+# Environment Variables
+  export EDITOR='mate -w'
+  export PATH="$HOME/bin:$PATH"
+
 # ALIASES
   # path
     alias l="ls -lFGgh"
