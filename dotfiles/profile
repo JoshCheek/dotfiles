@@ -9,6 +9,7 @@
     alias ga="git add"
     alias gcm="git commit -m"
     alias gp="git push"
+    alias gh="git hist"
   # rvm
     alias rurbx="rvm use \$(rvm list strings | grep -i rbx      | tail -1)"
     alias rumac="rvm use \$(rvm list strings | grep -i macruby  | tail -1)"
