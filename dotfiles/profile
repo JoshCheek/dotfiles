@@ -21,16 +21,16 @@
     alias r193="rvm use \$(rvm list strings | grep -i 1.9.3    | tail -1)"
 
 # PROMPT
-function parse_git_branch {
-  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ \1 /'
-}
-# Spent like an hour on this. Finally giving up and just hardcoding it.
-# function ps1_color {
-#   local foreground="${1:+\[\033[3${1}m\]}"
-#   local background="${2:+\[\033[4${2}m\]}"
-#   echo "\[\033[0m\]$foreground$background"
-# }
-PS1="\[\033[37;45m\] \@ \[\033[0m\] \[\033[37;45m\] \w \[\033[0m\] \[\033[33;45m\]\$(parse_git_branch)\[\033[0m\]\n\$ \[\033[0m\]"
+  function parse_git_branch {
+    git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ \1 /'
+  }
+  # Spent like an hour on this. Finally giving up and just hardcoding it.
+  # function ps1_color {
+  #   local foreground="${1:+\[\033[3${1}m\]}"
+  #   local background="${2:+\[\033[4${2}m\]}"
+  #   echo "\[\033[0m\]$foreground$background"
+  # }
+  PS1="\[\033[37;45m\] \@ \[\033[0m\] \[\033[37;45m\] \w \[\033[0m\] \[\033[33;45m\]\$(parse_git_branch)\[\033[0m\]\n\$ \[\033[0m\]"
 
 # RVM
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"
+  [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"
