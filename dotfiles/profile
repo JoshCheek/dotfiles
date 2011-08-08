@@ -26,6 +26,24 @@
     alias r192="    rvm use \$(rvm list strings | grep -i 1.9.2      | tail -1)"
     alias r193="    rvm use \$(rvm list strings | grep -i 1.9.3      | tail -1)"
 
+# FUNCTIONS / "BINARIES"
+  # convert colons to newlines, ie `:2n $PATH` or `:2n < /etc/passwd`
+  function :2n {
+    if [ "$#" -eq 0 ]; then
+      tr : "\n"
+    else
+      tr : "\n" <<< "$*"
+    fi
+  }
+  # give the fullpaths of files
+  function fullpath {
+    ruby -e '
+      $stdin.each_line { |path| puts File.expand_path path }  if ARGV.empty?
+      ARGV.each { |path| puts File.expand_path path }         unless ARGV.empty?
+    ' "$@"
+  }
+  
+
 # PROMPT
   function parse_git_branch {
     git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ \1 /'
