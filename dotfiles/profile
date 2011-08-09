@@ -28,21 +28,29 @@
 
 # FUNCTIONS / "BINARIES"
   # convert colons to newlines, ie `:2n $PATH` or `:2n < /etc/passwd`
-  function :2n {
-    if [ "$#" -eq 0 ]; then
-      tr : "\n"
-    else
-      tr : "\n" <<< "$*"
-    fi
-  }
+    function :2n {
+      if [ "$#" -eq 0 ]; then
+        tr : "\n"
+      else
+        tr : "\n" <<< "$*"
+      fi
+    }
   # give the fullpaths of files
-  function fullpath {
-    ruby -e '
-      $stdin.each_line { |path| puts File.expand_path path }  if ARGV.empty?
-      ARGV.each { |path| puts File.expand_path path }         unless ARGV.empty?
-    ' "$@"
-  }
-  
+    function fullpath {
+      ruby -e '
+        $stdin.each_line { |path| puts File.expand_path path }  if ARGV.empty?
+        ARGV.each { |path| puts File.expand_path path }         unless ARGV.empty?
+      ' "$@"
+    }
+  # when you forget to bundle exec, just run `be` it will rerun the command with bundler
+  # when you want to run a command with bundler, just prepend this function, ie `be rake spec`
+    function be {
+      if [ $# -eq 0 ]; then
+        bundle exec $(history | tail -2 | sed 's/^[ \t]*[0-9]*[ \t]*//');
+      else
+        bundle exec "$@"
+      fi
+    }
 
 # PROMPT
   function parse_git_branch {
