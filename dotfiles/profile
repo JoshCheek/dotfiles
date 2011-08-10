@@ -46,7 +46,9 @@
   # when you want to run a command with bundler, just prepend this function, ie `be rake spec`
     function be {
       if [ $# -eq 0 ]; then
-        bundle exec $(history | tail -2 | sed 's/^[ \t]*[0-9]*[ \t]*//');
+        local command=bundle\ exec\ "$(history | grep -v '^ *[0-9]* *be$' | tail -1 | sed 's/^[ \t]*[0-9]*[ \t]*//')"
+        echo expand to: "$command"
+        eval "$command"
       else
         bundle exec "$@"
       fi
