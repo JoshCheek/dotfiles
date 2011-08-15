@@ -27,6 +27,8 @@
     alias r193="    rvm use \$(rvm list strings | grep -i 1.9.3      | tail -1)"
   # homebrew
     alias brew-formulas="open 'https://github.com/mxcl/homebrew/tree/master/Library/Formula'"
+  # Ruby
+    alias cuke="cucumber"
 
 # FUNCTIONS / "BINARIES"
   # convert colons to newlines, ie `:2n $PATH` or `:2n < /etc/passwd`
