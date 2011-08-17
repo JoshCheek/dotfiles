@@ -25,6 +25,7 @@
     alias r192180=" rvm use \$(rvm list strings | grep -i 1.9.2-p180 | tail -1)"
     alias r192="    rvm use \$(rvm list strings | grep -i 1.9.2      | tail -1)"
     alias r193="    rvm use \$(rvm list strings | grep -i 1.9.3      | tail -1)"
+    
   # homebrew
     alias brew-formulas="open 'https://github.com/mxcl/homebrew/tree/master/Library/Formula'"
   # Ruby
@@ -71,4 +72,5 @@
   PS1="\[\033[37;45m\] \@ \[\033[0m\] \[\033[37;45m\] \w \[\033[0m\] \[\033[33;45m\]\$(parse_git_branch)\[\033[0m\]\n\$ \[\033[0m\]"
 
 # RVM
+  export rvm_project_rvmrc=1
   [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"
