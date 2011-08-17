@@ -58,6 +58,14 @@
         bundle exec "$@"
       fi
     }
+  # when making the typo "mat e." which I make all the fucking time -.^ reinterpret it to "mate ."
+    function mat {
+      if [ $# -eq 1  -a  "$1" = "e." ]; then
+        mate .
+      else
+        builtin mat "$@" # I don't currently have a mat binary, but if ever I do, I don't want to break it
+      fi
+    }
 
 # PROMPT
   function parse_git_branch {
