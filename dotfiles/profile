@@ -9,7 +9,7 @@
   # git
     alias gs="git status"
     alias gd="git diff"
-    alias go="git checkout"
+    alias go="colour-stderr-red git checkout"
     alias gb="git branch"
     alias ga="git add"
     alias gcm="git commit -m"
@@ -65,6 +65,14 @@
       else
         builtin mat "$@" # I don't currently have a mat binary, but if ever I do, I don't want to break it
       fi
+    }
+  # This is absolutely disgusting, but I can't find a better way to do it. It will colourize the
+  # standarderr red (but will print on stdout, and stdout on stderr)
+    function colour-red {
+      ruby -e '$stderr.print "\e[31m", $stdin.read, "\e[0m"'
+    }
+    function colour-stderr-red {
+      ( $* 3>&1 1>&2- 2>&3- ) | colour-red
     }
 
 # PROMPT
