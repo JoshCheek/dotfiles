@@ -31,7 +31,7 @@
   # Ruby
     alias cuke="cucumber"
 
-# FUNCTIONS / "BINARIES"
+# PROGRAMS (functions, binaries, aliases that behave like programs)
   # convert colons to newlines, ie `:2n $PATH` or `:2n < /etc/passwd`
     function :2n {
       if [ "$#" -eq 0 ]; then
@@ -74,6 +74,8 @@
     function colour-stderr-red {
       ( $* 3>&1 1>&2- 2>&3- ) | colour-red
     }
+  # At some point it might become necessary to rewrite this in C, but for now this will do
+    alias chomp="ruby -e 'print \$stdin.read.chomp'"
 
 # PROMPT
   function parse_git_branch {
