@@ -6,6 +6,10 @@
   # path
     alias l="ls -lFGgh"
     alias ..="cd .."
+    alias ...="cd ../.."
+    alias ....="cd ../../.."
+    alias .....="cd ../../../.."
+    alias ......="cd ../../../../.."
   # git
     alias gs="git status"
     alias gd="git diff"
