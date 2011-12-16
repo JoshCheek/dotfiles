@@ -34,6 +34,8 @@
     alias brew-formulas="open 'https://github.com/mxcl/homebrew/tree/master/Library/Formula'"
   # Ruby
     alias cuke="cucumber"
+  # generic
+    alias ss="python -m SimpleHTTPServer" # simple server (serves current dir on port 8000)
 
 # PROGRAMS (functions, binaries, aliases that behave like programs)
   # convert colons to newlines, ie `:2n $PATH` or `:2n < /etc/passwd`
