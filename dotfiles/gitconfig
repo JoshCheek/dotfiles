@@ -11,5 +11,6 @@
   hist = log --pretty=format:\"%Cgreen%h%Creset %Cblue%ad%Creset %s%C(yellow)%d%Creset %Cblue[%an]%Creset\" --graph --date=short
   type = cat-file -t
   dump = cat-file -p
+  praise = blame
 [push]
   default = upstream
