@@ -104,31 +104,6 @@
   #   echo "\[\033[0m\]$foreground$background"
   # }
   PS1="\[\033[37;45m\] \@ \[\033[0m\] \[\033[37;45m\] \w \[\033[0m\] \[\033[32;45m\]\$(parse_git_branch)\[\033[0m\]\n\$ \[\033[0m\]"
-  PROMPT_COMMAND='ruby -e "
-	def path_for(home, cwd)
-	  slash = %q(/)
-	  home  = home.chomp slash
-	  cwd   = cwd.chomp slash
-
-	  # return ~ for home
-	  return %q(~) if home == cwd
-
-	  # return ~/dir when 1 level below home
-	  dir = cwd.sub home, String.new
-	  num_slashes = dir.scan(slash).size
-	  return %Q(~#{dir}) if num_slashes == 1
-
-	  # return dir1/dir2 when 2 levels below home
-	  dir = dir[1..-1]
-	  return dir if num_slashes == 2
-
-	  # return dir1/.../dirn when n levels below home
-	  dirs = dir.split slash
-	  %Q(#{dirs.first}/.../#{dirs.last})
-	end
-	path = path_for File.expand_path(ENV[%q(HOME)]), File.expand_path(Dir.pwd)
-	print %Q(\e];#{path}\007)
-  "'
 
 # RVM
   export rvm_project_rvmrc=1
