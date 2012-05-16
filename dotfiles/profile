@@ -92,6 +92,21 @@
     alias chomp="ruby -e 'print \$stdin.read.chomp'"
   # No Ansi - strip ansi escape sequences from input
     alias na='ruby -pe "gsub /\e\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]/, String.new"'
+  # Give it a # and a dir, it will cd to that dir, then `cd ..` however many times you've indicated with the number
+  # The number defaults to 1, the dir, if not provided, defaults to the output of the previous command
+  # This lets you find the dir on one line, then run the command on the next
+    2dir() {
+      last_command="$(history | tail -2 | head -1 | sed 's/^ *[0-9]* *//')"
+      count="${1-1}"
+      name="${2:-$($last_command)}"
+      while [[ $count > 0 ]]
+        do
+          name=$(dirname "$name")
+          ((count--))
+      done
+      cd "$name"
+    }
+
 
 # PROMPT
   function parse_git_branch {
