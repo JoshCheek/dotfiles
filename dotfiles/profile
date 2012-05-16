@@ -10,6 +10,7 @@
     alias   ....="cd ../../.."
     alias  .....="cd ../../../.."
     alias ......="cd ../../../../.."
+
   # suspended processes
     alias j=jobs
 
@@ -18,6 +19,7 @@
       alias "$i=fg %$i"
       alias "k$i=kill -9 %$i"
     done
+
   # git
     alias gs="  git status"
     alias gd="  git diff"
@@ -27,6 +29,7 @@
     alias gcm=" git commit -m"
     alias gp="  git push"
     alias gh="  git hist"
+
   # rvm
     alias rrbx="    rvm use \$(rvm list strings | grep -i rbx        | tail -1)"
     alias rmac="    rvm use \$(rvm list strings | grep -i macruby    | tail -1)"
@@ -37,13 +40,16 @@
     alias r192180=" rvm use \$(rvm list strings | grep -i 1.9.2-p180 | tail -1)"
     alias r192="    rvm use \$(rvm list strings | grep -i 1.9.2      | tail -1)"
     alias r193="    rvm use \$(rvm list strings | grep -i 1.9.3      | tail -1)"
-    
+
   # homebrew
     alias brew-formulas="open 'https://github.com/mxcl/homebrew/tree/master/Library/Formula'"
+
   # Ruby
     alias cuke="cucumber"
+
   # generic
     alias ss="python -m SimpleHTTPServer" # simple server (serves current dir on port 8000)
+
 
 # PROGRAMS (functions, binaries, aliases that behave like programs)
   # convert colons to newlines, ie `:2n $PATH` or `:2n < /etc/passwd`
@@ -54,6 +60,7 @@
         tr : "\n" <<< "$*"
       fi
     }
+
   # give the fullpaths of files
     function fullpath {
       ruby -e '
@@ -61,6 +68,7 @@
         ARGV.each { |path| puts File.expand_path path }         unless ARGV.empty?
       ' "$@"
     }
+
   # when you forget to bundle exec, just run `be` it will rerun the command with bundler
   # when you want to run a command with bundler, just prepend this function, ie `be rake spec`
     function be {
@@ -72,6 +80,7 @@
         bundle exec "$@"
       fi
     }
+
   # when making the typo "mat e." which I make all the fucking time -.^ reinterpret it to "mate ."
     function mat {
       if [ $# -eq 1  -a  "$1" = "e." ]; then
@@ -80,6 +89,7 @@
         builtin mat "$@" # I don't currently have a mat binary, but if ever I do, I don't want to break it
       fi
     }
+
   # This is absolutely disgusting, but I can't find a better way to do it. It will colourize the
   # standarderr red (but will print on stdout, and stdout on stderr)
     function colour-red {
@@ -88,10 +98,13 @@
     function colour-stderr-red {
       ( $* 3>&1 1>&2- 2>&3- ) | colour-red
     }
+
   # At some point it might become necessary to rewrite this in C, but for now this will do
     alias chomp="ruby -e 'print \$stdin.read.chomp'"
+
   # No Ansi - strip ansi escape sequences from input
     alias na='ruby -pe "gsub /\e\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]/, String.new"'
+
   # Give it a # and a dir, it will cd to that dir, then `cd ..` however many times you've indicated with the number
   # The number defaults to 1, the dir, if not provided, defaults to the output of the previous command
   # This lets you find the dir on one line, then run the command on the next
@@ -112,6 +125,7 @@
   function parse_git_branch {
     git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ \1 /'
   }
+
   # Spent like an hour on this. Finally giving up and just hardcoding it.
   # function ps1_color {
   #   local foreground="${1:+\[\033[3${1}m\]}"
@@ -119,6 +133,7 @@
   #   echo "\[\033[0m\]$foreground$background"
   # }
   PS1="\[\033[37;45m\] \@ \[\033[0m\] \[\033[37;45m\] \w \[\033[0m\] \[\033[32;45m\]\$(parse_git_branch)\[\033[0m\]\n\$ \[\033[0m\]"
+
 
 # RVM
   export rvm_project_rvmrc=1
