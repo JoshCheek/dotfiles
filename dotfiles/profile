@@ -114,7 +114,7 @@
       name="${2:-$($last_command)}"
       while [[ $count > 0 ]]
         do
-          name=$(dirname "$name")
+          name="$(dirname \"$name\")"
           ((count--))
       done
       cd "$name"
