@@ -4,12 +4,19 @@
 
 # ALIASES
   # path
-    alias l="ls -lFGgh"
     alias     ..="cd .."
     alias    ...="cd ../.."
     alias   ....="cd ../../.."
     alias  .....="cd ../../../.."
     alias ......="cd ../../../../.."
+      # -l  long format
+      # -F  / after dirs, * after exe, @ after symlink
+      # -G  colorize
+      # -g suppress owner
+      # -o suppress group
+      # -h humanize sizes
+      # -q print nongraphic chars as question marks
+    alias l="ls -lFGgohq"
 
   # suspended processes
     alias j=jobs
