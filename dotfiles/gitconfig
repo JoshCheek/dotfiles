@@ -3,6 +3,8 @@
   email = josh.cheek@gmail.com
 [color]
   ui = true
+[color "diff"]
+  whitespace = red reverse
 [alias]
   co = checkout
   ci = commit
@@ -14,3 +16,5 @@
   praise = blame
 [push]
   default = upstream
+[core]
+  excludesfile = ~/.gitignore
