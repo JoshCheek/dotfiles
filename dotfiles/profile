@@ -128,6 +128,11 @@
       cd "$name"
     }
 
+  # take you to the dir of a file in a gem. e.g. `2gem rspec`
+    2gem () {
+      cd "$(dirname $(gem which $1))"
+    }
+
 
 # PROMPT
   function parse_git_branch {
