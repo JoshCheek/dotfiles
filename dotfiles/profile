@@ -21,11 +21,18 @@
   # suspended processes
     alias j=jobs
 
-    for i in 1 2 3 4 5 6 7 8 9
+    for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
     do
       alias "$i=fg %$i"
       alias "k$i=kill -9 %$i"
     done
+
+    function k {
+      for n in $@
+      do
+        kill -9 %$n
+      done
+    }
 
   # git
     alias gs="  git status"
