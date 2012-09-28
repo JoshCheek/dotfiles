@@ -1,0 +1,2 @@
+# Take a look at the exclude dirs to make sure theyre right
+ctags -R --exclude=.git --exclude=log --exclude=coverage --exclude=spec --exclude=pkg *
