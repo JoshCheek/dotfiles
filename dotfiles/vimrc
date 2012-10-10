@@ -19,8 +19,6 @@ set backspace=indent,eol,start  " backspace through everything in insert mode
 set hlsearch                    " highlight matches
 set incsearch                   " incremental searching
 
-
-
 "" ==========  Pathogen, vim path manager (https://github.com/tpope/vim-pathogen#readme)  ==========
 call pathogen#infect()
 
@@ -34,6 +32,9 @@ set t_Co=256       " Explicitly tell vim that the terminal supports 256 colors
 "" ========== NERDTree  ==========
 autocmd vimenter * if !argc() | NERDTree | endif  " load NERDTree automatically if started with no files
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif " close vim if NERDTree is the only open buffer
+
+"" ========== vim-textobj-rubyblock ==========
+runtime macros/matchit.vim " a dependency
 
 " got this list from here: https://github.com/Lokaltog/vim-powerline/blob/c4b72c5be57b165bb6a89d0b8a974fe62c0091d0/autoload/Powerline/Themes/default.vim
 call Pl#Theme#RemoveSegment('fugitive:branch')
@@ -64,11 +65,11 @@ nnoremap <c-h> <c-w>h
 nnoremap <c-l> <c-w>l
 
 " Emacs/Readline keybindings for commandline mode
-:cnoremap <C-A> <Home>
-:cnoremap <C-F> <Right>
-:cnoremap <C-B> <Left>
-:cnoremap <Esc>b <S-Left>
-:cnoremap <Esc>f <S-Right>
+cnoremap <C-A> <Home>
+cnoremap <C-F> <Right>
+cnoremap <C-B> <Left>
+cnoremap <Esc>b <S-Left>
+cnoremap <Esc>f <S-Right>
 
 
 "" :set guifont=Monaco:h14
