@@ -1,0 +1,77 @@
+#!/usr/bin/env ruby
+
+def range_to_indexes(range)
+  return range.to_a if range.first <= range.last
+  range.first.downto(range.last).to_a
+end
+
+def to_columns(nums_and_ranges)
+  column_indexes = nums_and_ranges.map do |val|
+    case val
+    when Integer
+      val
+    when Range
+      range_to_indexes val
+    when /^[0-9]+$/
+      val.to_i
+    when /^([0-9]+)\.\.([0-9]+)$/
+      range_to_indexes($1.to_i..$2.to_i)
+    else
+      raise ArgumentError, "Invalid input: #{val.inspect}, should be a number or a range"
+    end
+  end
+  column_indexes.flatten
+end
+
+def columns(in_stream, out_stream, column_indexes)
+  column_indexes.map! { |index| index - 1 }
+  in_stream.each_line do |line|
+    columns = line.split.values_at *column_indexes
+    out_stream.puts columns.join(' ')
+  end
+end
+
+
+# script
+if $0 !~ /rspec/
+  columns $stdin, $stdout, to_columns(ARGV)
+
+# spec
+else
+  describe '#to_columns' do
+    it 'maps numbers to numbers, strings to numbers, and ranges to their numeric elements' do
+      to_columns([1, 3..5, '7', '10..12']).should == [1, 3, 4, 5, 7, 10, 11, 12]
+    end
+
+    it 'raises an argument error for other values' do
+      expect { to_columns ['a'] }.to raise_error ArgumentError, /"a"/
+    end
+
+    it 'returns the results in the specified order' do
+      to_columns([5, 2..3]).should == [5, 2, 3]
+    end
+
+    it 'understands backwards ranges' do
+      to_columns(['9..7', 5..3]).should == [9, 8, 7, 5, 4, 3]
+    end
+  end
+
+  require 'stringio'
+  describe '#columns' do
+    it 'maps the columns of the input stream to the output stream (columns begin at 1, not 0)' do
+      input_stream    =  StringIO.new "a b c\nd e f"
+      output_stream   =  StringIO.new
+      column_indexes  =  [1, 3]
+      columns input_stream, output_stream, column_indexes
+      output_stream.string.should == "a c\nd f\n"
+    end
+
+    it 'maps the columns in the specified order' do
+      input_stream    =  StringIO.new "a b c\nd e f"
+      output_stream   =  StringIO.new
+      column_indexes  =  [3, 1]
+      columns input_stream, output_stream, column_indexes
+      output_stream.string.should == "c a\nf d\n"
+    end
+  end
+end
