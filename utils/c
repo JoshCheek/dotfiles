@@ -73,5 +73,13 @@ else
       columns input_stream, output_stream, column_indexes
       output_stream.string.should == "c a\nf d\n"
     end
+
+    it 'considers multiple spaces and tabs to be a single delimiter' do
+      input_stream    =  StringIO.new "a   \t  b c\nd e f"
+      output_stream   =  StringIO.new
+      column_indexes  =  [3, 1]
+      columns input_stream, output_stream, column_indexes
+      output_stream.string.should == "c a\nf d\n"
+    end
   end
 end
