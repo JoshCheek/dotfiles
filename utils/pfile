@@ -1,0 +1,76 @@
+#!/usr/bin/env ruby
+
+print_if_file = lambda do |printer, matchers, name|
+  name.chomp!
+  printer.puts name if File.file?(name) && matchers.all? { |matcher| name =~ matcher }
+end
+
+if $0 !~ /rspec/
+  $stdin.each &print_if_file.curry[Kernel][ARGV.map { |matcher| Regexp.new matcher }]
+else
+  require 'fakefs/safe'
+
+  describe 'print_if_file' do
+    class MockPrinter
+      def puts(name)
+        printed << name
+      end
+
+      def printed
+        @printed ||= []
+      end
+    end
+
+    before :all do
+      FakeFS.activate!
+      File.open("file1", "w") { |f| f.write "body1" }
+      File.open("file2", "w") { |f| f.write "body2" }
+      Dir.mkdir  "dir1"
+    end
+
+    after :all do
+      FakeFS.deactivate!
+    end
+
+    let(:printer)           { MockPrinter.new }
+    let(:universal_matcher) { '' }
+
+    it 'prints files' do
+      print_if_file[printer, [], "file1"]
+      printer.printed.should == %w[file1]
+    end
+
+    it 'does not print non-files' do
+      print_if_file[printer, [], "dir1"]
+      print_if_file[printer, [], ""]
+      printer.printed.should == []
+    end
+
+    it 'does not print nonexistent things' do
+      printer.printed.should == []
+    end
+
+    it 'ignores newlines' do
+      print_if_file[printer, [], "file1\n"]
+      print_if_file[printer, [], "file2"]
+      printer.printed.should == %w[file1 file2]
+    end
+
+    it 'prints names that match the matchers list (as a regex)' do
+      print_if_file[printer, [/.1/], "file1"]
+      print_if_file[printer, [/.1/, /f/], "file1"]
+      printer.printed.should == %w[file1 file1]
+    end
+
+    it 'does not print names that do not match the matchers list' do
+      print_if_file[printer, [/.1/], "file2"]
+      print_if_file[printer, [/.1/, /x/], "file1"]
+      printer.printed.should == []
+    end
+
+    it 'prints all files when there are no matchers provided' do
+      print_if_file[printer, [], "file1"]
+      printer.printed.should == %w[file1]
+    end
+  end
+end
