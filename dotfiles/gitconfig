@@ -10,7 +10,7 @@
   ci = commit
   st = status
   br = branch
-  brpb = !git branch --no-color 2> /dev/null | ruby -ne 'print $_.sub(\"*\", \"\").strip if $_.start_with? \"*\"' | pbcopy
+  brpb = !git branch --no-color 2> /dev/null | ruby -ne 'print $_.sub(\"*\", \"\").strip if /^\\*/' | pbcopy
   shas = log --pretty=format:\"%H\"
   hist = log --pretty=format:\"%Cgreen%h%Creset %Cblue%ad%Creset %s%C(yellow)%d%Creset %Cblue[%an]%Creset\" --graph --date=short
   type = cat-file -t
