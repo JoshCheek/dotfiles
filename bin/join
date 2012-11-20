@@ -1,0 +1,59 @@
+#!/usr/bin/env ruby
+
+class Join
+  attr_accessor :string, :delimiter
+
+  def initialize(string, raw_delimiters)
+    raw_delimiters << "\n" if raw_delimiters.empty?
+    self.string    = string
+    self.delimiter = Regexp.new "(" << raw_delimiters.map { |raw_delimiter| normalize raw_delimiter }.join('|') << ")+"
+  end
+
+  def join
+    string.gsub(delimiter, ' ').strip
+  end
+
+  private
+
+  def normalize(raw_delimiter)
+    raw_delimiter = "\n" if raw_delimiter == "\\n"
+    Regexp.escape raw_delimiter
+  end
+end
+
+
+if $0 !~ /rspec/
+  puts Join.new($stdin.read, ARGV).join
+else
+  describe 'join' do
+    def join(string, argv)
+      Join.new(string, argv).join
+    end
+
+    context 'when no args provided' do
+      it 'converts newlines to spaces' do
+        join("a b\nc d\n", []).should == "a b c d"
+        join("a b\nc d",   []).should == "a b c d"
+      end
+    end
+
+    context 'when args are provided' do
+      it 'treats the args as delimiters, joining on each of them' do
+        join('abcbd:e:f', ['b', ':']).should == 'a c d e f'
+      end
+
+      it "treats \\n as a newline" do
+        join("a:b\nc.d", [':', '\n']).should == "a b c.d"
+      end
+
+      it 'can have multi-char delimiters' do
+        join("a.-b.c-d", [".-"]).should == "a b.c-d"
+      end
+
+      it 'considers multiple adjacent delimiters to be the same delimiter' do
+        join("a::b", [":"]).should == "a b"
+      end
+    end
+  end
+end
+
