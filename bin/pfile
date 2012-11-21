@@ -1,25 +1,161 @@
 #!/usr/bin/env ruby
+require 'optparse'
 
-print_if_file = lambda do |printer, matchers, name|
-  name.chomp!
-  printer.puts name if File.file?(name) && matchers.all? { |matcher| name =~ matcher }
+class FileMatcher
+  def initialize(options={})
+    self.options = options
+  end
+
+  def match?(name)
+    name = name.chomp
+    matches_matchers?(name) && passes_file_constraints?(name)
+  end
+
+  private
+
+  attr_accessor :options
+
+  def matches_matchers?(name)
+    matchers.all? { |matcher| name =~ matcher }
+  end
+
+  def passes_file_constraints?(name)
+    return File.file?      name if files_only?
+    return File.directory? name if directories_only?
+    File.file?(name) || File.directory?(name)
+  end
+
+  def matchers
+    Array options[:matchers]
+  end
+
+  def files_only?
+    !allow_directories? && !directories_only?
+  end
+
+  def directories_only?
+    options[:directories_only]
+  end
+
+  def allow_directories?
+    options[:allow_directories]
+  end
 end
 
+class FileMatcher
+  class OptionParser
+    def initialize(args)
+      self.args = args
+    end
+
+    def parse
+      @parsed ||= begin
+        parser.parse!(args).to_hash
+      end
+    end
+
+    private
+
+    attr_accessor :args
+
+    def parser
+      # this makes me cry a little bit :(
+      ::OptionParser.new do |parser|
+        def parser.parsed
+          @parsed ||= {}
+        end
+
+        def parser.[]=(key, value)
+          parsed[key] = value
+        end
+
+        def parser.[](key)
+          parsed[key]
+        end
+
+        def parser.delete(key)
+          parsed.delete key
+        end
+
+        def parser.parse!(args)
+          super
+          post_process args
+          self
+        end
+
+        def parser.post_process(args)
+          self[:matchers] = args.map { |matcher| Regexp.new matcher }
+          delete :allow_directories if self[:directories_only]
+        end
+
+        def parser.inspect
+          "#<OptionParser with #{parsed.inspect}>"
+        end
+
+        def parser.to_hash
+          parsed
+        end
+
+        parser.banner = "Usage: pfile [options] [patterns-to-filter-with]"
+        parser.separator ""
+        parser.separator "Options:"
+
+        parser.on '-d', '--allow-directories', "Print directories as well as files" do |value|
+          parser[:allow_directories] = !!value
+        end
+
+        parser.on '-D', '--directories-only', "Print only directories and no files" do |value|
+          parser[:directories_only] = !!value
+        end
+
+        parser.on '-h', '--help', "This help screen" do |value|
+          parser[:help] = parser.to_s
+        end
+
+        # this is dumb, b/c I don't know how it decides that options should be indented this much.
+        parser.separator ""
+        parser.separator "Patterns to filter with:"
+        parser.separator "    Unescaped regex bodies, each line of output must match all of these"
+      end
+    end
+  end
+end
+
+
 if $0 !~ /rspec/
-  $stdin.each &print_if_file.curry[Kernel][ARGV.map { |matcher| Regexp.new matcher }]
+  options = FileMatcher::OptionParser.new(ARGV).parse
+  if options[:help]
+    $stderr.puts options[:help]
+  else
+    finder  = FileMatcher.new options
+    $stdin.each { |name| puts name if finder.match? name }
+  end
 else
   require 'fakefs/safe'
 
-  describe 'print_if_file' do
-    class MockPrinter
-      def puts(name)
-        printed << name
+  describe FileMatcher do
+    RSpec::Matchers.define :match_names do |*names|
+      file_matcher = nil
+      match do |matcher|
+        file_matcher = matcher
+        names.all? { |name| file_matcher.match? name }
       end
 
-      def printed
-        @printed ||= []
+      failure_message_for_should do
+        names.reject { |name| file_matcher.match? name }.map(&:inspect).join(", ") << " should have matched but didn't"
+      end
+
+      failure_message_for_should_not do
+        names.select { |name| file_matcher.match? name }.map(&:inspect).join(", ") << " should not have matched, but did"
       end
     end
+
+    def matcher_for(options={})
+      described_class.new(options)
+    end
+
+    alias match_name match_names
+    alias matcher    matcher_for
 
     before :all do
       FakeFS.activate!
@@ -32,45 +168,83 @@ else
       FakeFS.deactivate!
     end
 
-    let(:printer)           { MockPrinter.new }
-    let(:universal_matcher) { '' }
-
-    it 'prints files' do
-      print_if_file[printer, [], "file1"]
-      printer.printed.should == %w[file1]
-    end
-
-    it 'does not print non-files' do
-      print_if_file[printer, [], "dir1"]
-      print_if_file[printer, [], ""]
-      printer.printed.should == []
-    end
-
-    it 'does not print nonexistent things' do
-      printer.printed.should == []
+    it 'does not match nonexistent things' do
+      matcher.should_not match_name ''
     end
 
     it 'ignores newlines' do
-      print_if_file[printer, [], "file1\n"]
-      print_if_file[printer, [], "file2"]
-      printer.printed.should == %w[file1 file2]
+      matcher.should match_names "file1\n", "file2"
     end
 
-    it 'prints names that match the matchers list (as a regex)' do
-      print_if_file[printer, [/.1/], "file1"]
-      print_if_file[printer, [/.1/, /f/], "file1"]
-      printer.printed.should == %w[file1 file1]
+    it 'matches names that match the regex matcher list' do
+      matcher_for(matchers: [/.1/     ]).should match_name "file1"
+      matcher_for(matchers: [/.1/, /f/]).should match_name "file1"
     end
 
-    it 'does not print names that do not match the matchers list' do
-      print_if_file[printer, [/.1/], "file2"]
-      print_if_file[printer, [/.1/, /x/], "file1"]
-      printer.printed.should == []
+    it 'does not match names that do not match the all the regexes in the matcher list' do
+      matcher_for(matchers: [/.1/     ]).should_not match_name "file2"
+      matcher_for(matchers: [/.1/, /x/]).should_not match_name "file1"
     end
 
-    it 'prints all files when there are no matchers provided' do
-      print_if_file[printer, [], "file1"]
-      printer.printed.should == %w[file1]
+    it 'matches all files when there are no matchers provided' do
+      matcher.should match_name 'file1'
+    end
+
+    describe 'options' do
+      context 'none' do
+        it 'matches files but not directories' do
+          matcher.should match_name 'file1'
+          matcher.should_not match_name 'dir1'
+        end
+      end
+
+      context 'allow_directories: true' do
+        it 'matches files and directories' do
+          matcher_for(allow_directories: true).should match_names 'file1', 'dir1'
+        end
+      end
+
+      context 'directories_only: true' do
+        it 'matches directories but not files' do
+          matcher_for(directories_only: true).should match_name 'dir1'
+          matcher_for(directories_only: true).should_not match_name 'file1'
+        end
+      end
+    end
+  end
+
+  describe FileMatcher::OptionParser do
+    def parse(options)
+      described_class.new(options).parse
+    end
+
+    it 'parses -d and --allow-directories to allow_directories: true' do
+      parse(['-d'                 ])[:allow_directories].should be_true
+      parse(['--allow-directories'])[:allow_directories].should be_true
+    end
+
+    it 'parses -D and --directories-only to directories_only: true' do
+      parse(['-D'                ])[:directories_only].should be_true
+      parse(['--directories-only'])[:directories_only].should be_true
+    end
+
+    it 'when both -d and -D are provided, -D supercedes -d' do
+      [%w[-d                  -D]                ,
+       %w[-d                  --directories-only],
+       %w[--allow-directories --directories-only],
+       %w[--allow-directories -D]                ].each do |args|
+        parse(args)[:directories_only].should be_true
+        parse(args)[:allow_directories].should be_false
+      end
+    end
+
+    it 'parses -h and --help to the help screen' do
+      parse(%w[-h]     )[:help].should =~ /^\s*Usage/
+      parse(%w[-h -d a])[:help].should =~ /^\s*Usage/
+    end
+
+    it 'parses non options to regexp matchers' do
+      parse(%w[a -d b]).should == {allow_directories: true, matchers: [/a/, /b/]}
     end
   end
 end
