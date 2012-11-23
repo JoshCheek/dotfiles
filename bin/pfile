@@ -100,11 +100,11 @@ class FileMatcher
         parser.separator ""
         parser.separator "Options:"
 
-        parser.on '-d', '--allow-directories', "Print directories as well as files" do |value|
+        parser.on '-a', '--allow-directories', "Print directories as well as files" do |value|
           parser[:allow_directories] = !!value
         end
 
-        parser.on '-D', '--directories-only', "Print only directories and no files" do |value|
+        parser.on '-d', '--directories-only', "Print only directories and no files" do |value|
           parser[:directories_only] = !!value
         end
 
@@ -218,21 +218,25 @@ else
       described_class.new(options).parse
     end
 
-    it 'parses -d and --allow-directories to allow_directories: true' do
-      parse(['-d'                 ])[:allow_directories].should be_true
+    it 'only sets :matchers when no flags are provided' do
+      parse([]).to_hash.should == {matchers: []}
+    end
+
+    it 'parses -a and --allow-directories to allow_directories: true' do
+      parse(['-a'                 ])[:allow_directories].should be_true
       parse(['--allow-directories'])[:allow_directories].should be_true
     end
 
-    it 'parses -D and --directories-only to directories_only: true' do
-      parse(['-D'                ])[:directories_only].should be_true
+    it 'parses -d and --directories-only to directories_only: true' do
+      parse(['-d'                ])[:directories_only].should be_true
       parse(['--directories-only'])[:directories_only].should be_true
     end
 
-    it 'when both -d and -D are provided, -D supercedes -d' do
-      [%w[-d                  -D]                ,
-       %w[-d                  --directories-only],
+    it 'when both -a and -d are provided, -d supercedes -a' do
+      [%w[-a                  -d]                ,
+       %w[-a                  --directories-only],
        %w[--allow-directories --directories-only],
-       %w[--allow-directories -D]                ].each do |args|
+       %w[--allow-directories -d]                ].each do |args|
         parse(args)[:directories_only].should be_true
         parse(args)[:allow_directories].should be_false
       end
@@ -244,7 +248,7 @@ else
     end
 
     it 'parses non options to regexp matchers' do
-      parse(%w[a -d b]).should == {allow_directories: true, matchers: [/a/, /b/]}
+      parse(%w[a -a b]).should == {allow_directories: true, matchers: [/a/, /b/]}
     end
   end
 end
