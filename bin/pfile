@@ -1,5 +1,4 @@
 #!/usr/bin/env ruby
-require 'optparse'
 
 class FileMatcher
   def initialize(options={})
@@ -49,75 +48,34 @@ class FileMatcher
     end
 
     def parse
-      @parsed ||= begin
-        parser.parse!(args).to_hash
+      @parsed ||= args.each_with_object(matchers: []) do |arg, hash|
+        case arg
+        when '-a', '--allow-directories' then hash[:allow_directories] = true
+        when '-d', '--directories-only'  then hash[:directories_only]  = true
+        when '-h', '--help'              then hash[:help]              = help_screen
+        else                                  hash[:matchers]         << Regexp.new(arg)
+        end
+        hash.delete :allow_directories if hash[:directories_only]
       end
+    end
+
+    def help_screen
+      <<-HELP_SCREEN.gsub /^      /, ''
+      Usage: pfile [options] [patterns-to-filter-with]
+
+      Options:
+          -a, --allow-directories          Print directories as well as files
+          -d, --directories-only           Print only directories and no files
+          -h, --help                       This help screen
+
+      Patterns to filter with:
+          Unescaped regex bodies, each line of output must match all of these
+      HELP_SCREEN
     end
 
     private
 
     attr_accessor :args
-
-    def parser
-      # this makes me cry a little bit :(
-      ::OptionParser.new do |parser|
-        def parser.parsed
-          @parsed ||= {}
-        end
-
-        def parser.[]=(key, value)
-          parsed[key] = value
-        end
-
-        def parser.[](key)
-          parsed[key]
-        end
-
-        def parser.delete(key)
-          parsed.delete key
-        end
-
-        def parser.parse!(args)
-          super
-          post_process args
-          self
-        end
-
-        def parser.post_process(args)
-          self[:matchers] = args.map { |matcher| Regexp.new matcher }
-          delete :allow_directories if self[:directories_only]
-        end
-
-        def parser.inspect
-          "#<OptionParser with #{parsed.inspect}>"
-        end
-
-        def parser.to_hash
-          parsed
-        end
-
-        parser.banner = "Usage: pfile [options] [patterns-to-filter-with]"
-        parser.separator ""
-        parser.separator "Options:"
-
-        parser.on '-a', '--allow-directories', "Print directories as well as files" do |value|
-          parser[:allow_directories] = !!value
-        end
-
-        parser.on '-d', '--directories-only', "Print only directories and no files" do |value|
-          parser[:directories_only] = !!value
-        end
-
-        parser.on '-h', '--help', "This help screen" do |value|
-          parser[:help] = parser.to_s
-        end
-
-        # this is dumb, b/c I don't know how it decides that options should be indented this much.
-        parser.separator ""
-        parser.separator "Patterns to filter with:"
-        parser.separator "    Unescaped regex bodies, each line of output must match all of these"
-      end
-    end
   end
 end
 
