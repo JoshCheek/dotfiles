@@ -23,21 +23,221 @@ def to_columns(nums_and_ranges)
   column_indexes.flatten
 end
 
-def columns(in_stream, out_stream, column_indexes)
-  column_indexes.map! { |index| index - 1 }
-  in_stream.each_line do |line|
-    columns = line.split.values_at *column_indexes
-    out_stream.puts columns.join(' ')
+class OutputStream
+  attr_accessor :real_stream, :output_field_separator, :align_columns
+
+  class << self
+    alias for new
+  end
+
+  def initialize(real_stream, output_field_separator, align_columns)
+    self.real_stream, self.output_field_separator, self.align_columns =
+         real_stream,      output_field_separator,      align_columns
+    yield self
+    flush
+  end
+
+  def puts(*fields)
+    unflushed << fields
+    flush unless align_columns
+  end
+
+  def flush
+    column_widths = widths_for unflushed
+    unflushed.each do |fields|
+      line = fields.zip(column_widths)
+                   .map { |field, width| field_to_width field, width, output_field_separator }
+                   .compact
+                   .join(output_field_separator)
+      real_stream.puts line
+    end
+    unflushed.clear
+  end
+
+  def unflushed
+    @unflushed ||= []
+  end
+
+  def widths_for(array_of_fields)
+    result = array_of_fields.transpose.map { |col|
+      col.compact.max_by(&:length).length }
+    result
+  end
+
+  def field_to_width(field, width, padding)
+    return nil unless field
+    result = field.dup
+    result << padding while result.size < width
+    result
+  end
+end
+
+def columns(in_stream, out_stream, options)
+  column_indexes = options.fetch(:columns).map { |index| index - 1 }
+  ifs            = options.fetch :input_field_separator
+  ofs            = options.fetch :output_field_separator
+  OutputStream.for out_stream, ofs, options[:align_columns] do |out_stream|
+    in_stream.each_line do |line|
+      columns = line.split(ifs).map(&:chomp).values_at *column_indexes
+      out_stream.puts *columns
+    end
   end
 end
 
 
+def help_screen
+  <<-HELP_SCREEN.gsub(/^  /, '')
+  Usage: c [options] column-pattern [column-pattern]
+
+  Options:
+      --input-field-separator pattern    Regexp to use for finding field delimiters (column delimiters)
+          --ifs pattern                  in the input stream. Defaults to /\s+/ for runs of whitespace.
+          -F pattern
+          -Fpattern
+
+      --output-field-separator string    When printing columns, use this to delimit their output.
+          --ofs string                   Defaults to an empty space.
+
+      -a, --align                        Align columns when their width varies. Defaults to false.
+
+      -h, --help                          This help screen
+
+  Column Patterns:
+      Specify which columns you want in the output by passing the index, from 1.
+      Ranges of columns can be passed, they are Rinclusive and can be forward or backwards.
+
+      Examples:
+          Print columns 1 through 3        `c 1..3`
+          Print columns 1, and 3           `c 1 3`
+          Print columns 5, 4, and 3        `c 5..3`
+          Print columsn 1, 5, 4, 3, and 7  `c 1 5..3 7`
+  HELP_SCREEN
+end
+
+def default_options
+  {input_field_separator: /\s+/, output_field_separator: ' ', columns: []}
+end
+
+def parse_args(args, defaults=default_options)
+  args, options = args.dup, defaults.dup
+  options[:help] = help_screen if args.empty?
+
+  until args.empty?
+    arg = args.shift
+    case arg
+    when '-h', '--help'
+      options[:help] = help_screen
+    when '-F', '--ifs', '--input-field-separator'
+      separator = args.shift
+      separator || raise(ArgumentError, "Input field separator (#{arg}) requires an pattern to use")
+      options[:input_field_separator] = Regexp.new separator
+    when /^-F/
+      options[:input_field_separator] = Regexp.new(arg.sub '-F', '')
+    when '--ofs', '--output-field-separator'
+      separator = args.shift
+      separator || raise(ArgumentError, "Output field separator (#{arg}) requires the separator to be the next argument")
+      options[:output_field_separator] = separator
+    when '-a', '--align'
+      options[:align_columns] = true
+    else
+      options[:columns] << arg
+    end
+  end
+  raise ArgumentError, "At least one column must be provided" if options[:columns].empty? && !options[:help]
+  options[:columns] = to_columns options[:columns]
+  options
+end
+
 # script
 if $0 !~ /rspec/
-  columns $stdin, $stdout, to_columns(ARGV)
+  options = parse_args(ARGV)
+  if options[:help]
+    puts options[:help]
+  else
+    columns $stdin, $stdout, options
+  end
 
 # spec
 else
+  describe 'parse_args' do
+    def args(*args)
+      args.unshift 1 # requires at least one column
+      parse_args args
+    end
+
+    specify 'it does not consume the original array' do
+      array = [1, '-h']
+      parse_args array
+      array.should == [1, '-h']
+    end
+
+    specify '-h and --help set :help to the help screen' do
+      args(        )[:help].should be_nil
+      args('-h'    )[:help].should == help_screen
+      args('--help')[:help].should == help_screen
+    end
+
+    it 'sets help when there are no args' do
+      parse_args([])[:help].should be_true
+    end
+
+    describe 'input field separator' do
+      it 'defaults to a regex that matches all whitespace' do
+        args[:input_field_separator].should == /\s+/
+      end
+
+      specify '-F, --ifs, and --input-field-separator set :input_field_separator to the next argument' do
+        args('-Fa'                         )[:input_field_separator].should == /a/
+        args('-F', 'a'                     )[:input_field_separator].should == /a/
+        args('--ifs', 'a'                  )[:input_field_separator].should == /a/
+        args('--input-field-separator', 'a')[:input_field_separator].should == /a/
+      end
+
+      it 'raises an error if there is no next argument' do
+        expect { args '-F' }.to raise_error ArgumentError, "Input field separator (-F) requires an pattern to use"
+        expect { args '--ifs' }.to raise_error ArgumentError, "Input field separator (--ifs) requires an pattern to use"
+      end
+
+      it 'interprets the argument as an unescaped regex' do
+        args('-F', '.')[:input_field_separator].should == /./
+        args('-F', '\.')[:input_field_separator].should == /\./
+      end
+    end
+
+    describe 'output field separator' do
+      specify 'it defaults to a single space' do
+        args[:output_field_separator].should == ' '
+      end
+
+      specify '--ofs, and --output-field-separator set :output_field_separator to the next argument' do
+        args('--ofs', 'a'                   )[:output_field_separator].should == 'a'
+        args('--output-field-separator', 'a')[:output_field_separator].should == 'a'
+      end
+
+      it 'raises an error if there is no next argument' do
+        expect { args '--ofs'                    }.to raise_error ArgumentError, "Output field separator (--ofs) requires the separator to be the next argument"
+        expect { args '--output-field-separator' }.to raise_error ArgumentError, "Output field separator (--output-field-separator) requires the separator to be the next argument"
+      end
+    end
+
+    describe 'align columns' do
+      specify '-a and --align set :align_columns to true' do
+        args[:align_columns].should be_false
+        args('-a')[:align_columns].should be_true
+        args('--align')[:align_columns].should be_true
+      end
+    end
+
+    specify 'all other arguments are passed to #to_columns and aggregated as column numbers' do
+      parse_args([1, '-h', 2..4, '-F', '5', '7..6'])[:columns].should == [1, 2, 3, 4, 7, 6]
+    end
+
+    it 'raises an error if at least one column is not provided, unless help is set' do
+      expect { parse_args ['-a'] }.to raise_error ArgumentError, "At least one column must be provided"
+      parse_args ['-a', '-h']
+    end
+  end
+
   describe '#to_columns' do
     it 'maps numbers to numbers, strings to numbers, and ranges to their numeric elements' do
       to_columns([1, 3..5, '7', '10..12']).should == [1, 3, 4, 5, 7, 10, 11, 12]
@@ -61,25 +261,48 @@ else
     it 'maps the columns of the input stream to the output stream (columns begin at 1, not 0)' do
       input_stream    =  StringIO.new "a b c\nd e f"
       output_stream   =  StringIO.new
-      column_indexes  =  [1, 3]
-      columns input_stream, output_stream, column_indexes
+      columns input_stream, output_stream, default_options.merge(columns: [1, 3])
       output_stream.string.should == "a c\nd f\n"
     end
 
     it 'maps the columns in the specified order' do
       input_stream    =  StringIO.new "a b c\nd e f"
       output_stream   =  StringIO.new
-      column_indexes  =  [3, 1]
-      columns input_stream, output_stream, column_indexes
+      columns input_stream, output_stream, default_options.merge(columns: [3, 1])
       output_stream.string.should == "c a\nf d\n"
     end
 
-    it 'considers multiple spaces and tabs to be a single delimiter' do
-      input_stream    =  StringIO.new "a   \t  b c\nd e f"
+    it 'delimits the input stream based on the :input_field_separator' do
+      input_stream    =  StringIO.new "a:b:c\nd:e:f"
       output_stream   =  StringIO.new
-      column_indexes  =  [3, 1]
-      columns input_stream, output_stream, column_indexes
+      columns input_stream, output_stream, default_options.merge(columns: [3, 1], input_field_separator: /:/)
       output_stream.string.should == "c a\nf d\n"
+    end
+
+    it 'delimits the output stream based on the :output_field_separator' do
+      input_stream    =  StringIO.new "a b c\nd e f"
+      output_stream   =  StringIO.new
+      columns input_stream, output_stream, default_options.merge(columns: [3, 1], output_field_separator: ':')
+      output_stream.string.should == "c:a\nf:d\n"
+    end
+
+    describe 'when :align is set' do
+      it 'lines up output columns' do
+        input_stream    =  StringIO.new "123 1 1\n1 1234 1"
+        output_stream   =  StringIO.new
+        columns input_stream, output_stream, default_options.merge(columns: [1, 2, 3], align_columns: true)
+        output_stream.string.should == "123 1    1\n"\
+                                       "1   1234 1\n"
+      end
+
+      it 'ignores outputs with different numbers of columns' do
+        input_stream    =  StringIO.new "123 1 1\n1\n1 1234 1"
+        output_stream   =  StringIO.new
+        columns input_stream, output_stream, default_options.merge(columns: [1, 2, 3], align_columns: true)
+        output_stream.string.should == "123 1    1\n"\
+                                       "1  \n"\
+                                       "1   1234 1\n"
+      end
     end
   end
 end
