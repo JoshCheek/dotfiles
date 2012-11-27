@@ -11,7 +11,7 @@
   st = status
   br = branch
   brpb = !git rev-parse --abbrev-ref HEAD | xargs echo -n | pbcopy
-  brcrnt = git rev-parse --abbrev-ref HEAD
+  brcrnt = rev-parse --abbrev-ref HEAD
   shas = log --pretty=format:\"%H\"
   hist = log --pretty=format:\"%Cgreen%h%Creset %Cblue%ad%Creset %s%C(yellow)%d%Creset %Cblue[%an]%Creset\" --graph --date=short
   type = cat-file -t
