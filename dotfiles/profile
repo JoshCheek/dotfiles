@@ -35,14 +35,15 @@
     }
 
   # git
-    alias gs="  git status"
-    alias gd="  git diff"
-    alias go="  colour-stderr-red git checkout"
-    alias gb="  git branch"
-    alias ga="  git add"
-    alias gcm=" git commit -m"
-    alias gp="  git push"
-    alias gh="  git hist"
+    alias gs="   git status"
+    alias gd="   git diff"
+    alias go="   colour-stderr-red git checkout"
+    alias gb="   git branch"
+    alias ga="   git add"
+    alias gcm="  git commit -m"
+    alias gp="   git push"
+    alias gh="   git hist"
+    alias brpb=" git rev-parse --abbrev-ref HEAD | xargs echo -n | pbcopy"
 
   # rvm
     alias rrbx="    rvm use \$(rvm list strings | grep -i rbx        | tail -1)"
