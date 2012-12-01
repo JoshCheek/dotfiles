@@ -150,11 +150,16 @@ end
 
 # script
 if $0 !~ /rspec/
-  options = parse_args(ARGV)
-  if options[:help]
-    puts options[:help]
-  else
-    columns $stdin, $stdout, options
+  begin
+    options = parse_args(ARGV)
+    if options[:help]
+      puts options[:help]
+    else
+      columns $stdin, $stdout, options
+    end
+  rescue ArgumentError
+    $stderr.puts $!.message
+    exit 1
   end
 
 # spec
