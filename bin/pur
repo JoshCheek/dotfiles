@@ -78,34 +78,37 @@ class Pur
   end
 
   def call
-    if show_help?
-      outstream.puts self.class.help_screen
-      return 0
-    end
-
-    raise @error_message if @error_message
-
-    instream.each_line do |line|
-      line.chomp!
-      result = reduce_across line
-      next if !result
-      if reduce_down?
-        vertical_reduction result
-      else
-        outstream.puts result
-      end
-    end
-
-    if reduce_down?
-      outstream.puts @vertical_value.instance_eval(@post_reduction_map)
-    end
-    0
+    show_help || error_on_bad_args || map_and_reduce_lines || print_reduction
   rescue Exception
     errstream.puts $!.message
     return 1
   end
 
   private
+
+  def show_help
+    return unless show_help?
+    outstream.puts self.class.help_screen
+    0
+  end
+
+  def error_on_bad_args
+    raise @error_message if @error_message
+  end
+
+  def map_and_reduce_lines
+    instream.each_line do |line|
+      result = reduce_across line.chomp
+      next unless result
+      reduce_down? ? vertical_reduction(result) : outstream.puts(result)
+    end
+    0 unless reduce_down?
+  end
+
+  def print_reduction
+    outstream.puts @vertical_value.instance_eval @post_reduction_map
+    0
+  end
 
   def show_help?
     @should_show_help
