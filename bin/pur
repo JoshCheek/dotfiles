@@ -3,16 +3,20 @@
 class Pur
   def self.help_screen
     <<-HELP_SCREEN.gsub /^    /, ''
-    Usage: pur [HorizontalMap | HorizontalFilter | Regexp]* (- VerticalInitialValue VerticalReduction)?
+    Usage: pur [HorizontalMap | HorizontalFilter | Regexp]* (- VerticalInitialValue VerticalReduction VerticalMap?)?
 
-      Heavily inspired by pru, pipable ruby. Used to map/filter/reduce stdin.
+      Used to map/filter/reduce stdin with familiar Rubyisms
+
+      Heavily inspired by pru (https://rubygems.org/gems/pru)
 
       HorizontalMap:
         Is used to map the current line to a new value.
         Any expression that evaluates to a non true/false/nil value is considered a map
         Each map is evaluated within the context of the result of the previous map, with the initial value being the current line.
 
-        e.g. $ ruby -e 'puts "aaa\\nbb"' | pur size
+        e.g. Map lines to line length
+
+             $ ruby -e 'puts "aaa\\nbb"' | pur size
              3
              2
 
@@ -20,7 +24,9 @@ class Pur
         Any expression which returns true/false/nil is used to filter the results.
         The current expression will be kept if the result is true, and discarded if it is false/nil.
 
-        e.g. $ ruby -e 'puts "aaa\\nbb"' | pur 'size == 3'
+        e.g. Find lines with three characters
+
+             $ ruby -e 'puts "aaa\\nbb"' | pur 'size == 3'
              aaa
 
       Regexp:
@@ -34,37 +40,45 @@ class Pur
         This code will be passed each mapped/filtered result, it can access the aggregate value through _,
         it will be printed at the end of the input
 
-        e.g. $ ruby -e 'puts *1..10' | pur to_i - 0 '_ + self'
+        e.g. Sum numbers
+
+             $ ruby -e 'puts *1..10' | pur to_i - 0 '_ + self'
              55
 
-        e.g. $ ruby -e 'puts *"a".."c"' | pur - String.new '_ << self'
+        e.g. Join lines
+
+             $ ruby -e 'puts *"a".."c"' | pur - String.new '_ << self'
              abc
+
+      VerticalMap:
+        If the aggregate value isn't what you want to print, you can map it to a new value here
+
+        e.g. Makes output unique
+
+             $ ruby -e 'puts *%w[c b a c a b c]' | pur - Hash.new '_[self]=true; _' keys.sort.join
+             abc
+
+        e.g. Prints line frequencies
+
+             $ ruby -e 'puts *%w[c a c a b c]' | pur - 'Hash.new 0' '_[self]+=1; _' 'sort_by { |_,count| -count }.map { |line, count| "\#{count} \#{line}" }'
+             3 c
+             2 a
+             1 b
 
     HELP_SCREEN
   end
 
   def initialize(argv, instream, outstream, errstream)
-    argv = convert_regexes argv
-    self.argv      = argv
-    self.instream  = instream
-    self.outstream = outstream
-    self.errstream = errstream
-    @should_reduce_down = argv.include? '-'
-    if reduce_down?
-      case argv[argv.index('-')..-1].size
-      when 3
-        @vertical_value, @vertical_reducer = argv[-2..-1]
-        @vertical_value = eval @vertical_value
-      when 0, 1
-        @error_message = "Must provide an initial value (expecting exactly two dashed args, but got #{argv.inspect}"
-      else
-        @error_message = "Expecting an initial value and code to run (two arguments to the right of the dash)"
-      end
-    end
+    self.argv         = convert_regexes argv
+    self.instream     = instream
+    self.outstream    = outstream
+    self.errstream    = errstream
+    @should_show_help = argv.any? { |arg| arg == '-h' || arg == '--help' }
+    set_vertical_reduction_vars argv
   end
 
   def call
-    if argv.any? { |arg| arg == '-h' || arg == '--help' }
+    if show_help?
       outstream.puts self.class.help_screen
       return 0
     end
@@ -81,7 +95,10 @@ class Pur
         outstream.puts result
       end
     end
-    outstream.puts @vertical_value if reduce_down?
+
+    if reduce_down?
+      outstream.puts @vertical_value.instance_eval(@post_reduction_map)
+    end
     0
   rescue Exception
     errstream.puts $!.message
@@ -89,6 +106,27 @@ class Pur
   end
 
   private
+
+  def show_help?
+    @should_show_help
+  end
+
+  def set_vertical_reduction_vars(argv)
+    @should_reduce_down = argv.include? '-'
+    return unless reduce_down?
+    size = argv[argv.index('-')..-1].size
+    case size
+    when 3, 4
+      argv = argv + ['self'] if size == 3
+      @vertical_value, @vertical_reducer, @post_reduction_map = argv[-3..-1]
+      @vertical_value = eval @vertical_value
+    when 0, 1
+      @error_message = "Must provide an initial value to the vertical reduction#{argv.inspect}"
+    else
+      @error_message = "Expecting an initial value, code to run, and post-reduction mapping (two or three arguments to the right of the dash)"
+    end
+  end
+
 
   def vertical_reduction(current_line)
     @vertical_value = current_line.instance_eval("-> _ { #@vertical_reducer }").call(@vertical_value)
@@ -167,14 +205,22 @@ else
     end
 
     it 'raises an error if not given a starting value' do
+      invoke(%w[abc defg], %w[-]).out_string.should == ""
+      invoke(%w[abc defg], %w[-]).err_string.should include "initial value"
+      invoke(%w[abc defg], %w[-]).exitstatus.should_not be_zero
+
       invoke(%w[abc defg], %w[- _+size]).out_string.should == ""
       invoke(%w[abc defg], %w[- _+size]).err_string.should include "initial value"
       invoke(%w[abc defg], %w[- _+size]).exitstatus.should_not be_zero
       invoke(%w[abc defg], %w[- 10 _+size]).exitstatus.should == 0
     end
 
-    it 'raises an error if given more than two arguments to the vertical reduction' do
-      invoke(%w[abc defg], %w[- 0 1 2]).err_string.should include "two arguments"
+    it 'treats more than three arguments as an error' do
+      invoke(%w[abc defg], %w[- 0 1 2 3 4]).err_string.should include "three arguments"
+    end
+
+    it 'treats an optional third parameter as a mapping before printing (that way you can aggregate in one structure, but print in another)' do
+      invoke(%w[a b a c a], ['-', '{}', '_[self]=true;_', 'keys.sort.join']).out_string.should == "abc\n"
     end
 
     it 'reports errors to stderr, and exits with a non-zero exit status' do
