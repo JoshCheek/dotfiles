@@ -64,7 +64,6 @@ class Pur
              3 c
              2 a
              1 b
-
     HELP_SCREEN
   end
 
@@ -86,6 +85,8 @@ class Pur
 
   private
 
+  attr_accessor :argv, :instream, :outstream, :errstream
+
   def show_help
     return unless show_help?
     outstream.puts self.class.help_screen
@@ -98,7 +99,8 @@ class Pur
 
   def map_and_reduce_lines
     instream.each_line do |line|
-      result = reduce_across line.chomp
+      line.chomp!
+      result = reduce_across line
       next unless result
       reduce_down? ? vertical_reduction(result) : outstream.puts(result)
     end
@@ -141,7 +143,8 @@ class Pur
 
   def convert_regexes(args)
     args.map do |arg|
-      if arg.start_with? "/" then "#{arg} === to_s" else arg end
+      arg = "#{arg} === to_s" if arg.start_with? '/'
+      arg
     end
   end
 
@@ -149,20 +152,15 @@ class Pur
     old_var = var = line
     argv.each do |arg|
       return var if arg == '-'
-      var = apply arg, var
+      var = var.instance_eval arg
       return unless var
-      return old_var if var == true
+      var = old_var if var == true
       old_var = var
     end
     var
   end
-
-  def apply(applier, applyee)
-    applyee.instance_eval applier
-  end
-
-  attr_accessor :argv, :instream, :outstream, :errstream
 end
+
 
 if $0 !~ /rspec/
   exit Pur.new(ARGV, $stdin, $stdout, $stderr).call
@@ -202,9 +200,14 @@ else
       invoke(%w[aaa bb cccc], %w[size /3|4/]).out_string.should == "3\n4\n"
     end
 
+    it 'allows multiple mappings and filterings interspersed together' do
+      invoke([*1..10].map(&:to_s), %w[to_i odd? self*2 self%3==0 self*2]).err_string.should == ''
+      invoke([*1..10].map(&:to_s), %w[to_i odd? self*2 self%3==0 self*2]).out_string.should == "12\n36\n"
+    end
+
     it 'allows a reduction after a dash, with _ being bound to the previous result, and self the current result' do
       invoke(%w[abc defg], %w[- 0 _+size]).out_string.should == "7\n"
-      invoke(%w[abc defg hijkl], %w[/a|d/ size - 10 _+size]).out_string.should == "17\n"
+      invoke(%w[abc defg hijkl], %w[/a|d/ size - 10 _+self]).out_string.should == "17\n"
     end
 
     it 'raises an error if not given a starting value' do
