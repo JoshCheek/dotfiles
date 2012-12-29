@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+# should also make sure all env vars get set correctly ($_, $., etc)
 class Pur
   def self.help_screen
     <<-HELP_SCREEN.gsub /^    /, ''
