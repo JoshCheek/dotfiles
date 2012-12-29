@@ -134,7 +134,7 @@ class Pur
 
 
   def vertical_reduction(current_line)
-    @vertical_value = current_line.instance_eval("-> _ { #@vertical_reducer }").call(@vertical_value)
+    @vertical_value = current_line.instance_eval("lambda { |_| #@vertical_reducer }").call(@vertical_value)
   end
 
   def reduce_down?
