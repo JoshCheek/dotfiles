@@ -1,6 +1,5 @@
 #!/usr/bin/env ruby
 
-# should also make sure all env vars get set correctly ($_, $., etc)
 class Pur
   def self.help_screen
     <<-HELP_SCREEN.gsub /^    /, ''
@@ -102,7 +101,6 @@ class Pur
     $. = 0
     instream.each_line do |line|
       line.chomp!
-      $_ = line
       $. += 1
       result = reduce_across line
       next unless result
@@ -153,7 +151,7 @@ class Pur
   end
 
   def reduce_across(line)
-    old_var = var = line
+    $_ = old_var = var = line
     argv.each do |arg|
       return var if arg == '-'
       var = var.instance_eval arg
@@ -188,8 +186,7 @@ else
     end
 
     it 'sets $_ to the read in line' do
-      # invoke(%w[a b c], ['$_ + $_']).out_string.should == "aa\nbb\ncc\n"
-      invoke(%w[a b c], ['$_ + $_']).out_string.should == "aa\nbb\ncc\n"
+      invoke(%w[a b c], ['$_ + $_', 'self + $_']).out_string.should == "aaa\nbbb\nccc\n"
     end
 
     context 'mapping/selecting against an input' do
