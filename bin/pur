@@ -51,7 +51,7 @@ class Pur
              abc
 
       VerticalMap:
-        If the aggregate value isn't what you want to print, you can map it to a new value here
+        If the aggregate value is not what you want to print, you can map it to a new value here
 
         e.g. Makes output unique
 
