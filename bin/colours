@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+
+(40..48).each do |bg|
+  (30..38).each do |fg|
+    code = "\\e[#{bg};#{fg}m"
+    print "\e[#{bg};#{fg}m #{code} "
+  end
+  puts "\e[0m"
+end
