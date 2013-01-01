@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 
-[0,*30..37].each do |fg|
-  [0,*40..47].each do |bg|
+[0, *30..37].each do |fg|
+  [0, *40..47].each do |bg|
     code = "\e[#{fg};#{bg}m"
     code = "\e[#{bg};#{fg}m" if bg.zero? # b/c fg will be overridden by the zero which is only meant to reset the bg
-    print code, " ", code.sub("\e", '\e').ljust(9), " "
+    print code, " ", code.sub("\e", "\\e").ljust(9), " "
   end
   puts "\e[0m"
 end
