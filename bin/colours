@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 
-(30..37).each do |fg|
-  (40..47).each do |bg|
-    code = "\\e[#{bg};#{fg}m"
+[0,*30..37].each do |fg|
+  [0,*40..47].each do |bg|
+    code = "\\e[#{bg};#{fg}m".ljust 9
     print "\e[#{bg};#{fg}m #{code} "
   end
   puts "\e[0m"
