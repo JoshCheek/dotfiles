@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
-(40..48).each do |bg|
-  (30..38).each do |fg|
+(30..37).each do |fg|
+  (40..47).each do |bg|
     code = "\\e[#{bg};#{fg}m"
     print "\e[#{bg};#{fg}m #{code} "
   end
