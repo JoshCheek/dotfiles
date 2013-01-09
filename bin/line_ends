@@ -1,0 +1,131 @@
+#!/usr/bin/env ruby
+
+class LineEnds
+  def initialize
+    self.endings = []
+  end
+
+  include Enumerable
+
+  def each(&block)
+    endings.each &block
+  end
+
+  def next_char_is(char)
+    track char if should_track? char
+    self.previous_char = char
+    self
+  end
+
+  private
+
+  attr_accessor :previous_char, :endings
+
+  def should_track?(char)
+    char == "\n" || char == "\r"
+  end
+
+  def track(char)
+    if appending_would_make_a_line_end?(char)
+      endings[-1] += char
+    else
+      endings.push char
+    end
+  end
+
+  def appending_would_make_a_line_end?(char)
+    # guards from trying to append after a gap of non-ends
+    previous_char == endings.last && (
+      # guards from trying to make groups with 3 chars
+      # current possibilities are only \r\n and \n\r
+      previous_char == "\r" && char == "\n" ||
+      previous_char == "\n" && char == "\r"
+    )
+  end
+end
+
+
+
+if $0 !~ /rspec/
+  line_ends = LineEnds.new
+
+  File.open ARGV.first do |file|
+    file.each_char { |char| line_ends.next_char_is char }
+  end
+
+  line_ends.each do |ending|
+    puts ending.gsub("\n", "\\n").gsub("\r", "\\r") # translation is duplicated in the test
+  end
+else
+
+  describe 'line_ends binary' do
+    def write_file(body)
+      @body = body
+    end
+
+    def expect_ends(*ends)
+      @body.each_char
+           .inject(LineEnds.new) { |line_ends, char| line_ends.next_char_is char }
+           .map { |ending| ending.gsub("\n", "\\n").gsub("\r", "\\r") }
+           .should == ends
+    end
+
+
+    describe 'successful uses' do
+      it 'outputs nothing for an empty file' do
+        write_file ""
+        expect_ends #none
+      end
+
+      describe 'outputs each ending on its own line for a file with no empty lines' do
+        example '\n' do
+          write_file "abc\n"
+          expect_ends '\n'
+        end
+
+        it '\r\n' do
+          write_file "abc\r\n"
+          expect_ends '\r\n'
+        end
+
+        it '\n\r' do
+          write_file "abc\n\r"
+          expect_ends '\n\r'
+        end
+
+        it '\r' do
+          write_file "abc\r"
+          expect_ends '\r'
+        end
+
+        it '\n \r\n \n\r \n \r' do
+          write_file "abc\ndef\r\nghi\n\rjkl\nmno\r"
+          expect_ends '\n', '\r\n', '\n\r', '\n', '\r'
+        end
+      end
+
+      context 'outputs each ending on its own line for a file with empty lines' do
+        example '\n' do
+          write_file "\n\n"
+          expect_ends '\n', '\n'
+        end
+
+        example '\r' do
+          write_file "\r\r"
+          expect_ends '\r', '\r'
+        end
+
+        example '\r\n' do
+          write_file "\r\n\r\n"
+          expect_ends '\r\n', '\r\n'
+        end
+
+        example '\n\r' do
+          write_file "\n\r\n\r"
+          expect_ends '\n\r', '\n\r'
+        end
+      end
+
+    end
+  end
+end
