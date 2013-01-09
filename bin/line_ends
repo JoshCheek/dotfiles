@@ -1,6 +1,12 @@
 #!/usr/bin/env ruby
 
 class LineEnds
+  def self.escaped_for(text)
+    text.each_char
+        .inject(new) { |line_ends, char| line_ends.next_char_is char }
+        .map { |ending| ending.gsub("\n", "\\n").gsub("\r", "\\r") }
+  end
+
   def initialize
     self.endings = []
   end
@@ -47,16 +53,12 @@ end
 
 
 if $0 !~ /rspec/
-  line_ends = LineEnds.new
-
-  File.open ARGV.first do |file|
-    file.each_char { |char| line_ends.next_char_is char }
-  end
-
-  line_ends.each do |ending|
-    puts ending.gsub("\n", "\\n").gsub("\r", "\\r") # translation is duplicated in the test
+  File.open ARGV.first, 'r' do |file|
+    LineEnds.escaped_for(file).each { |ending| puts ending }
   end
 else
+
+  require 'stringio'
 
   describe 'line_ends binary' do
     def write_file(body)
@@ -64,14 +66,15 @@ else
     end
 
     def expect_ends(*ends)
-      @body.each_char
-           .inject(LineEnds.new) { |line_ends, char| line_ends.next_char_is char }
-           .map { |ending| ending.gsub("\n", "\\n").gsub("\r", "\\r") }
-           .should == ends
+      LineEnds.escaped_for(@body).should == ends
     end
 
-
     describe 'successful uses' do
+      it 'works for strings and streams' do
+        LineEnds.escaped_for("\n").should == ['\n']
+        LineEnds.escaped_for(StringIO.new "\n").should == ['\n']
+      end
+
       it 'outputs nothing for an empty file' do
         write_file ""
         expect_ends #none
