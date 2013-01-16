@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# see example of the output: https://twitter.com/josh_cheek/status/291575988100399104/photo/1
+
 find "${1-.}" -type file |
 ruby -ne 'print unless /svg|html|tmp|git|coverage|log|jpg|png|gem|ds_store/i' |
 xargs ruby -ne '
