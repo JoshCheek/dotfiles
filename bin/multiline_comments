@@ -1,0 +1,27 @@
+#!/bin/sh
+
+find "${1-.}" -type file |
+ruby -ne 'print unless /svg|html|tmp|git|coverage|log|jpg|png|gem|ds_store/i' |
+xargs ruby -ne '
+  BEGIN {
+    pl=""       # the previous line
+    plic=false  # previous line is comment
+    pplic=false # previous previous line is comment
+  }
+
+  clic = $_[/^\s*?#/] # current line is comment
+
+  if $<.pos - $_.size == 0 # on first line of file?
+    $.    = 1
+    plic  = false
+    pplic = false
+  else
+    print "\n\e[3#{$<.filename.size % 8}m#{$<.filename}:#{$.-1}\e[0m #{pl}" if clic && plic && !pplic
+    print   "\e[3#{$<.filename.size % 8}m#{$<.filename}:#{$.  }\e[0m #$_"   if clic && plic
+  end
+
+  # update vars for next iteration
+  pplic = plic
+  plic  = clic
+  pl    = $_
+'
