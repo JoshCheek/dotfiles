@@ -6,9 +6,9 @@ find "${1-.}" -type file |
 ruby -ne 'print unless /svg|html|tmp|git|coverage|log|jpg|png|gem|ds_store/i' |
 xargs ruby -ne '
   BEGIN {
-    pl=""       # the previous line
-    plic=false  # previous line is comment
-    pplic=false # previous previous line is comment
+    pl    = ""    # the previous line
+    plic  = false # previous line is comment
+    pplic = false # previous previous line is comment
   }
 
   clic = $_[/^\s*?#/] # current line is comment
