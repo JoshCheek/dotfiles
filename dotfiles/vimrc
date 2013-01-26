@@ -29,13 +29,6 @@ let g:Powerline_stl_path_style = 'relative'
 set laststatus=2   " Always show the statusline
 set t_Co=256       " Explicitly tell vim that the terminal supports 256 colors
 
-"" ========== NERDTree  ==========
-autocmd vimenter * if !argc() | NERDTree | endif  " load NERDTree automatically if started with no files
-autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif " close vim if NERDTree is the only open buffer
-
-"" ========== vim-textobj-rubyblock ==========
-runtime macros/matchit.vim " a dependency
-
 " got this list from here: https://github.com/Lokaltog/vim-powerline/blob/c4b72c5be57b165bb6a89d0b8a974fe62c0091d0/autoload/Powerline/Themes/default.vim
 call Pl#Theme#RemoveSegment('fugitive:branch')
 call Pl#Theme#RemoveSegment('syntastic:errors')
@@ -44,7 +37,12 @@ call Pl#Theme#RemoveSegment('fileencoding')
 call Pl#Theme#RemoveSegment('filetype')
 call Pl#Theme#RemoveSegment('lineinfo')
 
+"" ========== NERDTree  ==========
+autocmd vimenter * if !argc() | NERDTree | endif  " load NERDTree automatically if started with no files
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif " close vim if NERDTree is the only open buffer
 
+"" ========== vim-textobj-rubyblock ==========
+runtime macros/matchit.vim " a dependency
 
 "" ==========  My shit  ==========
 colorscheme Autumn
