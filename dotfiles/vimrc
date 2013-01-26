@@ -99,3 +99,30 @@ cmap %% <C-R>=expand("%")<CR>
 " .vm, from TECS, should be highlighted with assembly
 au BufNewFile,BufRead *.vm set filetype=asm
 au BufNewFile,BufRead *.jack set filetype=java "not really, but close enough
+
+" ========== Pathogen plugins ==========
+"
+" Color-Sampler-Pack
+" ZoomWin
+" ack.vim
+" nerdcommenter
+" nerdtree
+" supertab
+" vim-coffee-script
+" vim-commentary
+" vim-cucumber
+" vim-endwise
+" vim-fish-script
+" vim-fugitive
+" vim-haml
+" vim-haskell
+" vim-javascript
+" vim-markdown
+" vim-powerline
+" vim-repeat
+" vim-rspec
+" vim-ruby
+" vim-speeddating
+" vim-surround
+" vim-textobj-rubyblock
+" vim-textobj-user
