@@ -1,5 +1,5 @@
 # Environment Variables
-  export EDITOR='mate -w'
+  export EDITOR='vim'
   export PATH="$HOME/bin:$PATH"
 
 # ALIASES
