@@ -173,27 +173,35 @@
 
 
 # Ruby versions (maybe make this smarter such that they detect which manager you are using?)
-  # RVM (turned off b/c I switched to rbenv)
-    # export rvm_project_rvmrc=1
-    # [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"
+  function which_ruby {
+    if type rvm >/dev/null 2>&1; then
+      echo rvm
+    elif type rbenv >/dev/null 2>&1; then
+      echo rbenv
+    else
+      echo Cannot determine Ruby version >&2
+      exit 1
+    fi
+  }
 
-    # alias rrbx="    rvm use \$(rvm list strings | grep -i rbx        | tail -1)"
-    # alias rmac="    rvm use \$(rvm list strings | grep -i macruby    | tail -1)"
-    # alias rjav="    rvm use \$(rvm list strings | grep -i jruby      | tail -1)"
-    # alias r186="    rvm use \$(rvm list strings | grep -i 1.8.6      | tail -1)"
-    # alias r187="    rvm use \$(rvm list strings | grep -i 1.8.7      | tail -1)"
-    # alias r191="    rvm use \$(rvm list strings | grep -i 1.9.1      | tail -1)"
-    # alias r192180=" rvm use \$(rvm list strings | grep -i 1.9.2-p180 | tail -1)"
-    # alias r192="    rvm use \$(rvm list strings | grep -i 1.9.2      | tail -1)"
-    # alias r193="    rvm use \$(rvm list strings | grep -i 1.9.3      | tail -1)"
+  function switch_ruby_version {
+    case "$(which_ruby)" in
+    rvm)
+      rvm use "$(rvm list strings      | grep -i "$1" | tail -1)" >/dev/null;;
+    rbenv)
+      rbenv shell "$(rbenv versions --bare | grep -i "$1" | tail -1)" >/dev/null;;
+    *)
+      echo "Don't know how to switch ruby versions in $which_ruby" 1>&2
+      return 1;;
+    esac
+  }
 
-  # rbenv
-    alias rrbx=" rbenv shell \$(rbenv versions | grep -i rbx     | tail -1)"
-    alias rmac=" rbenv shell \$(rbenv versions | grep -i macruby | tail -1)"
-    alias rjav=" rbenv shell \$(rbenv versions | grep -i jruby   | tail -1)"
-    alias r186=" rbenv shell \$(rbenv versions | grep -i 1.8.6   | tail -1)"
-    alias r187=" rbenv shell \$(rbenv versions | grep -i 1.8.7   | tail -1)"
-    alias r191=" rbenv shell \$(rbenv versions | grep -i 1.9.1   | tail -1)"
-    alias r192=" rbenv shell \$(rbenv versions | grep -i 1.9.2   | tail -1)"
-    alias r193=" rbenv shell \$(rbenv versions | grep -i 1.9.3   | tail -1)"
-    alias r2="   rbenv shell \$(rbenv versions | grep -i 2.0     | tail -1)"
+  alias rrbx=" switch_ruby_version rbx     true && ruby -v"
+  alias rmac=" switch_ruby_version macruby true && ruby -v"
+  alias rjav=" switch_ruby_version jruby   true && ruby -v"
+  alias r186=" switch_ruby_version 1.8.6   true && ruby -v"
+  alias r187=" switch_ruby_version 1.8.7   true && ruby -v"
+  alias r191=" switch_ruby_version 1.9.1   true && ruby -v"
+  alias r192=" switch_ruby_version 1.9.2   true && ruby -v"
+  alias r193=" switch_ruby_version 1.9.3   true && ruby -v"
+  alias r2="   switch_ruby_version 2.0     true && ruby -v"
