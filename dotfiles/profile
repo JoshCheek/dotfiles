@@ -187,7 +187,7 @@
   function switch_ruby_version {
     case "$(which_ruby)" in
     rvm)
-      rvm use "$(rvm list strings      | grep -i "$1" | tail -1)" >/dev/null;;
+      rvm   use   "$(rvm list strings      | grep -i "$1" | tail -1)" >/dev/null;;
     rbenv)
       rbenv shell "$(rbenv versions --bare | grep -i "$1" | tail -1)" >/dev/null;;
     *)
