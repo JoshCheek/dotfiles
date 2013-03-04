@@ -172,7 +172,8 @@
   PS1="\[\033[37;45m\] \@ \[\033[0m\] \[\033[37;45m\] \w \[\033[0m\] \[\033[32;45m\]\$(parse_git_branch)\[\033[0m\]\n\$ \[\033[0m\]"
 
 
-# Ruby versions (maybe make this smarter such that they detect which manager you are using?)
+# Ruby versions (I don't have rvm installed, so can't check to make sure it works, but I think it should.
+#                If you try it, and it works for you, consider letting me know. If not, I wouldn't mind a pull request :)
   function which_ruby {
     if type rvm >/dev/null 2>&1; then
       echo rvm
