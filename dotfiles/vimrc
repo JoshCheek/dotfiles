@@ -41,6 +41,14 @@ call Pl#Theme#RemoveSegment('lineinfo')
 autocmd vimenter * if !argc() | NERDTree | endif  " load NERDTree automatically if started with no files
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif " close vim if NERDTree is the only open buffer
 
+"" ========== C-p ==========
+let g:ctrlp_custom_ignore = {
+  \ 'dir':  '\v[\/]\.(git|hg|svn|coverage)$',
+  \ }
+  " \ 'file': '\v\.(exe|so|dll)$',
+  " \ 'link': 'some_bad_symbolic_links',
+
+
 "" ========== vim-textobj-rubyblock ==========
 runtime macros/matchit.vim " a dependency
 
@@ -103,6 +111,7 @@ au BufNewFile,BufRead *.jack set filetype=java "not really, but close enough
 " Color-Sampler-Pack
 " ZoomWin
 " ack.vim
+" ctrlp.vim
 " nerdcommenter
 " nerdtree
 " supertab
