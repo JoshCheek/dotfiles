@@ -10,5 +10,6 @@
 --type-set=jack=.jack
 --type-set=plain_text=.txt
 --type-set=comma_separated_values=.csv
+--type-set=thor=.thor
 --ignore-dir=coverage
 --ignore-dir=tmp
