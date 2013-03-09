@@ -1,0 +1,62 @@
+#!/usr/bin/env ruby
+
+class Inspector
+  attr_accessor :argv, :stdin, :stdout
+
+  def initialize(argv, stdin, stdout)
+    self.argv   = argv
+    self.stdin  = stdin
+    self.stdout = stdout
+  end
+
+  def call
+    if argv.any? then inspect_files argv
+                 else inspect_stream stdin
+    end
+  end
+
+  private
+
+  def inspect_files(filenames)
+    filenames.each do |filename|
+      File.open(filename) { |file| inspect_stream file }
+    end
+  end
+
+  def inspect_stream(stream)
+    stream.each_line { |line| stdout.puts line.inspect }
+  end
+end
+
+
+if $0 !~ /rspec/
+  Inspector.new(ARGV, $stdin, $stdout).call
+else
+  require 'stringio'
+
+  describe 'inspect_stream' do
+    def inspect(argv, stdin)
+      stdout = StringIO.new
+      Inspector.new(argv, stdin, stdout).call
+      stdout.string
+    end
+
+    context 'when given no args' do
+      it 'inspects each line from stdin, and prints it to the output' do
+        inspect([], StringIO.new("a\tb\nc")).should == %("a\\tb\\n"\n"c"\n)
+      end
+    end
+
+    context 'when given args' do
+      it "treats each argument like a filename, inspecting that file's lines and printing to output" do
+        begin
+          File.write 'testa', 'a'
+          File.write 'testb', 'b'
+          inspect(%w[testa testb], StringIO.new('not seen')).should == %("a"\n"b"\n)
+        ensure
+          File.delete 'testa', 'testb'
+        end
+      end
+    end
+  end
+end
