@@ -100,7 +100,7 @@ def help_screen
 
       -a, --align                        Align columns when their width varies. Defaults to false.
 
-      -h, --help                          This help screen
+      -h, --help                         This help screen
 
   Column Patterns:
       Specify which columns you want in the output by passing the index, from 1.
