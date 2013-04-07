@@ -1,0 +1,347 @@
+#!/usr/bin/env ruby
+
+class Line
+  class Options < Struct.new(:show_help, :strip, :force, :chomp, :indexes, :errors, :instream, :outstream, :errstream, :help_screen)
+    def initialize(attributes={})
+      attributes.each { |attribute, value| __send__ "#{attribute}=", value }
+      yield self if block_given?
+    end
+
+    alias show_help? show_help
+    alias strip?     strip
+    alias force?     force
+    alias chomp?     chomp
+
+    def help_screen
+      super || (self.help_screen = '')
+    end
+
+    def indexes
+      super || (self.indexes = [])
+    end
+
+    def errors
+      super || (self.errors = {})
+    end
+
+    def instream
+      super || $stdin
+    end
+
+    def outstream
+      super || $stdout
+    end
+
+    def errstream
+      super || $stderr
+    end
+  end
+
+  class OptionParser
+    def self.call(*args)
+      new(*args).call
+    end
+
+    def initialize(arguments)
+      @arguments = arguments
+    end
+
+    def call
+      Options.new do |options|
+        options.help_screen = help_screen
+        invalid_args = []
+
+        @arguments.each do |arg|
+          case arg
+          when '-h', '--help'  then options.show_help = true
+          when '-s', '--strip' then options.strip     = true
+          when '-f', '--force' then options.force     = true
+          when '-c', '--chomp' then options.chomp     = true
+          when '0', /\A-\d+\Z/ then invalid_args << arg
+          when /\A\d+\Z/       then options.indexes << arg.to_i
+          else                      invalid_args << arg
+          end
+        end
+
+        if invalid_args.size == 1
+          options.errors[:line_numbers] = "#{invalid_args.first.inspect} is not a valid line number, offsets start from 1"
+        elsif invalid_args.size > 1
+          inspected_args = invalid_args.map(&:inspect)
+          inspected_args[-1] = "and #{inspected_args[-1]}"
+          options.errors[:line_numbers] = "#{inspected_args.join ', '} are not valid line numbers, offsets start from 1"
+        elsif options.indexes.empty?
+          options.errors[:line_numbers] = 'No line numbers provided'
+        end
+      end
+    end
+
+    def help_screen
+      <<-HELP.gsub(/^      /, '')
+      Usage: line [options] [numbers]
+
+      Prints the lines at the given line numbers.
+      The first line is line 1.
+
+      options:
+        -s, --strip   strip leading and tailing whitespace
+        -f, --force   do not err when told to print a line number beyond the input
+        -c, --chomp   no newlines between lines in the output
+        -h, --help    this help screen
+
+      examples:
+        line 1 22  # prints lines 1 and 22
+      HELP
+    end
+  end
+
+  def self.call(*args)
+    new(*args).call
+  end
+
+  attr_accessor :options
+
+  def initialize(options)
+    @options = options
+  end
+
+  def call
+    if options.show_help?
+      print_help
+      return 0
+    end
+
+    if options.errors.any?
+      print_errors
+      return 1
+    end
+
+    print_lines
+
+    if high_indexes.any? && !options.force?
+      print_high_indexes
+      return 1
+    end
+
+    return 0
+  end
+
+  private
+
+  attr_accessor :max_index
+
+  def print_help
+    options.outstream.puts options.help_screen
+  end
+
+  def high_indexes
+    options.indexes.select { |index| index > max_index }
+  end
+
+  def print_errors
+    options.errors.each do |type, message|
+      options.errstream.puts message
+    end
+  end
+
+  def print_high_indexes
+    options.errstream.puts "Only saw #{max_index} lines of input, can't print lines: #{high_indexes.join ', '}"
+  end
+
+  def print_lines
+    options.instream.each_line.with_index 1 do |line, index|
+      self.max_index = index
+      next unless options.indexes.include? index
+      line = line.strip if options.strip?
+      if options.chomp?
+        options.outstream.print line.chomp
+      else
+        options.outstream.puts line
+      end
+    end
+  end
+end
+
+if $0 !~ /rspec/
+  exit Line.call Line::OptionParser.call ARGV
+else
+  describe Line::Options do
+    let(:options) { described_class.new }
+
+    it 'takes a hash of key/value pairs that it sets' do
+      options = described_class.new(instream: 1, outstream: 2)
+      options.instream.should == 1
+      options.outstream.should == 2
+    end
+
+    it 'sets the instream to stdin by default', t:true do
+      options.instream.should == $stdin
+      options.instream = 123
+      options.instream.should == 123
+    end
+
+    it 'sets the outstream to stdout by default' do
+      options.outstream.should == $stdout
+      options.outstream = 123
+      options.outstream.should == 123
+    end
+
+    it 'sets the errstream to stderr by default' do
+      options.errstream.should == $stderr
+      options.errstream = 123
+      options.errstream.should == 123
+    end
+
+    specify 'indexes defaults to an empty collection' do
+      options.indexes.should == []
+      options.indexes.should equal options.indexes
+    end
+
+    specify 'errors defaults to an empty hash' do
+      options.errors.should == {}
+      options.errors.should equal options.errors
+    end
+
+    specify 'the help screen defaults to an empty string' do
+      options.help_screen.should == ''
+      options.help_screen = 'help screen'
+      options.help_screen.should == 'help screen'
+    end
+  end
+
+  describe Line::OptionParser do
+    def parse(args)
+      Line::OptionParser.call(args)
+    end
+
+    specify 'it sets the help screen on the options' do
+      parse([]).help_screen.tap do |help|
+        help.should include '-h'
+        help.should include '-s'
+        help.should include '-f'
+        help.should include '-c'
+      end
+    end
+
+    specify '-h, --help sets the help screen' do
+      parse([]).show_help?.should be_false
+      parse(['-h']).show_help?.should be_true
+      parse(['--help']).show_help?.should be_true
+    end
+
+    specify '-s, --strip sets strip' do
+      parse([]).strip?.should be_false
+      parse(['-s']).strip?.should be_true
+      parse(['--strip']).strip?.should be_true
+    end
+
+    specify '-f, --force sets force' do
+      parse([]).force?.should be_false
+      parse(['-f']).force?.should be_true
+      parse(['--force']).force?.should be_true
+    end
+
+    specify '-c, --chomp sets chomp' do
+      parse([]).chomp?.should be_false
+      parse(['-c']).chomp?.should be_true
+      parse(['--chomp']).chomp?.should be_true
+    end
+
+    it 'aggregates integral non-flagged arguments in indexes' do
+      parse(['1', '11']).indexes.should == [1, 11]
+    end
+
+    it 'has errors when no line numbers are provided' do
+      parse(['1']).errors.should_not have_key :line_numbers
+      parse([]).errors[:line_numbers].should == "No line numbers provided"
+    end
+
+    it 'has errors for non-positive line numbers, informing user that offset starts at 1' do
+      parse(['1']).errors.should_not have_key :line_numbers
+      parse(['0']).errors[:line_numbers].should == '"0" is not a valid line number, offsets start from 1'
+      parse(['-1']).errors[:line_numbers].should == '"-1" is not a valid line number, offsets start from 1'
+      parse(['-1', '0']).errors[:line_numbers].should == '"-1", and "0" are not valid line numbers, offsets start from 1'
+      parse(['-1', '0', 'a']).errors[:line_numbers].should == '"-1", "0", and "a" are not valid line numbers, offsets start from 1'
+    end
+  end
+
+  describe Line do
+    let(:_stderr)    { StringIO.new }
+    let(:_stdout)    { StringIO.new }
+    let(:_stdin)     { StringIO.new 100.times.map { |i| "line#{i.next}" }.join("\n") }
+    let(:options)    { described_class::Options.new errstream: _stderr, outstream: _stdout, instream: _stdin }
+    let(:stderr)     { exitstatus; _stderr.string }
+    let(:stdout)     { exitstatus; _stdout.string }
+    let(:exitstatus) { described_class.new(options).call }
+
+    context 'when there are errors' do
+      it 'prints the errors to the error stream and has an exit status of 1' do
+        options.errors[:whatever] = "MAH ERRAH"
+        stderr.should == "MAH ERRAH\n"
+        exitstatus.should == 1
+      end
+    end
+
+    context 'when there are no errors' do
+      it 'prints nothing to stderr, and has an exit status of 0' do
+        options.errors.should == {}
+        stderr.should == ""
+        exitstatus.should == 0
+      end
+    end
+
+    specify 'when show_help is set, it displays the help screen and exits with 0' do
+      options.help_screen = 'HELPME'
+      options.show_help   = true
+      stderr.should == ''
+      stdout.should == "HELPME\n"
+      exitstatus.should == 0
+    end
+
+    it 'prints the input lines at the specified indexes, starting at 1' do
+      options.indexes << 1 << 3
+      stdout.should == "line1\nline3\n"
+    end
+
+    context 'when there are not enough lines to print the given indexes' do
+      it 'does not print an error and exits 0 when force is set' do
+        options.force = true
+        options.indexes << 101
+        exitstatus.should == 0
+        stderr.should be_empty
+      end
+
+      it 'prints an error and exits 1 when force is not set' do
+        options.force = false
+        options.indexes << 100 << 101 << 102
+        exitstatus.should == 1
+        stderr.should == "Only saw 100 lines of input, can't print lines: 101, 102\n"
+      end
+    end
+
+    context 'when there is whitespace wrapping the lines' do
+      before do
+        _stdin.string = "  1  \n2"
+        options.indexes << 1 << 2
+      end
+
+      it 'does not print the whitespace when strip is set' do
+        options.strip = true
+        stdout.should == "1\n2\n"
+      end
+
+      it 'prints the whitespace when strip is not set' do
+        options.strip = false
+        stdout.should == "  1  \n2\n"
+      end
+    end
+
+    context 'when chomp is set' do
+      it 'does not print newlines between the input lines' do
+        _stdin.string = "  1  \n2"
+        options.indexes << 1 << 2
+        options.chomp = true
+        stdout.should == "  1  2"
+      end
+    end
+  end
+end
