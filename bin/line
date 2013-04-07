@@ -34,8 +34,13 @@ class Line
     attr_accessor :instream, :outstream, :errstream, :help_screen, :buffer_size
 
     def initialize(attributes={})
-      attributes.each { |attribute, value| __send__ "#{attribute}=", value }
+      update attributes
       yield self if block_given?
+    end
+
+    def update(attributes)
+      attributes.each { |attribute, value| __send__ "#{attribute}=", value }
+      self
     end
 
     alias line_numbers? line_numbers
@@ -298,6 +303,10 @@ end
 if $0 !~ /rspec/
   exit Line.call Line::OptionParser.call ARGV
 else
+  def parse(args)
+    Line::OptionParser.call(args)
+  end
+
   def index_matcher(index)
     Line::Matchers::Index.new index
   end
@@ -366,10 +375,6 @@ else
   end
 
   describe Line::OptionParser do
-    def parse(args)
-      Line::OptionParser.call(args)
-    end
-
     specify 'it sets the help screen on the options' do
       parse([]).help_screen.tap do |help|
         help.should include '-h'
@@ -445,14 +450,15 @@ else
     let(:_stderr)    { StringIO.new }
     let(:_stdout)    { StringIO.new }
     let(:_stdin)     { StringIO.new 100.times.map { |i| "line#{i.next}" }.join("\n") }
-    let(:options)    { described_class::Options.new errstream: _stderr, outstream: _stdout, instream: _stdin }
+    let(:args)       { [] }
+    let(:options)    { parse(args).update errstream: _stderr, outstream: _stdout, instream: _stdin }
     let(:stderr)     { exitstatus; _stderr.string }
     let(:stdout)     { exitstatus; _stdout.string }
     let(:exitstatus) { described_class.new(options).call }
 
     context 'when there are errors' do
       it 'prints the errors to the error stream and has an exit status of 1' do
-        options.errors[:whatever] = "MAH ERRAH"
+        options.errors = {whatever: "MAH ERRAH"}
         stderr.should == "MAH ERRAH\n"
         exitstatus.should == 1
       end
@@ -460,7 +466,7 @@ else
 
     context 'when there are no errors' do
       it 'prints nothing to stderr, and has an exit status of 0' do
-        options.errors.should == {}
+        options.errors = {}
         stderr.should == ""
         exitstatus.should == 0
       end
@@ -475,28 +481,24 @@ else
     end
 
     it 'prints the input lines at the specified indexes, starting at 1' do
-      options.line_matchers = index_matchers(1, 3)
+      args << '1' << '3'
       stdout.should == "line1\nline3\n"
     end
 
     it 'prints negative indexes from the end' do
-      options.buffer_size   = 2
-      options.line_matchers = index_matchers(98, 100, -2)
+      args << '98' << '100' << '-2'
       stdout.should == "line98\nline99\nline100\n"
     end
 
     context 'when there are not enough lines to print the given indexes' do
       it 'does not print an error and exits 0 when force is set' do
-        options.force = true
-        options.indexes = [101]
+        args << '-f' << '101'
         exitstatus.should == 0
         stderr.should be_empty
       end
 
       it 'prints an error and exits 1 when force is not set' do
-        options.force = false
-        options.buffer_size = 100
-        options.indexes = [100, 101, 102, -100, -101]
+        args << '100' << '101' << '102' << '-100' << '-101'
         exitstatus.should == 1
         stderr.should == "Only saw 100 lines of input, can't print lines: 101, 102, -101\n"
       end
@@ -505,7 +507,7 @@ else
     context 'when there is whitespace wrapping the lines' do
       before do
         _stdin.string = "  1  \n2"
-        options.line_matchers = index_matchers(1, 2)
+        args << '1' << '2'
       end
 
       it 'does not print the whitespace when strip is set' do
@@ -522,25 +524,21 @@ else
     context 'when chomp is set' do
       it 'does not print newlines between the input lines' do
         _stdin.string = "  1  \n2"
-        options.line_matchers = index_matchers(1, 2)
-        options.chomp = true
+        args << '-c' << '1' << '2'
         stdout.should == "  1  2"
       end
     end
 
     context 'when line_numbers is set' do
       it 'prints the line numbers in front of the lines' do
-        _stdin.string = 10.times.map { |i| "line#{i.next}" }.join("\n")
-        options.line_numbers  = true
-        options.line_matchers = [universal_matcher]
-        stdout.should == 10.times.map { |i| "#{i.next} line#{i.next}\n" }.join('')
+        args << '1' << '2' << '-l'
+        _stdin.string = "line1\nline2"
+        stdout.should == "1 line1\n2 line2\n"
       end
 
       it 'does not interfere with other options' do
+        args << '1' << '-s' << '-l'
         _stdin.string = '  123  '
-        options.line_numbers  = true
-        options.strip         = true
-        options.line_matchers = [universal_matcher]
         stdout.should == "1 123\n"
       end
     end
