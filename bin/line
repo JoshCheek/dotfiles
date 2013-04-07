@@ -57,8 +57,8 @@ class Line
           when '-s', '--strip' then options.strip     = true
           when '-f', '--force' then options.force     = true
           when '-c', '--chomp' then options.chomp     = true
-          when '0', /\A-\d+\Z/ then invalid_args << arg
-          when /\A\d+\Z/       then options.indexes << arg.to_i
+          when '0'             then invalid_args << arg
+          when /\A-?\d+\Z/     then options.indexes << arg.to_i
           else                      invalid_args << arg
           end
         end
@@ -134,7 +134,7 @@ class Line
   end
 
   def high_indexes
-    options.indexes.select { |index| index > max_index }
+    @high_indexes ||= options.indexes.select { |index| index > max_index }
   end
 
   def print_errors
@@ -148,9 +148,8 @@ class Line
   end
 
   def print_lines
-    options.instream.each_line.with_index 1 do |line, index|
-      self.max_index = index
-      next unless options.indexes.include? index
+    each_line do |line, positive_index, negative_index|
+      next unless options.indexes.include?(positive_index) || options.indexes.include?(negative_index)
       line = line.strip if options.strip?
       if options.chomp?
         options.outstream.print line.chomp
@@ -159,7 +158,86 @@ class Line
       end
     end
   end
+
+  def each_line
+    each_line = options.instream.each_line.method(:next)
+    QueueWithIndexes.new(buffer_size, &each_line).each do |line, positive_index, negative_index|
+      positive_index += 1
+      self.max_index = positive_index
+      yield line, positive_index, negative_index
+    end
+  end
+
+  def buffer_size
+    min_index = options.indexes.min
+    (min_index && min_index < 0) ? -min_index : 0
+  end
 end
+
+class QueueWithIndexes
+  def initialize(num_negatives=0, &input_generator)
+    self.positive_index  = 0
+    self.buffer          = []
+    self.num_negatives   = num_negatives
+    self.input_generator = input_generator
+  end
+
+  include Enumerable
+
+  def each(&block)
+    return to_enum :each unless block
+    fill_the_buffer             until dry_generator? || full_buffer?
+    flow_through_buffer(&block) until dry_generator?
+    drain_the_buffer(&block)    until empty?
+    self
+  end
+
+  def empty?
+    fill_the_buffer
+    buffer.empty?
+  end
+
+  private
+
+  attr_accessor :dry_generator, :positive_index, :buffer, :num_negatives, :input_generator
+  alias dry_generator? dry_generator
+
+  def full_buffer?
+    num_negatives <= buffer.size
+  end
+
+  def fill_the_buffer
+    input = generate_input
+    buffer << input unless dry_generator?
+  end
+
+  def flow_through_buffer(&block)
+    flow_in = generate_input
+    return if dry_generator?
+    buffer << flow_in
+    flow_out = buffer.shift
+    block.call [flow_out, increment_index, nil]
+  end
+
+  def drain_the_buffer(&block)
+    negative_index = -buffer.size
+    value = buffer.shift
+    block.call [value, increment_index, negative_index]
+  end
+
+  def generate_input
+    input_generator.call
+  rescue StopIteration
+    self.dry_generator = true
+  end
+
+  def increment_index
+    old_index = positive_index
+    self.positive_index = positive_index + 1
+    old_index
+  end
+end
+
 
 if $0 !~ /rspec/
   exit Line.call Line::OptionParser.call ARGV
@@ -247,7 +325,7 @@ else
     end
 
     it 'aggregates integral non-flagged arguments in indexes' do
-      parse(['1', '11']).indexes.should == [1, 11]
+      parse(['-1', '1', '11']).indexes.should == [-1, 1, 11]
     end
 
     it 'has errors when no line numbers are provided' do
@@ -255,12 +333,10 @@ else
       parse([]).errors[:line_numbers].should == "No line numbers provided"
     end
 
-    it 'has errors for non-positive line numbers, informing user that offset starts at 1' do
+    it 'has errors for 0, informing user that offset starts at 1' do
       parse(['1']).errors.should_not have_key :line_numbers
       parse(['0']).errors[:line_numbers].should == '"0" is not a valid line number, offsets start from 1'
-      parse(['-1']).errors[:line_numbers].should == '"-1" is not a valid line number, offsets start from 1'
-      parse(['-1', '0']).errors[:line_numbers].should == '"-1", and "0" are not valid line numbers, offsets start from 1'
-      parse(['-1', '0', 'a']).errors[:line_numbers].should == '"-1", "0", and "a" are not valid line numbers, offsets start from 1'
+      parse(['0', 'a', 'b']).errors[:line_numbers].should == '"0", "a", and "b" are not valid line numbers, offsets start from 1'
     end
   end
 
@@ -302,6 +378,11 @@ else
       stdout.should == "line1\nline3\n"
     end
 
+    it 'prints negative indexes from the end' do
+      options.indexes << 98 << 100 << -2
+      stdout.should == "line98\nline99\nline100\n"
+    end
+
     context 'when there are not enough lines to print the given indexes' do
       it 'does not print an error and exits 0 when force is set' do
         options.force = true
@@ -341,6 +422,74 @@ else
         options.indexes << 1 << 2
         options.chomp = true
         stdout.should == "  1  2"
+      end
+    end
+  end
+
+  describe QueueWithIndexes do
+    def generator
+      values = ['a', 'b', 'c']
+      lambda { values.shift || raise(StopIteration) }
+    end
+
+    specify '#each returns the queue' do
+      queue = QueueWithIndexes.new(&generator)
+      queue.each {}.should equal queue
+    end
+
+    specify '#each is lazy' do
+      QueueWithIndexes.new(&generator).each.map { 1 }.should == [1, 1, 1]
+    end
+
+    it 'stops reading from the generator once the input_generator raises StopIteration' do
+      values = %w[a b c]
+      queue = QueueWithIndexes.new do
+        if values.empty?
+          values = %w[a b c]
+          raise StopIteration
+        end
+        values.shift
+      end
+      queue.map(&:first).should == %w[a b c]
+      queue.map(&:first).should == []
+    end
+
+    it 'takes a function that generates values' do
+      a = ['a', 'b', 'c']
+      QueueWithIndexes.new(&generator).to_a.should == [['a', 0, nil], ['b', 1, nil], ['c', 2, nil]]
+    end
+
+    it 'can be given a size, to determine how much to buffer in order to be able to tell you negative indexes' do
+      QueueWithIndexes.new(2, &generator).to_a.should == [['a', 0, nil], ['b', 1, -2], ['c', 2, -1]]
+    end
+
+    example 'when the size given is greater than the number of values, every value has a negative index' do
+      QueueWithIndexes.new(4, &generator).to_a.should == [['a', 0, -3], ['b', 1, -2], ['c', 2, -1]]
+    end
+
+    it 'is cool with each being called all multiple times and such' do
+      queue = QueueWithIndexes.new(2, &generator)
+      queue.take(1).should == [['a', 0, nil]]
+      queue.take(1).should == [['b', 1, -2]]
+      queue.take(1).should == [['c', 2, -1]]
+      queue.take(1).should == []
+    end
+
+    describe 'empty?' do
+      it 'is true when there are no elements in the input' do
+        QueueWithIndexes.new { raise StopIteration }.should be_empty
+      end
+
+      it 'is false when there are elements in the input' do
+        QueueWithIndexes.new(&generator).should_not be_empty
+      end
+
+      it 'becomes true when it runs out of inputs' do
+        queue = QueueWithIndexes.new(2, &generator)
+        queue.take 2
+        queue.should_not be_empty
+        queue.take 1
+        queue.should be_empty
       end
     end
   end
