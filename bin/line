@@ -83,28 +83,28 @@ class Line
       end
     end
 
-    class NegatedIndex
+    class Not
       include Helpers
 
-      attr_accessor :index
+      attr_accessor :matcher
 
-      def initialize(index)
-        self.index = index
+      def initialize(matcher)
+        self.matcher = matcher
       end
 
       def matches?(line, positive_index, negative_index)
-        positive_index != index && negative_index != index
+        !matcher.matches?(line, positive_index, negative_index)
       end
 
       def inspect(has_parent=false)
-        inspect_helper has_parent, "^#{index}"
+        inspect_helper has_parent, "^(#{matcher.inspect true})"
       end
     end
   end
 
   class Options
     attr_accessor :show_help, :strip, :force, :chomp, :indexes, :errors, :line_matcher, :line_numbers
-    attr_accessor :instream, :outstream, :errstream, :help_screen, :buffer_size
+    attr_accessor :instream, :outstream, :errstream, :help_screen, :buffer_size, :debug
 
     def initialize(attributes={})
       update attributes
@@ -118,6 +118,7 @@ class Line
 
     alias line_numbers? line_numbers
     alias show_help?    show_help
+    alias debug?        debug
     alias strip?        strip
     alias force?        force
     alias chomp?        chomp
@@ -174,17 +175,20 @@ class Line
           when '-s', '--strip'        then options.strip        = true
           when '-f', '--force'        then options.force        = true
           when '-c', '--chomp'        then options.chomp        = true
+          when '-d', '--debug'        then options.debug        = true
           when '0'                    then invalid_args << arg
           when /\A\^-?\d+\Z/
             index = arg[1..-1].to_i
-            options.line_matcher ||= Matchers::MatchEverything.new
-            options.line_matcher = Matchers::And.new options.line_matcher, Matchers::NegatedIndex.new(index)
-          when /\A-?\d+\Z/
-            index = arg.to_i
-            options.line_matcher ||= Matchers::MatchNothing.new
-            options.line_matcher = Matchers::Or.new options.line_matcher, Matchers::Index.new(index)
             options.indexes << index
             min_index = index if index < min_index
+            options.line_matcher ||= Matchers::MatchEverything.new
+            options.line_matcher = Matchers::And.new options.line_matcher, Matchers::Not.new(Matchers::Index.new(index))
+          when /\A-?\d+\Z/
+            index = arg.to_i
+            options.indexes << index
+            min_index = index if index < min_index
+            options.line_matcher ||= Matchers::MatchNothing.new
+            options.line_matcher = Matchers::Or.new options.line_matcher, Matchers::Index.new(index)
           else
             invalid_args << arg
           end
@@ -208,10 +212,15 @@ class Line
 
     def help_screen
       <<-HELP.gsub(/^      /, '')
-      Usage: line [options] [numbers]
+      Usage: line [options] matchers
 
       Prints the lines at the given line numbers.
       The first line is line 1.
+
+      matchers:
+        1   matches the first line
+        -1  matches the last line
+        ^1  matches lines other than 1
 
       options:
         -l, --line-numbers  show line numbers in output
@@ -221,7 +230,10 @@ class Line
         -h, --help          this help screen
 
       examples:
-        line 1 22  # prints lines 1 and 22
+        line 1 22    # prints lines 1 and 22
+        line ^1 ^2   # prints all lines but the first two
+        line -1      # prints the last line
+        line ^-1     # prints all lines except the last one
       HELP
     end
   end
@@ -237,6 +249,8 @@ class Line
   end
 
   def call
+    print_matcher if options.debug?
+
     if options.show_help?
       print_help
       return 0
@@ -269,6 +283,10 @@ class Line
     options.outstream.puts options.help_screen
   end
 
+  def print_matcher
+    options.errstream.puts options.line_matcher.inspect
+  end
+
   def high_indexes
     @high_indexes ||= options.indexes.select { |index| index > max_index }
   end
@@ -288,8 +306,8 @@ class Line
       unseen_indexes.delete positive_index
       unseen_indexes.delete negative_index
       next unless options.line_matcher.matches? line, positive_index, negative_index
-      line = line.strip                  if options.strip?
-      line = "#{positive_index} #{line}" if options.line_numbers?
+      line = line.strip                   if options.strip?
+      line = "#{positive_index}\t#{line}" if options.line_numbers?
       if options.chomp?
         options.outstream.print line.chomp
       else
@@ -303,8 +321,14 @@ class Line
     QueueWithIndexes.new(options.buffer_size, &each_line).each do |line, positive_index, negative_index|
       positive_index += 1
       self.max_index = positive_index
+      debug_line line, positive_index, negative_index
       yield line, positive_index, negative_index
     end
+  end
+
+  def debug_line(line, positive_index, negative_index)
+    return unless options.debug?
+    options.errstream.puts "#{line.inspect}, #{positive_index.inspect}, #{negative_index.inspect}"
   end
 end
 
@@ -526,6 +550,11 @@ else
       parse(['-l', '1']).line_matcher.should_not match_indexes 0, -1
     end
 
+    specify '-d sets debug' do
+      parse([]).debug?.should be_false
+      parse(['-d']).debug?.should be_true
+    end
+
     it 'treats integral non-flagged arguments as lines to match' do
       parse(['-1', '1', '11']).indexes.should == [-1, 1, 11]
       matcher = parse(['-1', '1', '11']).line_matcher
@@ -538,8 +567,12 @@ else
         parse(['^1']).errors.should == {}
       end
 
-      it 'does not put them in the expected indexes' do
-        parse(['^1']).indexes.should == []
+      it 'puts them in the expected indexes' do
+        parse(['^1']).indexes.should == [1]
+      end
+
+      it 'sets the buffer size' do
+        parse(['^-3']).buffer_size.should == 3
       end
 
       it 'creates a matcher that matches their negation' do
@@ -584,6 +617,21 @@ else
         options.errors = {whatever: "MAH ERRAH"}
         stderr.should == "MAH ERRAH\n"
         exitstatus.should == 1
+      end
+    end
+
+    context 'when debug is set' do
+      before { args << '-d' }
+      it "prints the matcher's inspection to the errstream" do
+        stderr.should include 'Matcher'
+      end
+
+      it "prints each line, the positive and negative indexes" do
+        _stdin.string = "a\nb\nc\n"
+        args << '-2'
+        stderr.should include '"a\n", 1, nil'
+        stderr.should include '"b\n", 2, -2'
+        stderr.should include '"c\n", 3, -1'
       end
     end
 
@@ -656,13 +704,13 @@ else
       it 'prints the line numbers in front of the lines' do
         args.replace %w[1 2 -l]
         _stdin.string = "line1\nline2"
-        stdout.should == "1 line1\n2 line2\n"
+        stdout.should == "1\tline1\n2\tline2\n"
       end
 
       it 'does not interfere with other options' do
         args.replace %w[1 -s -l]
         _stdin.string = '  123  '
-        stdout.should == "1 123\n"
+        stdout.should == "1\t123\n"
       end
     end
   end
