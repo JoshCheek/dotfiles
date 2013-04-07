@@ -2,9 +2,29 @@
 
 class Line
   module Matchers
+    class Or
+      def initialize(matcher1, matcher2)
+        @matcher1, @matcher2 = matcher1, matcher2
+      end
+
+      def matches?(*args)
+        @matcher1.matches?(*args) || @matcher2.matches?(*args)
+      end
+    end
+
     class Universal
       def matches?(*)
         true
+      end
+
+      def ==(matcher)
+        self.class == matcher.class
+      end
+    end
+
+    class MatchNothing
+      def matches?(*)
+        false
       end
 
       def ==(matcher)
@@ -30,7 +50,7 @@ class Line
   end
 
   class Options
-    attr_accessor :show_help, :strip, :force, :chomp, :indexes, :errors, :line_matchers, :line_numbers
+    attr_accessor :show_help, :strip, :force, :chomp, :indexes, :errors, :line_matcher, :line_numbers
     attr_accessor :instream, :outstream, :errstream, :help_screen, :buffer_size
 
     def initialize(attributes={})
@@ -57,8 +77,8 @@ class Line
       @indexes ||= []
     end
 
-    def line_matchers
-      @line_matchers ||= []
+    def line_matcher
+      @line_matcher ||= Matchers::Universal.new
     end
 
     def errors
@@ -93,7 +113,8 @@ class Line
 
     def call
       Options.new do |options|
-        options.help_screen = help_screen
+        options.help_screen  = help_screen
+        options.line_matcher = Matchers::MatchNothing.new
         invalid_args = []
         min_index    = 0
 
@@ -107,16 +128,12 @@ class Line
           when '0'                    then invalid_args << arg
           when /\A-?\d+\Z/
             index = arg.to_i
-            options.line_matchers << Matchers::Index.new(index)
-            options.indexes       << index
+            options.line_matcher = Matchers::Or.new options.line_matcher, Matchers::Index.new(index)
+            options.indexes << index
             min_index = index if index < min_index
           else
             invalid_args << arg
           end
-        end
-
-        if options.line_numbers? && options.line_matchers.empty?
-          options.line_matchers << Matchers::Universal.new
         end
 
         if invalid_args.size == 1
@@ -125,7 +142,9 @@ class Line
           inspected_args = invalid_args.map(&:inspect)
           inspected_args[-1] = "and #{inspected_args[-1]}"
           options.errors[:line_numbers] = "#{inspected_args.join ', '} are not valid line numbers, offsets start from 1"
-        elsif options.line_matchers.empty?
+        elsif options.indexes.empty? && options.line_numbers?
+          options.line_matcher = Matchers::Universal.new
+        elsif options.indexes.empty?
           options.errors[:line_numbers] = 'No line numbers provided'
         end
 
@@ -214,7 +233,7 @@ class Line
     each_line do |line, positive_index, negative_index|
       unseen_indexes.delete positive_index
       unseen_indexes.delete negative_index
-      next unless options.line_matchers.any? { |matcher| matcher.matches? line, positive_index, negative_index }
+      next unless options.line_matcher.matches? line, positive_index, negative_index
       line = line.strip                  if options.strip?
       line = "#{positive_index} #{line}" if options.line_numbers?
       if options.chomp?
@@ -303,6 +322,30 @@ end
 if $0 !~ /rspec/
   exit Line.call Line::OptionParser.call ARGV
 else
+
+  class MatchIndexes
+    def initialize(*indexes)
+      @indexes = indexes
+      @unmatched = []
+    end
+
+    attr_reader :indexes, :unmatched
+
+    def matches?(matcher)
+      indexes.each { |index| unmatched << index unless matcher.matches? '', index, nil }
+      unmatched.empty?
+    end
+
+    def failure_message_for_should(*)
+      "Did not match #{unmatched.inspect}"
+    end
+  end
+
+  def match_indexes(*indexes)
+    MatchIndexes.new(*indexes)
+  end
+  alias match_index match_indexes
+
   def parse(args)
     Line::OptionParser.call(args)
   end
@@ -351,9 +394,10 @@ else
       options.indexes.should equal options.indexes
     end
 
-    specify 'line_matchers defaults to an empty collection' do
-      options.line_matchers.should == []
-      options.line_matchers.should equal options.line_matchers
+    specify 'line_matcher defaults to an the universal selection' do
+      options.line_matcher.should == Line::Matchers::Universal.new
+      options.line_matcher = 123
+      options.line_matcher.should == 123
     end
 
     specify 'errors defaults to an empty hash' do
@@ -416,13 +460,16 @@ else
     end
 
     specify '-l sets the universal matcher when no other matchers are provided' do
-      parse(['-l']).line_matchers.should == [universal_matcher]
-      parse(['-l', '1']).line_matchers.should == index_matchers(1)
+      parse(['-l']).line_matcher.should == universal_matcher
+      parse(['-l', '1']).line_matcher.should match_index 1
+      parse(['-l', '1']).line_matcher.should_not match_indexes 0, -1
     end
 
-    it 'aggregates integral non-flagged arguments in line_matchers and indexes' do
-      parse(['-1', '1', '11']).line_matchers.should == index_matchers(-1, 1, 11)
+    it 'treats integral non-flagged arguments as lines to match' do
       parse(['-1', '1', '11']).indexes.should == [-1, 1, 11]
+      matcher = parse(['-1', '1', '11']).line_matcher
+      matcher.should match_indexes -1, 1, 11
+      matcher.should_not match_indexes -2, 0, 2, 10, 12
     end
 
     it 'sets the buffer_size to 0 if there are no negative indexes' do
