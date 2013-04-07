@@ -83,6 +83,38 @@ class Line
       end
     end
 
+    class Range
+      include Helpers
+
+      attr_accessor :lower, :upper
+
+      def initialize(lower, upper)
+        self.lower, self.upper = lower, upper
+      end
+
+      def matches?(line, positive_index, negative_index)
+        if negative_index && lower < 0 && upper < 0
+          lower <= negative_index && negative_index <= upper
+        elsif negative_index && lower < 0
+          lower <= negative_index && positive_index <= upper
+        elsif negative_index && upper < 0
+          lower <= positive_index && negative_index <= upper
+        elsif 0 < lower && 0 < upper
+          lower <= positive_index && positive_index <= upper
+        elsif 0 < lower
+          lower <= positive_index
+        elsif 0 < upper
+          positive_index <= upper
+        else
+          false
+        end
+      end
+
+      def inspect(has_parent=false)
+        inspect_helper has_parent, "#{lower}..#{upper}"
+      end
+    end
+
     class Not
       include Helpers
 
@@ -177,6 +209,13 @@ class Line
           when '-c', '--chomp'        then options.chomp        = true
           when '-d', '--debug'        then options.debug        = true
           when '0'                    then invalid_args << arg
+          when /\A-?\d+..-?\d+/
+            lower, upper = arg.split('..').map(&:to_i)
+            options.indexes << lower << upper
+            min_index = lower if lower < min_index
+            min_index = upper if upper < min_index
+            options.line_matcher ||= Matchers::MatchNothing.new
+            options.line_matcher = Matchers::Or.new options.line_matcher, Matchers::Range.new(lower, upper)
           when /\A\^-?\d+\Z/
             index = arg[1..-1].to_i
             options.indexes << index
@@ -218,9 +257,10 @@ class Line
       The first line is line 1.
 
       matchers:
-        1   matches the first line
-        -1  matches the last line
-        ^1  matches lines other than 1
+        1      matches the first line
+        -1     matches the last line
+        ^1     matches lines other than 1
+        1..10  matches lines 1 through 10 (ends can be negative)
 
       options:
         -l, --line-numbers  show line numbers in output
@@ -234,6 +274,8 @@ class Line
         line ^1 ^2   # prints all lines but the first two
         line -1      # prints the last line
         line ^-1     # prints all lines except the last one
+        line 1..10   # prints lines 1 through 10
+        line 5..-5   # prints all lines except the first and last four
       HELP
     end
   end
@@ -414,7 +456,9 @@ else
       @matcher = matcher
 
       indexes.each do |index|
-        if matcher.matches? '', index, nil
+        indexes = [index, index]
+        indexes = index if index.kind_of? Array
+        if matcher.matches? '', *indexes
           matched << index
         else
           unmatched << index
@@ -560,6 +604,42 @@ else
       matcher = parse(['-1', '1', '11']).line_matcher
       matcher.should match_indexes -1, 1, 11
       matcher.should_not match_indexes -2, 0, 2, 10, 12
+    end
+
+    context 'when given ranges (e.g. 1..10)' do
+      it 'has no errors' do
+        parse(['1..10']).errors.should == {}
+      end
+
+      it 'puts the edges in the expected indexes' do
+        parse(['5..8']).indexes.should == [5, 8]
+        parse(['-8..-5']).indexes.should == [-8, -5]
+      end
+
+      it 'sets the buffer size' do
+        parse(['-8..-5']).buffer_size.should == 8
+        parse(['5..-5']).buffer_size.should  == 5
+      end
+
+      it 'creates a matcher that matches the range' do
+        matcher = parse(['5..8']).line_matcher
+        matcher.should     match_indexes [5, -1], [5, nil], [5, -100000]
+        matcher.should     match_indexes [8, -1], [8, nil], [8, -100000]
+        matcher.should     match_indexes [6, -1], [6, nil], [6, -100000]
+        matcher.should_not match_indexes [4, -1], [9, nil]
+
+        matcher = parse(['-8..-5']).line_matcher
+        matcher.should match_indexes -8, -7, -6, -5
+        matcher.should_not match_indexes -9, -4
+
+        matcher = parse(['5..-5']).line_matcher
+        matcher.should     match_indexes [5, -5], [6, nil], [6, -6]
+        matcher.should_not match_indexes [4, nil], [4, -4], [4, -5], [5, -4]
+
+        matcher = parse(['-5..5']).line_matcher
+        matcher.should     match_indexes [5, -5], [5, -4], [4, -5], [5, nil], [4, nil]
+        matcher.should_not match_indexes [5, -6], [6, nil], [6, -5], [4, nil], [4, -5]
+      end
     end
 
     context 'when given negated numbers (e.g. ^1)' do
