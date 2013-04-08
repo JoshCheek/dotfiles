@@ -196,11 +196,13 @@ class Line
     end
 
     def call
-      Options.new do |options|
+      @options ||= Options.new do |options|
         options.help_screen  = help_screen
         options.line_matcher = nil
-        invalid_args = []
-        min_index    = 0
+        invalid_args         = []
+        negative_matchers    = []
+        positive_matchers    = []
+        min_index            = 0
 
         @arguments.each do |arg|
           case arg
@@ -216,24 +218,22 @@ class Line
             options.indexes << lower << upper
             min_index = lower if lower < min_index
             min_index = upper if upper < min_index
-            options.line_matcher ||= Matchers::MatchNothing.new
-            options.line_matcher = Matchers::Or.new options.line_matcher, Matchers::Range.new(lower, upper)
+            positive_matchers << Matchers::Range.new(lower, upper)
           when /\A\^-?\d+\Z/
             index = arg[1..-1].to_i
             options.indexes << index
             min_index = index if index < min_index
-            options.line_matcher ||= Matchers::MatchEverything.new
-            options.line_matcher = Matchers::And.new options.line_matcher, Matchers::Not.new(Matchers::Index.new(index))
+            negative_matchers << Matchers::Not.new(Matchers::Index.new(index))
           when /\A-?\d+\Z/
             index = arg.to_i
             options.indexes << index
             min_index = index if index < min_index
-            options.line_matcher ||= Matchers::MatchNothing.new
-            options.line_matcher = Matchers::Or.new options.line_matcher, Matchers::Index.new(index)
+            positive_matchers << Matchers::Index.new(index)
           else
             invalid_args << arg
           end
         end
+
 
         if invalid_args.size == 1
           options.errors[:line_numbers] = "#{invalid_args.first.inspect} is not a valid line number, offsets start from 1"
@@ -243,8 +243,23 @@ class Line
           options.errors[:line_numbers] = "#{inspected_args.join ', '} are not valid line numbers, offsets start from 1"
         elsif options.line_matcher.nil? && options.line_numbers?
           options.line_matcher = Matchers::MatchEverything.new
-        elsif options.line_matcher.nil?
-          options.errors[:line_numbers] = 'No line numbers provided'
+        else
+          # no op?
+        end
+
+        positive_matcher = positive_matchers.inject(Matchers::MatchNothing.new)    { |memo, current| Matchers::Or.new  memo, current }
+        negative_matcher = negative_matchers.inject(Matchers::MatchEverything.new) { |memo, current| Matchers::And.new memo, current }
+
+        if positive_matchers.any? && negative_matchers.any?
+          options.line_matcher = Matchers::And.new positive_matcher, negative_matcher
+        elsif positive_matchers.any?
+          options.line_matcher = positive_matcher
+        elsif negative_matchers.any?
+          options.line_matcher = negative_matcher
+        elsif !options.line_numbers?
+          options.errors[:line_numbers] ||= 'No line numbers provided'
+        else
+          # no op?
         end
 
         options.buffer_size = min_index.abs
@@ -255,14 +270,15 @@ class Line
       <<-HELP.gsub(/^      /, '')
       Usage: line [options] matchers
 
-      Prints the lines at the given line numbers.
-      The first line is line 1.
+      Prints the lines from stdinput that are matched by the matchers
+      e.g. `line 1` prints the first line
 
       matchers:
-        1      matches the first line
-        -1     matches the last line
-        ^1     matches lines other than 1
-        1..10  matches lines 1 through 10 (ends can be negative)
+        2      matches the second line
+        -2     matches the second from the last line
+        ^2     matches lines other than the second
+        1..10  matches lines 1 through 10 (the numbers can be negative)
+        ^5..10 matches all lines before the fifth and all lines after the tenth
 
       options:
         -l, --line-numbers  show line numbers in output
@@ -272,12 +288,14 @@ class Line
         -h, --help          this help screen
 
       examples:
-        line 1 22    # prints lines 1 and 22
-        line ^1 ^2   # prints all lines but the first two
-        line -1      # prints the last line
-        line ^-1     # prints all lines except the last one
-        line 1..10   # prints lines 1 through 10
-        line 5..-5   # prints all lines except the first and last four
+        line 1 22         # prints lines 1 and 22
+        line -1           # prints the last line
+        line ^1 ^-1       # prints all lines but the first and the last
+        line 1..10        # prints lines 1 through 10
+        line 5..-5        # prints all lines except the first and last four
+        line ^5..10       # prins all lines except 5 through ten
+        line 5..10 ^6..8  # prints lines 5, 9, 10
+        line 5..10 ^7     # prints lines 5, 6, 8, 9
       HELP
     end
   end
@@ -551,7 +569,7 @@ else
       options.outstream.should == 2
     end
 
-    it 'sets the instream to stdin by default', t:true do
+    it 'sets the instream to stdin by default' do
       options.instream.should == $stdin
       options.instream = 123
       options.instream.should == 123
@@ -703,6 +721,12 @@ else
       it 'creates a matcher that matches their negation' do
         parse(['^2', '^4', '^-2']).line_matcher.should match_indexes 1, 3, 5, -1, -3
         parse(['^2', '^4', '^-2']).line_matcher.should_not match_indexes 2, 4, -2
+      end
+
+      it 'ands them together, and then ors them with everything else', t:true do
+        matcher = parse(['^6', '5..9', '^8', '11']).line_matcher
+        matcher.should     match_indexes 5, 7, 9, 11
+        matcher.should_not match_indexes 4, 6, 8, 10, 12
       end
     end
 
