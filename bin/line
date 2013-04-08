@@ -196,74 +196,82 @@ class Line
     end
 
     def call
-      @options ||= Options.new do |options|
-        options.help_screen  = help_screen
-        options.line_matcher = nil
-        invalid_args         = []
-        negative_matchers    = []
-        positive_matchers    = []
-        min_index            = 0
+      return @options if @options
+      self.options = Options.new
 
-        @arguments.each do |arg|
-          case arg
-          when '-l', '--line-numbers' then options.line_numbers = true
-          when '-h', '--help'         then options.show_help    = true
-          when '-s', '--strip'        then options.strip        = true
-          when '-f', '--force'        then options.force        = true
-          when '-c', '--chomp'        then options.chomp        = true
-          when '-d', '--debug'        then options.debug        = true
-          when '0'                    then invalid_args << arg
-          when /\A-?\d+..-?\d+/
-            lower, upper = arg.split('..').map(&:to_i)
-            options.indexes << lower << upper
-            min_index = lower if lower < min_index
-            min_index = upper if upper < min_index
-            positive_matchers << Matchers::Range.new(lower, upper)
-          when /\A\^-?\d+\Z/
-            index = arg[1..-1].to_i
-            options.indexes << index
-            min_index = index if index < min_index
-            negative_matchers << Matchers::Not.new(Matchers::Index.new(index))
-          when /\A-?\d+\Z/
-            index = arg.to_i
-            options.indexes << index
-            min_index = index if index < min_index
-            positive_matchers << Matchers::Index.new(index)
-          else
-            invalid_args << arg
-          end
-        end
-
-
-        if invalid_args.size == 1
-          options.errors[:line_numbers] = "#{invalid_args.first.inspect} is not a valid line number, offsets start from 1"
-        elsif invalid_args.size > 1
-          inspected_args = invalid_args.map(&:inspect)
-          inspected_args[-1] = "and #{inspected_args[-1]}"
-          options.errors[:line_numbers] = "#{inspected_args.join ', '} are not valid line numbers, offsets start from 1"
-        elsif options.line_matcher.nil? && options.line_numbers?
-          options.line_matcher = Matchers::MatchEverything.new
+      @arguments.each do |arg|
+        case arg
+        when '-l', '--line-numbers' then options.line_numbers = true
+        when '-h', '--help'         then options.show_help    = true
+        when '-s', '--strip'        then options.strip        = true
+        when '-f', '--force'        then options.force        = true
+        when '-c', '--chomp'        then options.chomp        = true
+        when '-d', '--debug'        then options.debug        = true
+        when '0'                    then invalid_args << arg
+        # range
+        when /\A-?\d+..-?\d+/
+          lower, upper = arg.split('..').map(&:to_i)
+          options.indexes   << lower << upper
+          positive_matchers << Matchers::Range.new(lower, upper)
+        # index
+        when /\A-?\d+\Z/
+          index = arg.to_i
+          options.indexes   << index
+          positive_matchers << Matchers::Index.new(index)
+        # negated index
+        when /\A\^-?\d+\Z/
+          index = arg[1..-1].to_i
+          options.indexes   << index
+          negative_matchers << Matchers::Not.new(Matchers::Index.new(index))
         else
-          # no op?
+          invalid_args << arg
         end
-
-        positive_matcher = positive_matchers.inject(Matchers::MatchNothing.new)    { |memo, current| Matchers::Or.new  memo, current }
-        negative_matcher = negative_matchers.inject(Matchers::MatchEverything.new) { |memo, current| Matchers::And.new memo, current }
-
-        if positive_matchers.any? && negative_matchers.any?
-          options.line_matcher = Matchers::And.new positive_matcher, negative_matcher
-        elsif positive_matchers.any?
-          options.line_matcher = positive_matcher
-        elsif negative_matchers.any?
-          options.line_matcher = negative_matcher
-        elsif !options.line_numbers?
-          options.errors[:line_numbers] ||= 'No line numbers provided'
-        else
-          # no op?
-        end
-
-        options.buffer_size = min_index.abs
       end
+
+      options.errors[:line_numbers] = error_msg_for_line_numbers if error_msg_for_line_numbers
+      options.line_matcher          = consolidate_args_to_line_matcher
+      options.buffer_size           = [0, *options.indexes].min.abs
+      options.help_screen           = help_screen
+      options
+    end
+
+    private
+
+    attr_accessor :options
+
+    def error_msg_for_line_numbers
+      if invalid_args.size == 1
+        "#{invalid_args.first.inspect} is not a valid line number, offsets start from 1"
+      elsif invalid_args.size > 1
+        inspected_args = invalid_args.map(&:inspect)
+        inspected_args[-1] = "and #{inspected_args[-1]}"
+        "#{inspected_args.join ', '} are not valid line numbers, offsets start from 1"
+      elsif positive_matchers.empty? && negative_matchers.empty? && !options.line_numbers?
+        'No line numbers provided'
+      end
+    end
+
+    def consolidate_args_to_line_matcher
+      positive_matcher = positive_matchers.inject(Matchers::MatchNothing.new)    { |memo, current| Matchers::Or.new  memo, current }
+      negative_matcher = negative_matchers.inject(Matchers::MatchEverything.new) { |memo, current| Matchers::And.new memo, current }
+
+      if    positive_matchers.any? && negative_matchers.any? then Matchers::And.new positive_matcher, negative_matcher
+      elsif positive_matchers.any?                           then positive_matcher
+      elsif negative_matchers.any?                           then negative_matcher
+      else                                                        Matchers::MatchEverything.new
+      end
+    end
+
+    def invalid_args
+      @invalid_args ||= []
+    end
+
+    def negative_matchers
+      @negative_matchers ||= []
+    end
+
+    def positive_matchers
+      @positive_matchers ||= []
     end
 
     def help_screen
