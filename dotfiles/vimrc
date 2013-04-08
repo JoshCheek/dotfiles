@@ -63,6 +63,7 @@ set cursorline                                      " colours the line the curso
 set number                                          " line numbers
 nmap <Leader>p orequire "pry"<CR>binding.pry<ESC>;  " pry insertion
 vnoremap . :norm.<CR>                               " in visual mode, "." will for each line, go into normal mode and execute the "."
+nmap <S-C-r> :set syntax=ruby<CR>                   " shortcut for rubyizing a file
 
 " easier navigation between split windows
 nnoremap <c-j> <c-w>j
