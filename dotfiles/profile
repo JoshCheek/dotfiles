@@ -62,8 +62,9 @@
     }
 
   # git
+    alias gsh="  git s"                                                      # git show with my custom options (see gitconfig)
     alias gs="   git status"
-    alias gd="   git diff"
+    alias gd="   git d"                                                      # git diff with my custom options
     alias go="   colour-stderr-red git checkout"
     alias gb="   git branch"
     alias ga="   git add"

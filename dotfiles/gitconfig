@@ -6,6 +6,8 @@
 [color "diff"]
   whitespace = red reverse
 [alias]
+  d  = diff --patience --ignore-space-change
+  s  = show --patience --ignore-space-change
   co = checkout
   ci = commit
   st = status
