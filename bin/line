@@ -3,8 +3,10 @@
 class Line
   module Matchers
     module Helpers
-      def inspect_helper(has_parent, inspected)
-        return inspected if has_parent
+      def inspect_helper(parent, inspected, has_children)
+        return inspected        if parent && parent.class == self.class
+        return "(#{inspected})" if parent && has_children
+        return inspected        if parent
         "Matcher(#{inspected})"
       end
     end
@@ -20,8 +22,8 @@ class Line
         @matcher1.matches?(*args) || @matcher2.matches?(*args)
       end
 
-      def inspect(has_parent=false)
-        inspect_helper has_parent, "#{@matcher1.inspect true} || #{@matcher2.inspect true}"
+      def inspect(parent=false)
+        inspect_helper parent, "#{@matcher1.inspect self} || #{@matcher2.inspect self}", true
       end
     end
 
@@ -36,8 +38,8 @@ class Line
         @matcher1.matches?(*args) && @matcher2.matches?(*args)
       end
 
-      def inspect(has_parent=false)
-        inspect_helper has_parent, "#{@matcher1.inspect true} && #{@matcher2.inspect true}"
+      def inspect(parent=false)
+        inspect_helper parent, "#{@matcher1.inspect self} && #{@matcher2.inspect self}", true
       end
     end
 
@@ -48,8 +50,8 @@ class Line
         true
       end
 
-      def inspect(has_parent=false)
-        inspect_helper has_parent, "MatchEverything"
+      def inspect(parent=false)
+        inspect_helper parent, "MatchEverything", false
       end
     end
 
@@ -60,8 +62,8 @@ class Line
         false
       end
 
-      def inspect(has_parent=false)
-        inspect_helper has_parent, "MatchNothing"
+      def inspect(parent=false)
+        inspect_helper parent, "MatchNothing", false
       end
     end
 
@@ -78,8 +80,8 @@ class Line
         positive_index == index || negative_index == index
       end
 
-      def inspect(has_parent=false)
-        inspect_helper has_parent, index.to_s
+      def inspect(parent=false)
+        inspect_helper parent, index.to_s, false
       end
     end
 
@@ -110,8 +112,8 @@ class Line
         end
       end
 
-      def inspect(has_parent=false)
-        inspect_helper has_parent, "#{lower}..#{upper}"
+      def inspect(parent=false)
+        inspect_helper parent, "#{lower}..#{upper}", false
       end
     end
 
@@ -128,8 +130,8 @@ class Line
         !matcher.matches?(line, positive_index, negative_index)
       end
 
-      def inspect(has_parent=false)
-        inspect_helper has_parent, "^(#{matcher.inspect true})"
+      def inspect(parent=false)
+        inspect_helper parent, "^#{matcher.inspect self}", true
       end
     end
   end
