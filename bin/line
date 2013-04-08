@@ -95,20 +95,13 @@ class Line
       end
 
       def matches?(line, positive_index, negative_index)
-        if negative_index && lower < 0 && upper < 0
-          lower <= negative_index && negative_index <= upper
-        elsif negative_index && lower < 0
-          lower <= negative_index && positive_index <= upper
-        elsif negative_index && upper < 0
-          lower <= positive_index && negative_index <= upper
-        elsif 0 < lower && 0 < upper
-          lower <= positive_index && positive_index <= upper
-        elsif 0 < lower
-          lower <= positive_index
-        elsif 0 < upper
-          positive_index <= upper
-        else
-          false
+        if    negative_index && lower < 0 && upper < 0 then lower <= negative_index && negative_index <= upper
+        elsif negative_index && lower < 0              then lower <= negative_index && positive_index <= upper
+        elsif negative_index && upper < 0              then lower <= positive_index && negative_index <= upper
+        elsif 0 < lower && 0 < upper                   then lower <= positive_index && positive_index <= upper
+        elsif 0 < lower                                then lower <= positive_index
+        elsif 0 < upper                                then positive_index <= upper
+        else                                                false
         end
       end
 
@@ -223,6 +216,10 @@ class Line
           index = arg[1..-1].to_i
           options.indexes   << index
           negative_matchers << Matchers::Not.new(Matchers::Index.new(index))
+        when /\A\^-?\d+..-?\d+\Z/
+          lower, upper = arg[1..-1].split('..').map(&:to_i)
+          options.indexes   << lower << upper
+          negative_matchers << Matchers::Not.new(Matchers::Range.new(lower, upper))
         else
           invalid_args << arg
         end
@@ -473,20 +470,23 @@ else
   require 'surrogate/rspec'
 
   class MatchIndexes
-    def initialize(*indexes)
-      @indexes = indexes
+    def initialize(is_positive, *indexes)
+      @positive  = is_positive
+      @indexes   = indexes
       @unmatched = []
       @matched   = []
     end
 
-    attr_reader :indexes, :matched, :unmatched, :matcher
+    attr_reader :indexes, :matched, :unmatched, :matcher, :positive
+
+    alias positive? positive
 
     def matches?(matcher)
       @matcher = matcher
 
-      indexes.each do |index|
+      self.indexes.each do |index|
         index.kind_of?(Array) ? indexes = index :
-        index < 1             ? indexes = [0, index] :
+        index < 0             ? indexes = [0, index] :
                                 indexes = [index, nil]
 
         if matcher.matches? '', *indexes
@@ -495,20 +495,26 @@ else
           unmatched << index
         end
       end
-      unmatched.empty?
+
+      positive? ?  unmatched.empty? : matched.empty?
     end
 
     def failure_message_for_should(*)
-      "#{matcher.inspect} should have matched #{unmatched.inspect}"
-    end
-
-    def negative_failure_message(*)
-      "#{matcher.inspect} shouldn't have matched #{matched.inspect}"
+      if positive?
+        "#{matcher.inspect} should have matched #{unmatched.inspect}"
+      else
+        "#{matcher.inspect} shouldn't have matched #{matched.inspect}"
+      end
     end
   end
 
   def match_indexes(*indexes)
-    MatchIndexes.new(*indexes)
+    MatchIndexes.new(true, *indexes)
+  end
+  alias match_index match_indexes
+
+  def match_no_indexes(*indexes)
+    MatchIndexes.new(false, *indexes)
   end
   alias match_index match_indexes
 
@@ -662,7 +668,7 @@ else
     specify '-l matches everything when no other matchers are provided' do
       parse(['-l']).line_matcher.should match_indexes *1..5
       parse(['-l', '1']).line_matcher.should match_index 1
-      parse(['-l', '1']).line_matcher.should_not match_indexes 0, -1
+      parse(['-l', '1']).line_matcher.should match_no_indexes 0, -1
     end
 
     specify '-d sets debug' do
@@ -703,7 +709,7 @@ else
         parse(['-1', '1', '11']).indexes.should == [-1, 1, 11]
         matcher = parse(['-1', '1', '11']).line_matcher
         matcher.should match_indexes -1, 1, 11
-        matcher.should_not match_indexes -2, 0, 2, 10, 12
+        matcher.should match_no_indexes -2, 0, 2, 10, 12
       end
     end
 
@@ -724,23 +730,60 @@ else
 
       it 'creates a matcher that matches the range' do
         matcher = parse(['5..8']).line_matcher
-        matcher.should     match_indexes [5, -1], [5, nil], [5, -100000]
-        matcher.should     match_indexes [8, -1], [8, nil], [8, -100000]
-        matcher.should     match_indexes [6, -1], [6, nil], [6, -100000]
-        matcher.should_not match_indexes [4, -1], [9, nil]
+        matcher.should match_indexes [5, -1], [5, nil], [5, -100000]
+        matcher.should match_indexes [8, -1], [8, nil], [8, -100000]
+        matcher.should match_indexes [6, -1], [6, nil], [6, -100000]
+        matcher.should match_no_indexes [4, -1], [9, nil]
 
         matcher = parse(['-8..-5']).line_matcher
         matcher.should match_indexes -8, -7, -6, -5
-        matcher.should_not match_indexes -9, -4
+        matcher.should match_no_indexes -9, -4
 
         matcher = parse(['5..-5']).line_matcher
-        matcher.should     match_indexes [5, -5], [6, nil], [6, -6]
-        matcher.should_not match_indexes [4, nil], [4, -4], [4, -5], [5, -4]
+        matcher.should match_indexes [5, -5], [6, nil], [6, -6]
+        matcher.should match_no_indexes [4, nil], [4, -4], [4, -5], [5, -4]
 
         matcher = parse(['-5..5']).line_matcher
-        matcher.should     match_indexes [5, -5], [5, -4], [4, -5], [5, nil], [4, nil]
-        matcher.should_not match_indexes [5, -6], [6, nil], [6, -5], [4, nil], [4, -5]
+        matcher.should match_indexes    [5, -5], [5,  -4], [4, -5], [5, nil], [4, nil]
+        matcher.should match_no_indexes [5, -6], [6, nil], [6, -5]
       end
+    end
+
+    context 'when given negated ranges (e.g. ^1..10, ^-5..-3)' do
+      it 'has no errors' do
+        parse(['^1..10']).errors.should == {}
+      end
+
+      it 'puts the edges in the expected indexes' do
+        parse(['^5..8']).indexes.should == [5, 8]
+        parse(['^-8..-5']).indexes.should == [-8, -5]
+      end
+
+      it 'sets the buffer size' do
+        parse(['^-8..-5']).buffer_size.should == 8
+        parse(['^5..-5']).buffer_size.should  == 5
+      end
+
+      it 'creates a matcher that matches the range', t:true do
+        matcher = parse(['^5..8']).line_matcher
+        matcher.should match_no_indexes [5, -1], [5, nil], [5, -100000]
+        matcher.should match_no_indexes [8, -1], [8, nil], [8, -100000]
+        matcher.should match_no_indexes [6, -1], [6, nil], [6, -100000]
+        matcher.should match_indexes    [4, -1], [9, nil]
+
+        matcher = parse(['^-8..-5']).line_matcher
+        matcher.should match_no_indexes -8, -7, -6, -5
+        matcher.should match_indexes    -9, -4
+
+        matcher = parse(['^5..-5']).line_matcher
+        matcher.should match_no_indexes [5, -5], [6, nil], [6, -6]
+        matcher.should match_indexes    [4, nil], [4, -4], [4, -5], [5, -4]
+
+        matcher = parse(['^-5..5']).line_matcher
+        matcher.should match_no_indexes [5, -5], [5,  -4], [4, -5], [5, nil], [4, nil]
+        matcher.should match_indexes    [5, -6], [6, nil], [6, -5]
+      end
+
     end
 
     context 'when given negated numbers (e.g. ^1, ^-1)' do
@@ -758,13 +801,13 @@ else
 
       it 'creates a matcher that matches their negation' do
         parse(['^2', '^4', '^-2']).line_matcher.should match_indexes 1, 3, 5, -1, -3
-        parse(['^2', '^4', '^-2']).line_matcher.should_not match_indexes 2, 4, -2
+        parse(['^2', '^4', '^-2']).line_matcher.should match_no_indexes 2, 4, -2
       end
 
-      it 'ands them together, and then ors them with everything else', t:true do
+      it 'ands them together, and then ors them with everything else' do
         matcher = parse(['^6', '5..9', '^8', '11']).line_matcher
-        matcher.should     match_indexes 5, 7, 9, 11
-        matcher.should_not match_indexes 4, 6, 8, 10, 12
+        matcher.should match_indexes 5, 7, 9, 11
+        matcher.should match_no_indexes 4, 6, 8, 10, 12
       end
     end
   end
