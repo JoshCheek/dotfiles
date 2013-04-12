@@ -19,6 +19,7 @@
   type = cat-file -t
   dump = cat-file -p
   praise = blame
+  count = git shortlog -sn
 [push]
   default = upstream
 [core]
