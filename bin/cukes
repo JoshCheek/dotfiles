@@ -1,0 +1,63 @@
+#!/usr/bin/env ruby
+
+def print_usage
+  puts <<-USAGE.gsub /^    /, ''
+    Usage: cukes types [options]
+
+    available types:
+      given/g  when/w  then/t  and/a  but/b
+
+    available options:
+      steps/s:           shows step definitions. If not passed, searches features
+      verbose/v:         prints the command used
+      help/h/-h/--help:  prints this screen
+
+    examples:
+      cukes help                # prints help screen
+      cukes given and verbose   # prints Given, and And uses, and the command used to find them
+      cukes w s                 # prints When step definitions
+  USAGE
+end
+
+
+
+types = []
+steps = false
+verbose = false
+
+ARGV.each do |type|
+  case type.downcase
+  when 'given',   'g' then types << 'Given'
+  when 'when',    'w' then types << 'When'
+  when 'then',    't' then types << 'Then'
+  when 'and',     'a' then types << 'And'
+  when 'but',     'b' then types << 'But'
+  when 'steps',   's' then steps = true
+  when 'verbose', 'v' then verbose = true
+  when 'help', 'h', '--help', '-h'
+    print_usage
+    exit 0
+  else
+    puts "Don't know what to do with #{type.inspect}"
+    print_usage
+    exit 1
+  end
+end
+
+types.uniq!
+
+if types.empty?
+  print_usage
+  exit 1
+end
+
+command = "ack '#{types.join '|'}' features"
+if steps
+  command << " | ruby -ane 'print if $F.first.include? %(.rb:)'"
+else
+  command << " --ignore-dir=features/step_definitions"
+end
+command << " | ruby -ne 'print $_.split(/\\s+/, 2).last' | sort -u"
+
+puts command if verbose
+system command
