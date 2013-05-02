@@ -161,16 +161,45 @@
 
 # PROMPT
   function parse_git_branch {
-    git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ \1 /'
+    branch=`git rev-parse --abbrev-ref HEAD 2>/dev/null`
+    if [ "HEAD" = "$branch" ]; then
+      echo "(no branch)"
+    else
+      echo "$branch"
+    fi
   }
 
-  # Spent like an hour on this. Finally giving up and just hardcoding it.
-  # function ps1_color {
-  #   local foreground="${1:+\[\033[3${1}m\]}"
-  #   local background="${2:+\[\033[4${2}m\]}"
-  #   echo "\[\033[0m\]$foreground$background"
-  # }
-  PS1="\[\033[37;45m\] \@ \[\033[0m\] \[\033[37;45m\] \w \[\033[0m\] \[\033[32;45m\]\$(parse_git_branch)\[\033[0m\]\n\$ \[\033[0m\]"
+  function prompt_segment {
+    if [[ ! -z "$1" ]]; then
+      echo "\[\033[${2:-37};45m\]${1}\[\033[0m\]"
+    fi
+  }
+
+  function build_mah_prompt {
+    # time
+    ps1="$(prompt_segment " \@ ")"
+
+    # cwd with coloured current directory
+    # path="$(dirname `pwd`)"
+    # dir="$(basename `pwd`)"
+    # ps1="${ps1} $(prompt_segment " ${path}/")$(prompt_segment "$dir " 34)"
+
+    # cwd
+    ps1="${ps1} $(prompt_segment " \w ")"
+
+    # git branch
+    git_branch=`parse_git_branch`
+    if [[ ! -z "$git_branch" ]]; then ps1="${ps1} $(prompt_segment " $git_branch " 32)"; fi
+
+    # next line
+    ps1="${ps1}\n\$ "
+
+    # output
+    PS1="$ps1"
+  }
+
+  PROMPT_COMMAND='build_mah_prompt'
+
 
 
 # Ruby versions (I don't have rvm installed, so can't check to make sure it works, but I think it should.
