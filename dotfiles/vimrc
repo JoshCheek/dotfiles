@@ -38,7 +38,7 @@ call Pl#Theme#RemoveSegment('filetype')
 call Pl#Theme#RemoveSegment('lineinfo')
 
 "" ========== NERDTree  ==========
-autocmd vimenter * if !argc() | NERDTree | endif  " load NERDTree automatically if started with no files
+" autocmd vimenter * if !argc() | NERDTree | endif  " load NERDTree automatically if started with no files
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif " close vim if NERDTree is the only open buffer
 
 "" ========== C-p ==========
@@ -63,7 +63,7 @@ set cursorline                                      " colours the line the curso
 set number                                          " line numbers
 nmap <Leader>p orequire "pry"<CR>binding.pry<ESC>;  " pry insertion
 vnoremap . :norm.<CR>                               " in visual mode, "." will for each line, go into normal mode and execute the "."
-nmap <S-C-r> :set syntax=ruby<CR>                   " shortcut for rubyizing a file
+"nmap <C-S-r> :set syntax=ruby<CR>                   " shortcut for rubyizing a file
 
 " easier navigation between split windows
 nnoremap <c-j> <c-w>j
