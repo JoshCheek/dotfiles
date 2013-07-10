@@ -1,0 +1,1 @@
+alias gh "git hist"

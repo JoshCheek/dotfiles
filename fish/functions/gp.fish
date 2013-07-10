@@ -1,0 +1,1 @@
+alias gp "git push"

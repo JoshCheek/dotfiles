@@ -1,0 +1,1 @@
+alias go "git checkout"
