@@ -24,3 +24,6 @@
   default = upstream
 [core]
   excludesfile = ~/.gitignore
+  editor = vim
+[merge]
+  conflictstyle = diff3
