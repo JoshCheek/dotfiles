@@ -41,13 +41,21 @@ call Pl#Theme#RemoveSegment('lineinfo')
 " autocmd vimenter * if !argc() | NERDTree | endif  " load NERDTree automatically if started with no files
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif " close vim if NERDTree is the only open buffer
 
-"" ========== C-p ==========
-let g:ctrlp_custom_ignore = {
-  \ 'dir':  '\v[\/]\.(git|hg|svn|coverage)$',
-  \ }
-  " \ 'file': '\v\.(exe|so|dll)$',
-  " \ 'link': 'some_bad_symbolic_links',
+"" ========== unite.vim ==========
+" http://bling.github.io/blog/2013/06/02/unite-dot-vim-the-plugin-you-didnt-know-you-need/
 
+" needs some other dep to work
+" nnoremap <C-p> :Unite file_rec/async<cr>
+
+" just flat doesn't work
+" nnoremap <space>/ :Unite ack.<cr>
+
+" I don't actually understand what this does
+" let g:unite_source_history_yank_enable = 1
+" nnoremap <space>y :Unite history/yank<cr>
+
+" yay, this one works!
+nnoremap <space>s :Unite -quick-match buffer<cr>
 
 "" ========== vim-textobj-rubyblock ==========
 runtime macros/matchit.vim " a dependency
@@ -111,6 +119,7 @@ au BufNewFile,BufRead *.jack set filetype=java "not really, but close enough
 " ZoomWin                     https://github.com/vim-scripts/ZoomWin.git
 " nerdtree                    https://github.com/scrooloose/nerdtree.git
 " supertab                    https://github.com/ervandew/supertab.git
+" unite.vim                   https://github.com/Shougo/unite.vim.git
 " vim-coffee-script           https://github.com/kchmck/vim-coffee-script.git
 " vim-commentary              https://github.com/tpope/vim-commentary.git
 " vim-cucumber                https://github.com/tpope/vim-cucumber.git
