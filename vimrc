@@ -53,7 +53,7 @@ let g:ctrlp_custom_ignore = {
 runtime macros/matchit.vim " a dependency
 
 "" ==========  My shit  ==========
-colorscheme Autumn
+" colorscheme Autumn " for gvim, really, which I don't use any more
 
 set nobackup                                        " no backup files
 set nowritebackup                                   " only in case you don't want a backup file while editing
