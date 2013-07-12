@@ -108,28 +108,24 @@ au BufNewFile,BufRead *.jack set filetype=java "not really, but close enough
 
 " ========== Pathogen plugins ==========
 "
-" Color-Sampler-Pack
-" ZoomWin
-" ack.vim
-" ctrlp.vim
-" nerdcommenter
-" nerdtree
-" supertab
-" vim-coffee-script
-" vim-commentary
-" vim-cucumber
-" vim-endwise
-" vim-fish-script
-" vim-fugitive
-" vim-haml
-" vim-haskell
-" vim-javascript
-" vim-markdown
-" vim-powerline
-" vim-repeat
-" vim-rspec
-" vim-ruby
-" vim-speeddating
-" vim-surround
-" vim-textobj-rubyblock
-" vim-textobj-user
+" ZoomWin                     https://github.com/vim-scripts/ZoomWin.git
+" nerdtree                    https://github.com/scrooloose/nerdtree.git
+" supertab                    https://github.com/ervandew/supertab.git
+" vim-coffee-script           https://github.com/kchmck/vim-coffee-script.git
+" vim-commentary              https://github.com/tpope/vim-commentary.git
+" vim-cucumber                https://github.com/tpope/vim-cucumber.git
+" vim-elixir                  https://github.com/elixir-lang/vim-elixir.git
+" vim-endwise                 https://github.com/tpope/vim-endwise.git
+" vim-fish-script "uhm, I made this, and it's not good enough to publish
+" vim-fugitive                https://github.com/tpope/vim-fugitive.git
+" vim-haml                    https://url = git://github.com/tpope/vim-haml.git
+" vim-haskell uhm, I need to replace this with something better, this plugin is awful
+" vim-javascript              https://github.com/pangloss/vim-javascript.git
+" vim-markdown                https://github.com/tpope/vim-markdown.git
+" vim-powerline               https://github.com/Lokaltog/vim-powerline.git
+" vim-repeat                  https://github.com/tpope/vim-repeat.git
+" vim-rspec                   https://github.com/skwp/vim-rspec.git
+" vim-ruby                    https://github.com/vim-ruby/vim-ruby.git
+" vim-surround                https://github.com/tpope/vim-surround.git
+" vim-textobj-rubyblock       https://github.com/nelstrom/vim-textobj-rubyblock.git
+" vim-textobj-user            https://github.com/kana/vim-textobj-user.git
