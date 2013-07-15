@@ -128,7 +128,7 @@ au BufNewFile,BufRead *.jack set filetype=java "not really, but close enough
 " vim-fish-script "uhm, I made this, and it's not good enough to publish
 " vim-fugitive                https://github.com/tpope/vim-fugitive.git
 " vim-haml                    https://url = git://github.com/tpope/vim-haml.git
-" vim-haskell uhm, I need to replace this with something better, this plugin is awful
+" hdevtools                   https://github.com/bitc/hdevtools.git
 " vim-javascript              https://github.com/pangloss/vim-javascript.git
 " vim-markdown                https://github.com/tpope/vim-markdown.git
 " vim-powerline               https://github.com/Lokaltog/vim-powerline.git
