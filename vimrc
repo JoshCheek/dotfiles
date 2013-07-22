@@ -41,22 +41,6 @@ call Pl#Theme#RemoveSegment('lineinfo')
 " autocmd vimenter * if !argc() | NERDTree | endif  " load NERDTree automatically if started with no files
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif " close vim if NERDTree is the only open buffer
 
-"" ========== unite.vim ==========
-" http://bling.github.io/blog/2013/06/02/unite-dot-vim-the-plugin-you-didnt-know-you-need/
-
-" needs some other dep to work
-" nnoremap <C-p> :Unite file_rec/async<cr>
-
-" just flat doesn't work
-" nnoremap <space>/ :Unite ack.<cr>
-
-" I don't actually understand what this does
-" let g:unite_source_history_yank_enable = 1
-" nnoremap <space>y :Unite history/yank<cr>
-
-" yay, this one works!
-nnoremap <space>s :Unite -quick-match buffer<cr>
-
 "" ========== vim-textobj-rubyblock ==========
 runtime macros/matchit.vim " a dependency
 
