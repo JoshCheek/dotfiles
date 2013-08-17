@@ -1,4 +1,6 @@
 function fish_prompt
+  set -l last_status $status
+
   # the time
   set_color --background magenta
   echo -n (date +" %I:%M %p ")
@@ -18,6 +20,14 @@ function fish_prompt
     set_color --background normal
   end
 
-  # the prompt
-  echo -n \n"🐠 "
+  # the prompt depends on the last status
+  if [ $last_status = 0 ]
+    echo -n \n"🐠 "
+  else
+    echo -n \n"🍣 " # sushi
+    # other option: 🎣
+  end
+  set_color --background normal
+  echo -n ' '
+
 end
