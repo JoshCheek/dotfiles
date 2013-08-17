@@ -1,0 +1,10 @@
+#!/bin/sh
+
+command="find . | grep -v .git | grep -v /coverage/"
+
+for search_string in $@
+do
+  command="$command | grep -i $search_string"
+done
+
+eval $command
