@@ -22,3 +22,12 @@ if test -e ~/.config/fish/private_config.fish
 end
 
 set -x she_told_me_she_had_a_god_complex_i_told_her_i_was_an_atheist ~/Dropbox/passwords
+
+for i in (seq 30)
+  eval "function $i
+          fg %$i
+        end"
+  eval "function k$i
+          kill -9 %$i
+        end"
+end
