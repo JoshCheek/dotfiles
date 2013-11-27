@@ -23,7 +23,6 @@ set incsearch                   " incremental searching
 call pathogen#infect()
 
 "" ==========  Powerline, toolbar (https://github.com/Lokaltog/vim-powerline/) ==========
-let g:Powerline_colorscheme = 'josh'
 let g:Powerline_symbols = 'compatible'
 let g:Powerline_stl_path_style = 'relative'
 set laststatus=2   " Always show the statusline
