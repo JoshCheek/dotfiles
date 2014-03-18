@@ -5,12 +5,6 @@ set --export PATH "$HOME/bin"               \
                   "$HOME/.cabal/bin"        \
                   $PATH
 
-# tune Ruby's GC
-set --export RUBY_HEAP_MIN_SLOTS           500000
-set --export RUBY_HEAP_SLOTS_INCREMENT     250000
-set --export RUBY_HEAP_SLOTS_GROWTH_FACTOR 1
-set --export RUBY_GC_MALLOC_LIMIT          50000000
-
 # rails cucumber integration looks for this env var to decide how to display output
 set --export CUCUMBER_FORMAT pretty
 
@@ -31,3 +25,5 @@ for i in (seq 30)
           kill -9 %$i
         end"
 end
+
+source /usr/local/share/chruby/chruby.fish
