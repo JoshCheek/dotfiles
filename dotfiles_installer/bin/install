@@ -3,7 +3,7 @@
 $LOAD_PATH.unshift File.expand_path '../../lib', __FILE__
 require 'install_dotfiles'
 
-installer = InstallDotfiles.new(ARGV, $stdin, $stdout)
+installer = InstallDotfiles.new($stdin, $stdout)
 
 dotfiles_dir = File.expand_path '../../..', __FILE__
 home_dir     = ENV['HOME']

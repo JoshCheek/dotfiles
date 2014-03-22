@@ -16,12 +16,12 @@ describe 'installer' do
   let(:stdin)  { StringIO.new }
   let(:stdout) { StringIO.new }
 
-  def installer(options={})
-    InstallDotfiles.new(options.fetch(:argv, []), stdin, stdout)
+  def installer
+    InstallDotfiles.new(stdin, stdout)
   end
 
   def symlink(options)
-    installer(options).symlink(options)
+    installer.symlink(options)
   end
 
   def home_dir(dir)
@@ -148,6 +148,7 @@ describe 'installer' do
     end
   end
 
+
   describe 'append' do
     it 'makes the file if it DNE' do
       home_dir 'append/makes_file' do |home_dir|
@@ -174,6 +175,17 @@ describe 'installer' do
         expect(File.read file).to eq "some_data\ncontent\nsome_more_data\n"
       end
     end
+  end
+
+
+  describe 'clone_or_pull' do
+    # what does actual git do if you try to clone to a thing that already exists?
+    # maybe:
+      # it clones if the dir dne
+      # it pulls if the dir does exist
+      # it prompts for overwrite if the dir is not a git repo
+    #
+    # try this shit out by hand
   end
 
 
@@ -239,5 +251,8 @@ describe 'installer' do
     end
   end
 
-  # vim -- makes the directory structure, clones the repos
+  describe '.vim' do
+    it 'needs to curl that file from the pathogen website into ~/.vim/autoload/pathogen.vim'
+    it 'needs to clone all the plugins into ~/.vim/bundle'
+  end
 end

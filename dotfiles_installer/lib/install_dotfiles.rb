@@ -1,10 +1,9 @@
 require 'fileutils'
 
 class InstallDotfiles
-  attr_accessor :argv, :stdin, :stdout
+  attr_accessor :stdin, :stdout
 
-  def initialize(argv, stdin, stdout)
-    self.argv     = argv
+  def initialize(stdin, stdout)
     self.stdin    = stdin
     self.stdout   = stdout
   end
