@@ -5,13 +5,15 @@ require 'haiti/config'
 require 'haiti/command_line_helpers'
 require 'install_dotfiles'
 
-$root_dir = File.expand_path '../../', __FILE__
+$root_dir            = File.expand_path '../../', __FILE__
+$proving_grounds_dir = "#$root_dir/proving_grounds"
+
 Haiti.configure do |config|
   config.bin_dir = "#{$root_dir}/bin"
 end
 
 # reset after each
-FileUtils.rm_rf "#$root_dir/proving_grounds"
+FileUtils.rm_rf $proving_grounds_dir
 
 describe 'installer' do
   include Haiti::CommandLineHelpers
@@ -220,6 +222,43 @@ describe 'installer' do
       end
       expect { installer.git_clone_or_pull @fixture_dir, other_repo }
         .to raise_error InstallDotfiles::CloneDirExistsError
+    end
+  end
+
+
+  describe 'curl', t:true do
+    before { Kernel.stub(:system).and_return('curl-result') }
+
+    it 'makes the path to the directory to curl into' do
+      target_dir = "#$proving_grounds_dir/curl/make_path/intermediate_directory"
+      installer.curl target_dir+'/filename', 'some_url'
+      expect(test 'd', target_dir).to eq true
+    end
+
+    it 'invokes curl with --silent and --show-error, the target, and the source and writes it to the file' do
+      filename = "#$proving_grounds_dir/curl/check_args/filename"
+      Kernel.should_receive(:system).with(%Q(curl -Sso #{filename.inspect} "some_url"))
+      installer.curl filename, 'some_url'
+    end
+
+    it 'prompts for overwrite if the file already exists' do
+      home_dir 'curl/already_exists' do |home_dir|
+        Dir.chdir home_dir do
+          FileUtils.touch 'filename'
+          Kernel.should_receive :system
+          stdin.string = "yes"
+          installer.curl "#{home_dir}/filename", "some_url"
+        end
+      end
+
+      home_dir 'curl/already_exists' do |home_dir|
+        Dir.chdir home_dir do
+          FileUtils.touch 'filename'
+          Kernel.should_not_receive :system
+          stdin.string = "no"
+          installer.curl "#{home_dir}/filename", "some_url"
+        end
+      end
     end
   end
 

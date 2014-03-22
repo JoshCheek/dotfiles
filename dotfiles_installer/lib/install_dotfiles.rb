@@ -58,6 +58,18 @@ class InstallDotfiles
     end
   end
 
+  def curl(target_file, url)
+    FileUtils.mkdir_p File.dirname target_file
+    if Kernel.test('e', target_file)
+      should_overwrite = prompt "Overwrite #{target_file.inspect}? [y/n]", /^(y|n)/i do |response|
+        response.downcase.start_with? 'y'
+      end
+      return unless should_overwrite
+      FileUtils.rm target_file
+    end
+    Kernel.system %Q(curl -Sso #{target_file.inspect} #{url.inspect})
+  end
+
 
   private
 
