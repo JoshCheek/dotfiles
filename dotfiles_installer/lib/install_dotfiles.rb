@@ -1,6 +1,9 @@
 require 'fileutils'
+require 'open3'
 
 class InstallDotfiles
+  CloneDirExistsError = Class.new StandardError
+
   attr_accessor :stdin, :stdout
 
   def initialize(stdin, stdout)
@@ -38,6 +41,23 @@ class InstallDotfiles
       File.open(file_name, 'a') { |file| file.puts content }
     end
   end
+
+  def git_clone_or_pull(existing_repo, location)
+    stdout, stderr, status = Open3.capture3 'git', 'clone', existing_repo, location
+    return if status.success?
+    if stderr['already exists']
+      Dir.chdir location do
+        if Kernel.test 'd', '.git'
+          out, err, status = Open3.capture3 'git', 'pull'
+        else
+          raise CloneDirExistsError, "#{location} exists and is not a git repo"
+        end
+      end
+    else
+      raise "Some unexpected error while cloning to #{location.inspect}: #{stderr.inspect}"
+    end
+  end
+
 
   private
 

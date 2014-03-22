@@ -10,6 +10,9 @@ Haiti.configure do |config|
   config.bin_dir = "#{$root_dir}/bin"
 end
 
+# reset after each
+FileUtils.rm_rf "#$root_dir/proving_grounds"
+
 describe 'installer' do
   include Haiti::CommandLineHelpers
 
@@ -20,10 +23,6 @@ describe 'installer' do
     InstallDotfiles.new(stdin, stdout)
   end
 
-  def symlink(options)
-    installer.symlink(options)
-  end
-
   def home_dir(dir)
     actual_home  = ENV['HOME']
     home_dir     = File.expand_path "#{$root_dir}/proving_grounds/#{dir}", __FILE__
@@ -32,6 +31,7 @@ describe 'installer' do
     FileUtils.rm_rf home_dir
     make_proving_grounds
     yield home_dir
+    home_dir
   ensure
     ENV['HOME'] = actual_home
   end
@@ -41,7 +41,7 @@ describe 'installer' do
       home_dir 'symlink/good' do |home_dir|
         existing_file = "#{home_dir}/existing"
         new_file      = "#{home_dir}/new"
-        symlink existing: existing_file, new: new_file
+        installer.symlink existing: existing_file, new: new_file
         expect(File.realdirpath new_file).to eq existing_file
       end
     end
@@ -50,8 +50,8 @@ describe 'installer' do
       home_dir 'symlink/symlink_already_exists' do |home_dir|
         existing_file = "#{home_dir}/existing"
         new_file      = "#{home_dir}/new"
-        symlink existing: existing_file, new: new_file # symlink it
-        symlink existing: existing_file, new: new_file # this time, new already exists
+        installer.symlink existing: existing_file, new: new_file # symlink it
+        installer.symlink existing: existing_file, new: new_file # this time, new already exists
         expect(File.realdirpath new_file).to eq existing_file
       end
     end
@@ -63,8 +63,8 @@ describe 'installer' do
           actual_file  = "#{home_dir}/actual"
           new_file     = "#{home_dir}/new"
           stdin.string = "wat\nyes\nrest"
-          symlink existing: actual_file,  new: new_file
-          symlink existing: desired_file, new: new_file
+          installer.symlink existing: actual_file,  new: new_file
+          installer.symlink existing: desired_file, new: new_file
           expect(File.realdirpath new_file).to eq desired_file
           expect(stdin.read).to eq "rest"
         end
@@ -76,7 +76,7 @@ describe 'installer' do
           new_file      = "#{home_dir}/new"
           stdin.string  = "wat\nyes\nrest"
           FileUtils.touch new_file
-          symlink existing: existing_file, new: new_file
+          installer.symlink existing: existing_file, new: new_file
           expect(File.realdirpath new_file).to eq existing_file
           expect(stdin.read).to eq "rest"
         end
@@ -88,7 +88,7 @@ describe 'installer' do
           new_file      = "#{home_dir}/new"
           stdin.string  = "wat\nyes\nrest"
           FileUtils.mkdir new_file
-          symlink existing: existing_file, new: new_file
+          installer.symlink existing: existing_file, new: new_file
           expect(File.realdirpath new_file).to eq existing_file
           expect(stdin.read).to eq "rest"
         end
@@ -103,7 +103,7 @@ describe 'installer' do
             FileUtils.rm_f new_file
             File.open(new_file, 'w') { |f| f.write 'some nonsense' }
             expect(File.realdirpath new_file).to_not eq existing_file
-            symlink existing: existing_file, new: new_file
+            installer.symlink existing: existing_file, new: new_file
             expect(File.realdirpath new_file).to eq existing_file
           end
         end
@@ -118,7 +118,7 @@ describe 'installer' do
             FileUtils.rm_f new_file
             File.open(new_file, 'w') { |f| f.write 'some nonsense' }
             expect(File.realdirpath new_file).to_not eq existing_file
-            symlink existing: existing_file, new: new_file
+            installer.symlink existing: existing_file, new: new_file
             expect(File.read new_file).to eq 'some nonsense'
           end
         end
@@ -132,7 +132,7 @@ describe 'installer' do
           FileUtils.rm_f new_file
           File.open(new_file, 'w') { |f| f.write 'some nonsense' }
           expect(File.realdirpath new_file).to_not eq existing_file
-          symlink existing: existing_file, new: new_file
+          installer.symlink existing: existing_file, new: new_file
           expect(File.realdirpath new_file).to eq existing_file
 
           stdin.string  = "blah\nno"
@@ -141,7 +141,7 @@ describe 'installer' do
           FileUtils.rm_f new_file
           File.open(new_file, 'w') { |f| f.write 'some nonsense' }
           expect(File.realdirpath new_file).to_not eq existing_file
-          symlink existing: existing_file, new: new_file
+          installer.symlink existing: existing_file, new: new_file
           expect(File.read new_file).to eq 'some nonsense'
         end
       end
@@ -178,14 +178,49 @@ describe 'installer' do
   end
 
 
-  describe 'clone_or_pull' do
-    # what does actual git do if you try to clone to a thing that already exists?
-    # maybe:
-      # it clones if the dir dne
-      # it pulls if the dir does exist
-      # it prompts for overwrite if the dir is not a git repo
-    #
-    # try this shit out by hand
+  describe 'git_clone_or_pull' do
+    before do
+      home_dir 'git/fixture' do |fixture_dir|
+        @fixture_dir = fixture_dir
+        Dir.chdir fixture_dir do
+          FileUtils.touch 'some_source_controlled_file'
+          `git init`
+          `git add .`
+          `git commit -m 'Some commit'`
+        end
+      end
+    end
+
+    it 'clones the repo when the repo does not exist' do
+      cloned_dir = File.expand_path('../cloned', @fixture_dir)
+      installer.git_clone_or_pull @fixture_dir, cloned_dir
+      expect(Dir.glob(cloned_dir+'/*').map { |fname| File.basename fname }).to eq ['some_source_controlled_file']
+    end
+
+    it 'pulls the repo when the repo does exist' do
+      cloned_dir = File.expand_path('../cloned_before_changes', @fixture_dir)
+      installer.git_clone_or_pull @fixture_dir, cloned_dir # initial clone
+      Dir.chdir @fixture_dir do
+        FileUtils.touch 'upstream_change'
+        `git add .`
+        `git commit -m 'Another file'`
+        installer.git_clone_or_pull @fixture_dir, cloned_dir
+        expect(Dir.glob(cloned_dir+'/*').map { |fname| File.basename fname }).to eq [
+          'some_source_controlled_file',
+          'upstream_change',
+        ]
+      end
+    end
+
+    it 'fails if the dir is not a git repo' do
+      other_repo = home_dir 'git/not_git_repo' do |dir|
+        Dir.chdir dir do
+          FileUtils.touch 'existing-file'
+        end
+      end
+      expect { installer.git_clone_or_pull @fixture_dir, other_repo }
+        .to raise_error InstallDotfiles::CloneDirExistsError
+    end
   end
 
 
