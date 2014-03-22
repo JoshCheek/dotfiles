@@ -108,9 +108,9 @@ au BufNewFile,BufRead *.jack set filetype=java "not really, but close enough
 " vim-cucumber                https://github.com/tpope/vim-cucumber.git
 " vim-elixir                  https://github.com/elixir-lang/vim-elixir.git
 " vim-endwise                 https://github.com/tpope/vim-endwise.git
-" vim-fish-script "uhm, I made this, and it's not good enough to publish
+" vim-fish                    https://github.com/dag/vim-fish.git
 " vim-fugitive                https://github.com/tpope/vim-fugitive.git
-" vim-haml                    https://url = git://github.com/tpope/vim-haml.git
+" vim-haml                    https://github.com/tpope/vim-haml.git
 " hdevtools                   https://github.com/bitc/hdevtools.git
 " vim-javascript              https://github.com/pangloss/vim-javascript.git
 " vim-markdown                https://github.com/tpope/vim-markdown.git
