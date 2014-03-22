@@ -1,5 +1,10 @@
+# For configs that I don't want in my public git (ie work stuff and stuff that changes across computers)
+if test -e ~/.config/fish/private_config.fish
+  source   ~/.config/fish/private_config.fish
+end
+
+# various paths
 set --export PATH "$HOME/bin"               \
-                  "$HOME/code/dotfiles/bin" \
                   "/usr/local/bin"          \
                   "$HOME/.rbenv/shims"      \
                   "$HOME/.cabal/bin"        \
@@ -9,11 +14,6 @@ set --export PATH "$HOME/bin"               \
 set --export CUCUMBER_FORMAT pretty
 
 alias strip "ruby -ne 'print \$_.strip'" # should make this a real function
-
-# For configs that I don't want in my public git (ie work stuff)
-if test -e ~/.config/fish/private_config.fish
-  source   ~/.config/fish/private_config.fish
-end
 
 # Not really using this anymore, started using 1password, which is okay, but will leave this anyway
 set -x she_told_me_she_had_a_god_complex_i_told_her_i_was_an_atheist ~/Dropbox/passwords
