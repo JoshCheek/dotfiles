@@ -26,3 +26,12 @@ installer.append "#{home_dir}/.config/fish/private_config.fish", %Q(set --export
 
 # .vim
 installer.curl "#{home_dir}/.vim/autoload/pathogen.vim", "https://raw.github.com/tpope/vim-pathogen/master/autoload/pathogen.vim"
+File.readlines("#{dotfiles_dir}/vimrc")
+    .drop_while { |line| !line['Pathogen plugins'] }
+    .drop(2) # remove the comments
+    .each  { |line|
+      repo       = line.split.last
+      basename   = File.basename repo.sub /\.git$/, ''
+      target_dir = "#{home_dir}/.vim/bundle/#{basename}"
+      installer.git_clone_or_pull repo, target_dir
+    }

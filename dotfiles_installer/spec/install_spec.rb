@@ -295,7 +295,7 @@ describe 'installer' do
         # .vim
         expect(File.readlines("#@home_dir/.vim/autoload/pathogen.vim").first) # installs pathogen
             .to eq %Q(" pathogen.vim - path option manipulation\n)
-        # it 'needs to clone all the plugins into ~/.vim/bundle' do
+        expect(test 'd', "#@home_dir/.vim/bundle/nerdtree").to eq true # assume that if nerdtree exists, then all the plugins got installed
       end
     end
   end
