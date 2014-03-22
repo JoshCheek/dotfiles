@@ -1,11 +1,12 @@
 #!/usr/bin/env ruby
 
-$LOAD_PATH.unshift File.expand_path '../../lib', __FILE__
+actual_file = File.realdirpath(__FILE__)
+$LOAD_PATH.unshift File.expand_path '../../lib', actual_file
 require 'install_dotfiles'
 
 installer = InstallDotfiles.new($stdin, $stdout)
 
-dotfiles_dir = File.expand_path '../../..', __FILE__
+dotfiles_dir = File.expand_path '../../..', actual_file
 home_dir     = ENV['HOME']
 
 # symlinks
