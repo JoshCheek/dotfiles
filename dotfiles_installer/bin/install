@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift File.expand_path '../../lib', __FILE__
+require 'install_dotfiles'
+
+installer = InstallDotfiles.new(ARGV, $stdin, $stdout)
+
+dotfiles_dir = File.expand_path '../../..', __FILE__
+home_dir     = ENV['HOME']
+
+installer.symlink existing: "#{dotfiles_dir}/ackrc",     new: "#{home_dir}/.ackrc"
+installer.symlink existing: "#{dotfiles_dir}/fish",      new: "#{home_dir}/.config/fish"
+installer.symlink existing: "#{dotfiles_dir}/gemrc",     new: "#{home_dir}/.gemrc"
+installer.symlink existing: "#{dotfiles_dir}/gitconfig", new: "#{home_dir}/.gitconfig"
+installer.symlink existing: "#{dotfiles_dir}/gitignore", new: "#{home_dir}/.gitignore"
+installer.symlink existing: "#{dotfiles_dir}/vimrc",     new: "#{home_dir}/.vimrc"
+installer.symlink existing: "#{dotfiles_dir}/rspec",     new: "#{home_dir}/.rspec"
+
+installer.append "#{home_dir}/.bash_profile",                    %Q(export PATH="#{dotfiles_dir}/bin:$PATH")
+installer.append "#{home_dir}/.bash_profile",                    %Q(source "#{dotfiles_dir}/bash_profile")
+installer.append "#{home_dir}/.config/fish/private_config.fish", %Q(set --export PATH "#{dotfiles_dir}/bin" $PATH)
+
