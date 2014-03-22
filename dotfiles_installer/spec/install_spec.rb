@@ -263,70 +263,40 @@ describe 'installer' do
   end
 
 
-  describe 'installations' do
-    around do |spec|
-      home_dir "moves_all_files" do |home_dir|
-        @home_dir  = home_dir
-        invocation = execute 'install'
-        expect(invocation.status).to be_success
-        spec.call
-      end
-    end
-
+  describe 'integration' do
     def actual(filename)
       File.expand_path "#$root_dir/../#{filename}"
     end
 
-    it 'installs ackrc        to $HOME/.ackrc' do
-      expect(File.realdirpath "#@home_dir/.ackrc").to eq actual 'ackrc'
-    end
+    it 'actually installs everything' do
+      home_dir "moves_all_files" do |home_dir|
+        @home_dir  = home_dir
+        invocation = execute 'install'
+        expect(invocation.status).to be_success
 
-    it 'installs fish         to $HOME/.config/fish' do
-      expect(File.realdirpath "#@home_dir/.config/fish").to eq actual 'fish'
-    end
+        # symlinks
+        expect(File.realdirpath "#@home_dir/.ackrc"       ).to eq actual 'ackrc'     # ackrc     -> $HOME/.ackrc
+        expect(File.realdirpath "#@home_dir/.config/fish" ).to eq actual 'fish'      # fish      -> $HOME/.config/fish
+        expect(File.realdirpath "#@home_dir/.gemrc"       ).to eq actual 'gemrc'     # gemrc     -> $HOME/.gemrc
+        expect(File.realdirpath "#@home_dir/.gitconfig"   ).to eq actual 'gitconfig' # gitconfig -> $HOME/.gitconfig
+        expect(File.realdirpath "#@home_dir/.gitignore"   ).to eq actual 'gitignore' # gitignore -> $HOME/.gitignore
+        expect(File.realdirpath "#@home_dir/.vimrc"       ).to eq actual 'vimrc'     # vimrc     -> $HOME/.vimrc
+        expect(File.realdirpath "#@home_dir/.rspec"       ).to eq actual 'rspec'     # rspec     -> $HOME/.rspec
 
-    it 'installs gemrc        to $HOME/.gemrc' do
-      expect(File.realdirpath "#@home_dir/.gemrc").to eq actual 'gemrc'
-    end
-
-    it 'installs gitconfig    to $HOME/.gitconfig' do
-      expect(File.realdirpath "#@home_dir/.gitconfig").to eq actual 'gitconfig'
-    end
-
-    it 'installs gitignore    to $HOME/.gitignore' do
-      expect(File.realdirpath "#@home_dir/.gitignore").to eq actual 'gitignore'
-    end
-
-    it 'installs vimrc        to $HOME/.vimrc' do
-      expect(File.realdirpath "#@home_dir/.vimrc").to eq actual 'vimrc'
-    end
-
-    it 'installs rspec        to $HOME/.rspec' do
-      expect(File.realdirpath "#@home_dir/.rspec").to eq actual 'rspec'
-    end
-
-    describe 'bash_profile' do
-      it 'appends the bin into the path' do
+        # bash_profile
         bash_profile = File.read "#@home_dir/.bash_profile"
-        expect(bash_profile).to include %Q(export PATH="#{actual 'bin'}:$PATH")
-      end
+        expect(bash_profile).to include %Q(export PATH="#{actual 'bin'}:$PATH") # appends the bin into the path
+        expect(bash_profile).to include %Q(source "#{actual 'bash_profile'}")   # appends the sourcing of the dotfiles bash_profile
 
-      it 'appends the sourcing of the dotfiles bash_profile' do
-        bash_profile = File.read "#@home_dir/.bash_profile"
-        expect(bash_profile).to include %Q(source "#{actual 'bash_profile'}")
-      end
-    end
-
-    describe 'fish/private_config.fish' do
-      it 'appends the bin into the path' do
+        # fish/private_config.fish
         private_config = File.read "#@home_dir/.config/fish/private_config.fish"
-        expect(private_config).to include %Q(set --export PATH "#{actual 'bin'}" $PATH)
+        expect(private_config).to include %Q(set --export PATH "#{actual 'bin'}" $PATH) # appends bin into the path
+
+        # .vim
+        expect(File.readlines("#@home_dir/.vim/autoload/pathogen.vim").first) # installs pathogen
+            .to eq %Q(" pathogen.vim - path option manipulation\n)
+        # it 'needs to clone all the plugins into ~/.vim/bundle' do
       end
     end
-  end
-
-  describe '.vim' do
-    it 'needs to curl that file from the pathogen website into ~/.vim/autoload/pathogen.vim'
-    it 'needs to clone all the plugins into ~/.vim/bundle'
   end
 end
