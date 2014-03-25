@@ -1,8 +1,3 @@
-# For configs that I don't want in my public git (ie work stuff and stuff that changes across computers)
-if test -e ~/.config/fish/private_config.fish
-  source   ~/.config/fish/private_config.fish
-end
-
 # various paths
 set --export PATH "$HOME/bin"               \
                   "/usr/local/bin"          \
@@ -34,3 +29,9 @@ source /usr/local/share/chruby/chruby.fish
 
 # Don't print a greeting when I start the shell
 set --erase fish_greeting
+
+# For configs that I don't want in my public git (ie work stuff and stuff that changes across computers)
+if test -e ~/.config/fish/private_config.fish
+  source   ~/.config/fish/private_config.fish
+end
+
