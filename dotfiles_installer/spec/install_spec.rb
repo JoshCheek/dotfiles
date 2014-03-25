@@ -270,6 +270,7 @@ describe 'installer' do
 
     it 'actually installs everything' do
       home_dir "moves_all_files" do |home_dir|
+        pending 'Integration is turned off in environment' if ENV['NO_INTEGRATION']
         @home_dir  = home_dir
         invocation = execute 'install'
         expect(invocation.status).to be_success
