@@ -15,6 +15,7 @@ function cd --description 'Change directory'
     else
       prevd
     end
+    after_cd
     return $status
   end
 
@@ -27,7 +28,6 @@ function cd --description 'Change directory'
     set -g __fish_cd_direction prev
   end
 
-  fish $HOME/.config/fish/after_cd.fish # my customization: post cd hook
-
+  after_cd
   return $cd_status
 end
