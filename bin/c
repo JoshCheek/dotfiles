@@ -59,9 +59,8 @@ class OutputStream
   end
 
   def widths_for(array_of_fields)
-    result = array_of_fields.transpose.map { |col|
-      col.compact.max_by(&:length).length }
-    result
+    array_of_fields.transpose
+                   .map { |col| col.compact.max_by(&:length).length }
   end
 
   def field_to_width(field, width, padding)
