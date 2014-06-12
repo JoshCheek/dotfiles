@@ -1,4 +1,9 @@
 #!/bin/bash
 
+# there is apparently a ctags implementation installed by default in OSX,
+# this default one is not compatible with the below command.
+# To get the below command to work, install the ctags from homebrew:
+# $ brew install ctags
+
 # Take a look at the exclude dirs to make sure theyre right
 ctags -R --exclude=.git --exclude=log --exclude=coverage --exclude=spec --exclude=pkg *
