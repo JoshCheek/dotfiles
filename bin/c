@@ -42,6 +42,8 @@ class OutputStream
     flush unless align_columns
   end
 
+  private
+
   def flush
     column_widths = widths_for unflushed
     unflushed.each do |fields|
