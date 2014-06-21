@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby -p
+
+# No Ansi - strip ansi escape sequences from input
+gsub /\e\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]/, String.new
+

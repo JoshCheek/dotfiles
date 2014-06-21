@@ -59,9 +59,6 @@
 
 # PROGRAMS (functions, binaries, aliases that behave like programs)
 
-  # No Ansi - strip ansi escape sequences from input
-    alias na='ruby -pe "gsub /\e\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]/, String.new"'
-
   # Give it a # and a dir, it will cd to that dir, then `cd ..` however many times you've indicated with the number
   # The number defaults to 1, the dir, if not provided, defaults to the output of the previous command
   # This lets you find the dir on one line, then run the command on the next
