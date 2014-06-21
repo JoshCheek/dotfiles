@@ -58,17 +58,6 @@
 
 
 # PROGRAMS (functions, binaries, aliases that behave like programs)
-  # when you forget to bundle exec, just run `be` it will rerun the command with bundler
-  # when you want to run a command with bundler, just prepend this function, ie `be rake spec`
-    function be {
-      if [ $# -eq 0 ]; then
-        local command=bundle\ exec\ "$(history | grep -v '^ *[0-9]* *be$' | tail -1 | sed 's/^[ \t]*[0-9]*[ \t]*//')"
-        echo expand to: "$command"
-        eval "$command"
-      else
-        bundle exec "$@"
-      fi
-    }
 
   # when making the typo "mat e." which I make all the fucking time -.^ reinterpret it to "mate ."
     function mat {
