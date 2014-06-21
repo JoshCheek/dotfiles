@@ -25,7 +25,7 @@
   # suspended processes
     alias j=jobs
 
-    for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+    for i in $(seq 30)
     do
       alias "$i=fg %$i"
       alias "k$i=kill -9 %$i"
