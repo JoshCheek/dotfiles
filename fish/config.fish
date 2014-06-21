@@ -10,9 +10,6 @@ set --export CUCUMBER_FORMAT pretty
 
 alias strip "ruby -ne 'print \$_.strip'" # should make this a real function
 
-# Not really using this anymore, started using 1password, which is okay, but will leave this anyway
-set -x she_told_me_she_had_a_god_complex_i_told_her_i_was_an_atheist ~/Dropbox/passwords
-
 # Custom kill and foreground commands since I work with a lot of background jobs
 for i in (seq 30)
   eval "function $i
