@@ -58,14 +58,6 @@
 
 
 # PROGRAMS (functions, binaries, aliases that behave like programs)
-  # give the fullpaths of files
-    function fullpath {
-      ruby -e '
-        $stdin.each_line { |path| puts File.expand_path path }  if ARGV.empty?
-        ARGV.each { |path| puts File.expand_path path }         unless ARGV.empty?
-      ' "$@"
-    }
-
   # when you forget to bundle exec, just run `be` it will rerun the command with bundler
   # when you want to run a command with bundler, just prepend this function, ie `be rake spec`
     function be {
