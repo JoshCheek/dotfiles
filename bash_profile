@@ -59,15 +59,6 @@
 
 # PROGRAMS (functions, binaries, aliases that behave like programs)
 
-  # This is absolutely disgusting, but I can't find a better way to do it. It will colourize the
-  # standarderr red (but will print on stdout, and stdout on stderr)
-    function colour-red {
-      ruby -e '$stderr.print "\e[31m", $stdin.read, "\e[0m"'
-    }
-    function colour-stderr-red {
-      ( $* 3>&1 1>&2- 2>&3- ) | colour-red
-    }
-
   # At some point it might become necessary to rewrite this in C, but for now this will do
     alias chomp="ruby -e 'print \$stdin.read.chomp'"
 
