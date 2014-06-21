@@ -53,9 +53,6 @@
       done
     }
 
-  # homebrew
-    alias brew-formulas="open 'https://github.com/mxcl/homebrew/tree/master/Library/Formula'"
-
   # Ruby
     alias cuke="cucumber"
 
