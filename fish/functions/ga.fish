@@ -1,1 +1,0 @@
-alias ga "git add"

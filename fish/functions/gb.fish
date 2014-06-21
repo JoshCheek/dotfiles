@@ -1,1 +1,0 @@
-alias gb "git branch"

@@ -7,9 +7,7 @@
   whitespace = red reverse
 [alias]
   d  = diff --patience --ignore-space-change
-  s  = show --patience --ignore-space-change
   co = checkout
-  ci = commit
   st = status
   br = branch
   brpb = !git rev-parse --abbrev-ref HEAD | xargs echo -n | pbcopy

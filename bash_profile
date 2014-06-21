@@ -53,18 +53,6 @@
       done
     }
 
-  # git
-    alias gsh="  git s"                                                      # git show with my custom options (see gitconfig)
-    alias gs="   git status"
-    alias gd="   git d"                                                      # git diff with my custom options
-    alias go="   colour-stderr-red git checkout"
-    alias gb="   git branch"
-    alias ga="   git add"
-    alias gcm="  git commit -m"
-    alias gp="   git push"
-    alias gh="   git hist"
-    alias brpb=" git rev-parse --abbrev-ref HEAD | xargs echo -n | pbcopy"
-
   # homebrew
     alias brew-formulas="open 'https://github.com/mxcl/homebrew/tree/master/Library/Formula'"
 

@@ -1,1 +1,0 @@
-alias gd "git d"

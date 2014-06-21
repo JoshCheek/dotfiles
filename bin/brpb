@@ -1,0 +1,2 @@
+#!/bin/sh
+git git rev-parse --abbrev-ref HEAD | xargs echo -n | pbcopy
