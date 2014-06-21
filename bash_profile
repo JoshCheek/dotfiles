@@ -53,9 +53,6 @@
       done
     }
 
-  # Ruby
-    alias cuke="cucumber"
-
   # generic
     alias ss="python -m SimpleHTTPServer" # simple server (serves current dir on port 8000)
 
