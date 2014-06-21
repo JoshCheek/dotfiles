@@ -1,1 +1,2 @@
-#!/usr/bin/env bundle exec
+#!/bin/sh
+bundle exec "$@"
