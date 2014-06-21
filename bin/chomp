@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+print $stdin.read.chomp
+
+# At some point it might become necessary to rewrite this in C
+# but for now this will do
+

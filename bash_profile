@@ -59,9 +59,6 @@
 
 # PROGRAMS (functions, binaries, aliases that behave like programs)
 
-  # At some point it might become necessary to rewrite this in C, but for now this will do
-    alias chomp="ruby -e 'print \$stdin.read.chomp'"
-
   # No Ansi - strip ansi escape sequences from input
     alias na='ruby -pe "gsub /\e\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]/, String.new"'
 
