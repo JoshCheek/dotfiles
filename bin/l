@@ -7,4 +7,4 @@
 # -o suppress group
 # -h humanize sizes
 # -q print nongraphic chars as question marks
-ls -lFGgohq
+ls -lFGgohq "$@"
