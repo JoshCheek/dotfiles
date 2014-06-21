@@ -53,6 +53,14 @@
       done
     }
 
+    # kill all jobs
+    ka () {
+      for job_num in $(jobs | ruby -ne 'puts $_[/\d+/]')
+      do
+        kill -9 "%$job_num"
+      done
+    }
+
   # generic
     alias ss="python -m SimpleHTTPServer" # simple server (serves current dir on port 8000)
 
