@@ -9,14 +9,6 @@
     alias   ....="cd ../../.."
     alias  .....="cd ../../../.."
     alias ......="cd ../../../../.."
-      # -l  long format
-      # -F  / after dirs, * after exe, @ after symlink
-      # -G  colorize
-      # -g suppress owner
-      # -o suppress group
-      # -h humanize sizes
-      # -q print nongraphic chars as question marks
-    alias l="ls -lFGgohq"
 
     # override cd b/c I always want to list dirs after I cd
     # note that this won't work with rvm b/c it overrides cd.
