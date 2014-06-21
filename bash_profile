@@ -59,15 +59,6 @@
 
 # PROGRAMS (functions, binaries, aliases that behave like programs)
 
-  # when making the typo "mat e." which I make all the fucking time -.^ reinterpret it to "mate ."
-    function mat {
-      if [ $# -eq 1  -a  "$1" = "e." ]; then
-        mate .
-      else
-        builtin mat "$@" # I don't currently have a mat binary, but if ever I do, I don't want to break it
-      fi
-    }
-
   # This is absolutely disgusting, but I can't find a better way to do it. It will colourize the
   # standarderr red (but will print on stdout, and stdout on stderr)
     function colour-red {
