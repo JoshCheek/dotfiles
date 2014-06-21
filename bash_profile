@@ -58,15 +58,6 @@
 
 
 # PROGRAMS (functions, binaries, aliases that behave like programs)
-  # convert colons to newlines, ie `:2n $PATH` or `:2n < /etc/passwd`
-    function :2n {
-      if [ "$#" -eq 0 ]; then
-        tr : "\n"
-      else
-        tr : "\n" <<< "$*"
-      fi
-    }
-
   # give the fullpaths of files
     function fullpath {
       ruby -e '

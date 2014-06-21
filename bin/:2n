@@ -1,0 +1,8 @@
+#/bin/bash
+
+# convert colons to newlines, ie `:2n $PATH` or `:2n < /etc/passwd`
+if [ "$#" -eq 0 ]; then
+  tr : "\n"
+else
+  tr : "\n" <<< "$*"
+fi
