@@ -1,0 +1,10 @@
+#!/bin/bash
+
+target="$1"
+
+# disk usage
+#  -c = Display grand total (it's the first token of the last line)
+#  -h = Human readable format
+size=`du -c -h "$target" | tail -1 | awk '{ print $1 }'`
+
+echo "$target is $size"
