@@ -4,8 +4,7 @@ actual_file = File.realdirpath(__FILE__)
 $LOAD_PATH.unshift File.expand_path '../../lib', actual_file
 require 'install_dotfiles'
 
-installer = InstallDotfiles.new($stdin, $stdout)
-
+installer    = InstallDotfiles.new($stdin, $stdout)
 dotfiles_dir = File.expand_path '../../..', actual_file
 home_dir     = ENV['HOME']
 
@@ -19,14 +18,14 @@ installer.symlink existing: "#{dotfiles_dir}/vimrc",     new: "#{home_dir}/.vimr
 installer.symlink existing: "#{dotfiles_dir}/rspec",     new: "#{home_dir}/.rspec"
 
 # bash_profile
-installer.append "#{home_dir}/.bash_profile",                    %Q(export PATH="#{dotfiles_dir}/bin:$PATH")
-installer.append "#{home_dir}/.bash_profile",                    %Q(source "#{dotfiles_dir}/bash_profile")
+installer.append "#{home_dir}/.bash_profile", %Q(export PATH="#{dotfiles_dir}/bin:$PATH")
+installer.append "#{home_dir}/.bash_profile", %Q(source "#{dotfiles_dir}/bash_profile")
 
 # fish/private_config.fish
 installer.append "#{home_dir}/.config/fish/private_config.fish", %Q(set --export PATH "#{dotfiles_dir}/bin" $PATH)
 
-# .vim
-installer.curl "#{home_dir}/.vim/autoload/pathogen.vim", "https://raw.github.com/tpope/vim-pathogen/master/autoload/pathogen.vim"
+# .vim dependencies
+installer.curl "#{home_dir}/.vim/autoload/pathogen.vim", "https://raw.githubusercontent.com/tpope/vim-pathogen/master/autoload/pathogen.vim"
 File.readlines("#{dotfiles_dir}/vimrc")
     .drop_while { |line| !line['Pathogen plugins'] }
     .drop(2) # remove the comments
