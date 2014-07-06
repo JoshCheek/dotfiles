@@ -4,32 +4,48 @@ require 'open3'
 class InstallDotfiles
   CloneDirExistsError = Class.new StandardError
 
+  include FileUtils
+
   attr_accessor :stdin, :stdout
 
   def initialize(stdin, stdout)
-    self.stdin    = stdin
-    self.stdout   = stdout
+    @fileutils_output = stdout
+    self.stdin        = stdin
+    self.stdout       = stdout
   end
 
   def symlink(options)
-    existing       = File.expand_path options.fetch :existing
-    new            = File.expand_path options.fetch :new
-    new_is_symlink = Kernel.test 'l', new
-    new_exists     = Kernel.test 'e', new
-
-    if new_is_symlink && File.realdirpath(new) == File.realdirpath(existing)
-      # noop, work would be redundant
-    elsif new_is_symlink || new_exists
+    existing          = File.expand_path options.fetch :existing
+    new               = File.expand_path options.fetch :new
+    new_is_symlink    = Kernel.test 'l', new
+    new_exists        = Kernel.test 'e', new
+    redundant_symlink = new_is_symlink && File.realdirpath(new) == File.realdirpath(existing)
+    will_clobber      = !redundant_symlink && new_exists
+    noop              = redundant_symlink
+    # expect    new -> actual
+    # trying to new -> desired
+    # expectations:
+    #   new_is_symlink     true
+    #   new_exists         true <-- this is false
+    #   redundant_symlink  false
+    #   will_clobber       true
+    #   noop               false
+    require "pry"
+    binding.pry if $PRYTIME
+    if will_clobber
       should_overwrite = prompt "Overwrite #{new.inspect}? [y/n]", /^(y|n)/i do |response|
         response.downcase.start_with? 'y'
       end
       if should_overwrite
-        FileUtils.rm_rf new
-        FileUtils.ln_s existing, new
+        rm_rf new
+        ln_s existing, new
       end
+      # Informative message here?
     else
-      FileUtils.mkdir_p File.dirname(new)
-      FileUtils.ln_s    existing, new
+      stdout.print "Skipping: " if noop
+      mkdir_p File.dirname(new), verbose: true, noop: noop
+      stdout.print "Skipping: " if noop
+      ln_s    existing, new,     verbose: true, noop: noop
     end
   end
 

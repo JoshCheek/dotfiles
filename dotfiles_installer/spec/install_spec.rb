@@ -39,33 +39,46 @@ describe 'installer' do
   end
 
   describe 'symlink' do
-    it 'symlinks the fullpath of the existing file to the link location' do
-      home_dir 'symlink/good' do |home_dir|
-        existing_file = "#{home_dir}/existing"
-        new_file      = "#{home_dir}/new"
-        installer.symlink existing: existing_file, new: new_file
-        expect(File.realdirpath new_file).to eq existing_file
+    context 'when the symlink will not clobber anything', t:true do
+      before do
+        @home_dir = home_dir 'symlink/good' do |home_dir|
+          @existing_file = "#{home_dir}/existing"
+          @new_file      = "#{home_dir}/new"
+          installer.symlink existing: @existing_file, new: @new_file
+        end
+      end
+
+      it 'symlinks the fullpath of the existing file to the link location' do
+        expect(File.realdirpath @new_file).to eq @existing_file
+      end
+
+      it 'prints what commands it ran' do
+        expect(stdout.string).to include "mkdir"
+        expect(stdout.string).to include "ln -s"
       end
     end
 
-    it 'does not prompt for overwrite if the new file is already a link to the existing one' do
+    it 'skips (with a notification) if the new file is already a link to the existing one', t:true do
       home_dir 'symlink/symlink_already_exists' do |home_dir|
         existing_file = "#{home_dir}/existing"
         new_file      = "#{home_dir}/new"
         installer.symlink existing: existing_file, new: new_file # symlink it
         installer.symlink existing: existing_file, new: new_file # this time, new already exists
         expect(File.realdirpath new_file).to eq existing_file
+        expect(stdout.string).to include "Skipping: mkdir"
+        expect(stdout.string).to include "Skipping: ln -s"
       end
     end
 
-    describe 'after prompting when the file exists' do
-      it 'prompts when new is a symlink to some other file' do
+    describe 'after prompting when the file exists', t:true do
+      it 'prompts when new is a symlink to some other file', t2:true do
         home_dir "symlink/reprompts_when_symlinked_to_other" do |home_dir|
           desired_file = "#{home_dir}/desired"
           actual_file  = "#{home_dir}/actual"
           new_file     = "#{home_dir}/new"
           stdin.string = "wat\nyes\nrest"
           installer.symlink existing: actual_file,  new: new_file
+          $PRYTIME = true
           installer.symlink existing: desired_file, new: new_file
           expect(File.realdirpath new_file).to eq desired_file
           expect(stdin.read).to eq "rest"
@@ -123,6 +136,32 @@ describe 'installer' do
             installer.symlink existing: existing_file, new: new_file
             expect(File.read new_file).to eq 'some nonsense'
           end
+        end
+      end
+
+      it 'prints the command when it overwrites' do
+        home_dir 'symlink/no_overwrite' do |home_dir|
+          stdin.string  = "yes"
+          existing_file = "#{home_dir}/existing"
+          new_file      = "#{home_dir}/new"
+          FileUtils.rm_f new_file
+          File.open(new_file, 'w') { |f| f.write 'some nonsense' }
+          installer.symlink existing: existing_file, new: new_file
+          expect(stdout.string).to match /^rm -rf/
+          expect(stdout.string).to match /^ln -s/
+        end
+      end
+
+      it 'prints that it is skipping the command when it does not overwrite' do
+        home_dir 'symlink/no_overwrite' do |home_dir|
+          stdin.string  = "no"
+          existing_file = "#{home_dir}/existing"
+          new_file      = "#{home_dir}/new"
+          FileUtils.rm_f new_file
+          File.open(new_file, 'w') { |f| f.write 'some nonsense' }
+          installer.symlink existing: existing_file, new: new_file
+          expect(stdout.string).to include 'Skipping: rm -rf'
+          expect(stdout.string).to include 'Skipping: ln -s'
         end
       end
 
@@ -270,7 +309,10 @@ describe 'installer' do
 
     it 'actually installs everything' do
       home_dir "moves_all_files" do |home_dir|
-        pending 'Integration is turned off in environment' if ENV['NO_INTEGRATION']
+        if ENV['NO_INTEGRATION']
+          pending 'Integration is turned off in environment'
+          raise "don't run this code"
+        end
         @home_dir  = home_dir
         invocation = execute 'install'
         expect(invocation.status).to be_success
@@ -298,6 +340,11 @@ describe 'installer' do
         expect(File.readlines("#@home_dir/.vim/autoload/pathogen.vim").first) # installs pathogen
             .to eq %Q(" pathogen.vim - path option manipulation\n)
         expect(test 'd', "#@home_dir/.vim/bundle/nerdtree").to eq true # assume that if nerdtree exists, then all the plugins got installed
+
+        # words
+
+
+        # cln
       end
     end
   end
