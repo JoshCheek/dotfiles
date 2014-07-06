@@ -1,3 +1,10 @@
 #!/usr/bin/env ruby
-$stdin.each_line { |path| puts File.expand_path path }  if ARGV.empty?
-ARGV.each { |path| puts File.expand_path path }         unless ARGV.empty?
+
+relative_dirs = (ARGV.empty? ? $stdin.read.each_line : ARGV)
+absolute_dirs = relative_dirs.map { |path| File.expand_path(path) }
+
+if absolute_dirs.size == 1
+  print absolute_dirs.first.chomp # no newline when there is only one dir
+else
+  absolute_dirs.each { |dir| puts dir }
+end
