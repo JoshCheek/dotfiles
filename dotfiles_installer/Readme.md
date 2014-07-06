@@ -1,7 +1,7 @@
 # Dotfiles Installer
 Installs my dotfiles onto a new system.
 
-For specifics of what will be installed, run the binary with --help or --dry-run
+TODO: For specifics of what will be installed, run the binary with --help or --dry-run
 
 ## Things Considered (i.e. can you feel safe running this?)
 * TODO: All options can be individually prompted to see if you want to do them with --prompt
