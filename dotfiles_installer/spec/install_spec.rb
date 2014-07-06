@@ -283,6 +283,7 @@ describe 'installer' do
         expect(File.realdirpath "#@home_dir/.gitignore"   ).to eq actual 'gitignore' # gitignore -> $HOME/.gitignore
         expect(File.realdirpath "#@home_dir/.vimrc"       ).to eq actual 'vimrc'     # vimrc     -> $HOME/.vimrc
         expect(File.realdirpath "#@home_dir/.rspec"       ).to eq actual 'rspec'     # rspec     -> $HOME/.rspec
+        expect(File.realdirpath "#@home_dir/.pryrc"       ).to eq actual 'pryrc'     # pryrc     -> $HOME/.pryrc
 
         # bash_profile
         bash_profile = File.read "#@home_dir/.bash_profile"
