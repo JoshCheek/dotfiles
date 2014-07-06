@@ -226,8 +226,8 @@ describe 'installer' do
   end
 
 
-  describe 'curl', t:true do
-    before { Kernel.stub(:system).and_return('curl-result') }
+  describe 'curl' do
+    before { allow(Kernel).to receive(:system).and_return('curl-result') }
 
     it 'makes the path to the directory to curl into' do
       target_dir = "#$proving_grounds_dir/curl/make_path/intermediate_directory"
@@ -237,7 +237,7 @@ describe 'installer' do
 
     it 'invokes curl with --silent and --show-error, the target, and the source and writes it to the file' do
       filename = "#$proving_grounds_dir/curl/check_args/filename"
-      Kernel.should_receive(:system).with(%Q(curl -Sso #{filename.inspect} "some_url"))
+      expect(Kernel).to receive(:system).with(%Q(curl -Sso #{filename.inspect} "some_url"))
       installer.curl filename, 'some_url'
     end
 
@@ -245,7 +245,7 @@ describe 'installer' do
       home_dir 'curl/already_exists' do |home_dir|
         Dir.chdir home_dir do
           FileUtils.touch 'filename'
-          Kernel.should_receive :system
+          expect(Kernel).to receive :system
           stdin.string = "yes"
           installer.curl "#{home_dir}/filename", "some_url"
         end
@@ -254,7 +254,7 @@ describe 'installer' do
       home_dir 'curl/already_exists' do |home_dir|
         Dir.chdir home_dir do
           FileUtils.touch 'filename'
-          Kernel.should_not_receive :system
+          expect(Kernel).to_not receive :system
           stdin.string = "no"
           installer.curl "#{home_dir}/filename", "some_url"
         end
