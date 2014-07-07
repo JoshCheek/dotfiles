@@ -1,0 +1,298 @@
+#!/usr/bin/env ruby
+# Use like this:
+#   $ scan_notes < file
+# it will print the top-level of lines
+# then say you want to look at the children of 3
+#   $ scan_notes 3 < file
+# you can continue to dig down if you like
+#   $ scan_notes 4 1 3 < file
+
+# Maybe features will be added one day:
+#   ScanNotes:
+#     --help flag
+#     Handle bad args:
+#       non-numeric
+#       out of bounds
+#     Show something useful when there are no children
+#     -n/--number-of-children
+#     possibly a -i/--interactive, not sure if this will work well, but keyboard magician did something kind of like this
+#     show path that you took to current node
+#   IndentationTree:
+#     Options to linting
+#       no_toplevel_indentation: false # implies the first node must have a depth of 0
+#       consistent_indentation:  true  # implies all depths are a multiple of n
+#       exact_indentation:       n     # the n that all depths are a multiple of
+#     Prettier inspect
+#     Put blank-lines back in, but have options to filter them (parser), and to disallow them (linter)
+#     Some traversal methods for nodes
+
+module IndentationTree
+  class Node < Struct.new(:is_root, :depth, :line_number, :value, :children)
+    alias root? is_root
+
+    def initialize(is_root:, depth:, line_number:, value:, children:)
+      super is_root, depth, line_number, value, children
+    end
+  end
+
+
+  class FailedLint < StandardError
+    attr_reader :lint_result
+
+    def initialize(lint_result)
+      @lint_result = lint_result
+      super build_message(lint_result)
+    end
+
+    def validate!
+      raise self unless message.empty?
+    end
+
+    private
+
+    def build_message(lint_result)
+      lint_result[:inconsistent_child_depths].each_with_object("") do |node, message|
+        children_message = node.children.map do |child|
+          "  #{child.line_number}: #{child.value.inspect}"
+        end
+        message << "Inconsistent child depths:\n#{children_message.join "\n"}\n"
+      end
+    end
+  end
+
+
+  module Lint
+    extend self
+    def string(string)
+      tree IndentationTree.parse(string)
+    end
+
+    def tree(root)
+      lint_results = {inconsistent_child_depths: []}
+      _lint_tree lint_results, root
+    end
+
+    private
+
+    def _lint_tree(lint_results, root)
+      children   = root.children
+      num_depths = children.map(&:depth).uniq.size
+      if 1 < num_depths
+        lint_results[:inconsistent_child_depths] << root
+      end
+      children.each do |child|
+        _lint_tree lint_results, child
+      end
+      lint_results
+    end
+  end
+
+  extend self
+
+  # builds the tree, but raises if it fails linting
+  def parse!(string)
+    root, queue = build_tree string
+    result = Lint.tree root
+    FailedLint.new(result).validate!
+    root
+  end
+
+  def parse(string)
+    root, * = build_tree(string)
+    root
+  end
+
+  private
+
+  def build_tree(string)
+    root  = Node.new is_root: true, depth: -1, line_number: -1, value: 'root', children: []
+    queue = node_queue_for(string)
+    extract_children(root, queue)
+    raise "This shouldn't be possible!" unless queue.empty?
+    root
+  end
+
+  def extract_children(parent, queue)
+    return parent if queue.empty?
+    if parent.depth < queue.first.depth
+      child = queue.shift
+      parent.children << child
+      extract_children child,  queue
+      extract_children parent, queue
+    end
+  end
+
+  def node_queue_for(string)
+    string.lines
+          .map.with_index(1)
+          .reject { |line, _| line =~ /^\s*$/ }
+          .map { |line, line_number|
+            Node.new(is_root:     false,
+                     depth:       line[/^\s*/].size, # amount of leading indentation
+                     line_number: line_number,
+                     value:       line.strip,
+                     children:    Array.new)
+          }
+  end
+end
+
+
+class ScanNotes
+  def self.call(stdin, argv)
+    new(stdin, argv).call
+  end
+
+  def initialize(stdin, argv)
+    @stdin = stdin
+    @path  = argv.map(&:to_i)
+  end
+
+  def call
+    root   = IndentationTree.parse! stdin.read
+    target = path.reduce(root) { |node, n| node.children[n] }
+    target.children
+          .map.with_index { |child, index| "#{index}. #{child.value}\n" }
+          .join("")
+  end
+
+  private
+
+  attr_reader :stdin, :path
+end
+
+if $0 !~ /rspec/
+  puts ScanNotes.call($stdin, ARGV)
+else
+  require 'stringio'
+
+  def to_ary_tree(root)
+    children = root.children.map { |child| to_ary_tree child }
+    return children if root.root?
+    [root.value, children]
+  end
+
+  describe IndentationTree, tree:true do
+    # run against manifesto: /Users/josh/code/todo-game/todo_manifesto.txt
+    def call(string)
+      to_ary_tree IndentationTree.parse!(string)
+    end
+
+    it 'turns String into a tree' do
+      expect(call "a").to eq [['a', []]]
+      expect(call "a\nb").to eq [['a', []],
+                                 ['b', []]]
+      expect(call "a\n b").to eq [['a', [['b', []]]]]
+      expect(call "a\n b\n c\nd").to eq [['a', [['b', []],
+                                                ['c', []]
+                                               ]],
+                                         ['d', []]]
+      expect(call "a\n b\n  c").to eq [['a', [['b', [['c', []]]]]]]
+    end
+
+    it 'can deal with whatever amount of indentation, so long as it is consistent across childs' do
+      expect(call "a\n b\n  c").to eq [['a', [['b', [['c', []]]]]]]
+      expect(call "a\n  b\n   c").to eq [['a', [['b', [['c', []]]]]]]
+      expect(call "a\n   b\n    c").to eq [['a', [['b', [['c', []]]]]]]
+    end
+
+    it 'ignores leading indentation' do
+      expect(call " a\n"\
+                  " b\n"\
+                  "   c\n"\
+                  " d").to eq [["a", []],
+                               ["b", [["c", []]]],
+                               ["d", []]]
+    end
+
+    it 'ignores blank lines, but this does not fuck up the line numbers' do
+      root = IndentationTree.parse("a\n"\
+                                   "\n"\
+                                   "b\n"\
+                                    "    \n"\
+                                    "c")
+      expect(root.children.size).to eq 3
+      a, b, c = root.children
+      expect(a.children).to be_empty
+      expect(b.children).to be_empty
+      expect(c.children).to be_empty
+      expect(a.line_number).to eq 1
+      expect(b.line_number).to eq 3
+      expect(c.line_number).to eq 5
+    end
+
+    specify 'pares vs parse!: the bang-version raises if it fails linting, ' do
+      IndentationTree.parse("a\n  b\n c")
+      expect { IndentationTree.parse! "a\n  b\n c" }.to raise_error IndentationTree::FailedLint, /2: "b"\n  3: "c"/
+    end
+
+    describe 'linting' do
+      it 'identifies inconsistent indentation (e.g. 2 spaces and then 3 spaces)' do
+        result = IndentationTree::Lint.string "a\n"\
+                                              "  b\n"\
+                                              "    c\n"\
+                                              "   d\n"\
+                                              " e\n"
+        sibs = result[:inconsistent_child_depths]
+        expect(sibs.size).to eq 2
+        expect(sibs[0].children.map(&:value)).to eq ['b', 'e']
+        expect(sibs[1].children.map(&:value)).to eq ['c', 'd']
+      end
+    end
+  end
+
+
+
+  describe ScanNotes, bin:true do
+    def call(argv, stdin=fixture)
+      whitespace = stdin[/\A\s*/]
+      stdin      = stdin.gsub(/^#{whitespace}/, "")
+      ScanNotes.call(StringIO.new(stdin), argv)
+    end
+
+    let(:fixture) { <<-STDIN.gsub(/^      /, '') }
+      A
+        a
+        b
+          l
+        c
+          m
+      B
+        d
+        e
+          x
+            y
+              z
+        f
+      C
+      STDIN
+
+    it 'prints the topmost level of the note string from stdin, numbering lines as it goes' do
+      expect(call []).to eq "0. A\n1. B\n2. C\n"
+    end
+
+    it 'treats numbers on argv as array indexes in its lines, printing that row\'s children' do
+      expect(call %w[0]).to eq "0. a\n1. b\n2. c\n"
+      expect(call %w[1]).to eq "0. d\n1. e\n2. f\n"
+    end
+
+    it 'can take multiple line numbers to dive down to a topic' do
+      expect(call %w[0 1]).to eq "0. l\n"
+      expect(call %w[0 2]).to eq "0. m\n"
+      expect(call %w[1 1 0 0]).to eq "0. z\n"
+    end
+
+    context 'with -a or --all flag' do
+      it 'prints all children' do
+        raise pending
+        expect(call %w[-a]).to eq
+      end
+    end
+    context '--help flag'
+    # ERRORS
+    context 'when given non-numeric args'
+    context 'when index is out of bounds'
+    context 'when there are no results to display'
+      # expect(call [2]).to eq "" # <-- that really what I want?
+    context 'when file is formatted poorly'
+  end
+end
