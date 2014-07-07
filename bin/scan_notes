@@ -21,7 +21,7 @@
 #     --line for printing by line number instead of child position
 #     --depth 2 to show children (default depth = 1)
 #     --continuation-character="c" to signal that next line is a continuation of previous
-#   IndentationTree:
+#   TextIndentationToTree:
 #     Options to linting
 #       no_toplevel_indentation: false # implies the first node must have a depth of 0
 #       consistent_indentation:  true  # implies all depths are a multiple of n
@@ -32,7 +32,7 @@
 #     Some way to specify that next line is actually part of current line (block, probably)
 #     parent pointer
 
-module IndentationTree
+module TextIndentationToTree
   class Node < Struct.new(:is_root, :depth, :line_number, :value, :children)
     alias root? is_root
 
@@ -70,7 +70,7 @@ module IndentationTree
   module Lint
     extend self
     def string(string)
-      tree IndentationTree.parse(string)
+      tree TextIndentationToTree.parse(string)
     end
 
     def tree(root)
@@ -154,7 +154,7 @@ class ScanNotes
   end
 
   def call
-    root   = IndentationTree.parse! stdin.read
+    root   = TextIndentationToTree.parse! stdin.read
     target = path.reduce(root) { |node, n| node.children[n] }
     target.children
           .map.with_index { |child, index| "#{index}. #{child.value}\n" }
@@ -177,10 +177,10 @@ else
     [root.value, children]
   end
 
-  describe IndentationTree, tree:true do
+  describe TextIndentationToTree, tree:true do
     # run against manifesto: /Users/josh/code/todo-game/todo_manifesto.txt
     def call(string)
-      to_ary_tree IndentationTree.parse!(string)
+      to_ary_tree TextIndentationToTree.parse!(string)
     end
 
     it 'turns String into a tree' do
@@ -211,7 +211,7 @@ else
     end
 
     it 'ignores blank lines, but this does not fuck up the line numbers' do
-      root = IndentationTree.parse("a\n"\
+      root = TextIndentationToTree.parse("a\n"\
                                    "\n"\
                                    "b\n"\
                                     "    \n"\
@@ -227,13 +227,13 @@ else
     end
 
     specify 'pares vs parse!: the bang-version raises if it fails linting, ' do
-      IndentationTree.parse("a\n  b\n c")
-      expect { IndentationTree.parse! "a\n  b\n c" }.to raise_error IndentationTree::FailedLint, /2: "b"\n  3: "c"/
+      TextIndentationToTree.parse("a\n  b\n c")
+      expect { TextIndentationToTree.parse! "a\n  b\n c" }.to raise_error TextIndentationToTree::FailedLint, /2: "b"\n  3: "c"/
     end
 
     describe 'linting' do
       it 'identifies inconsistent indentation (e.g. 2 spaces and then 3 spaces)' do
-        result = IndentationTree::Lint.string "a\n"\
+        result = TextIndentationToTree::Lint.string "a\n"\
                                               "  b\n"\
                                               "    c\n"\
                                               "   d\n"\
