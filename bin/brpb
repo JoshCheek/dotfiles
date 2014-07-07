@@ -1,2 +1,14 @@
-#!/bin/sh
-git git rev-parse --abbrev-ref HEAD | xargs echo -n | pbcopy
+#!/bin/bash
+
+# Copies your current git branch into your pasteboard
+# and prints it out
+current_git_branch="$(git rev-parse --abbrev-ref HEAD)"
+status="$?"
+
+if [[ "0" -ne "$status" ]]
+then
+  exit "$status"
+fi
+
+echo "$current_git_branch"
+echo -n "$current_git_branch" | pbcopy
