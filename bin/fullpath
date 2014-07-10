@@ -1,10 +1,24 @@
 #!/usr/bin/env ruby
 
+copy1 = ARGV.delete '-c'
+copy2 = ARGV.delete '--copy'
+should_copy = copy1 || copy2
+
 relative_dirs = (ARGV.empty? ? $stdin.read.each_line : ARGV)
 absolute_dirs = relative_dirs.map { |path| File.expand_path(path) }
 
+def pbcopy(str)
+  require 'open3'
+  Open3.popen3("pbcopy") { |stdin, stdout, stderr, wait_thr|
+    stdin.write str
+  }
+end
+
 if absolute_dirs.size == 1
-  print absolute_dirs.first.chomp # no newline when there is only one dir
+  name = absolute_dirs.first.chomp # no newline when there is only one dir
+  pbcopy name
+  print name
 else
   absolute_dirs.each { |dir| puts dir }
+  pbcopy absolute_dirs.join("\n")
 end
