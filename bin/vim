@@ -1,0 +1,14 @@
+#!/bin/sh
+
+macvim="/Applications/MacVim.app/Contents/MacOS/Vim" # get it with `brew install macvim && brew linkapps`
+systemvim="/usr/bin/vim"
+
+if test -e "$macvim"
+then
+  "$macvim" "$@"
+elif test -e "$systemvim"
+then
+  "$systemvim" "$@"
+else
+  "$(whereis vim)" "$@"
+fi
