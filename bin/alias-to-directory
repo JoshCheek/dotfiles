@@ -16,11 +16,11 @@ class AliasToDirectory
   #         whether_program_errored (e.g. false implies exit status 0)
   def call
     @result ||= begin
-      definitions  = parse_defs @raw_definitions
-      flags, args  = parse_args @argv
-      output       = ''
+      definitions = parse_defs @raw_definitions
+      flags, args = parse_args @argv
+      output      = ''
       info_output = ''
-      had_error    = false
+      had_error   = false
 
       if flags.include?('-h') || flags.include?('--help')
         return self.class.help_text, "", false
@@ -81,12 +81,12 @@ end
 
 
 if $0 !~ /rspec/
-  lambda { # execute in a lambda to get a new binding so that local vars here don't override let blocks down below
-    output, info_output, had_error = AliasToDirectory.new($stdin.read, ARGV).call
+  # tap so that local vars up here don't override let blocks down below
+  AliasToDirectory.new($stdin.read, ARGV).call.tap do |output, info_output, had_error|
     $stdout.print output
     $stderr.print info_output
     exit had_error
-  }.call
+  end
 else
   RSpec.configure &:disable_monkey_patching!
 
@@ -156,7 +156,7 @@ else
     context 'when the alias definition list is empty' do
       lets(:output, :info_output, :had_error) { AliasToDirectory.new("", ["a"]).call }
       it('has nothing in the output string') { expect(output).to be_empty }
-      it('says so in the info string')       { expect(info_output).to include "must provide a list" }
+      it('says so in the info string')       { expect(info_output).to include "must provide a list" } # kinda fragile
       it('has an error')                     { expect(had_error).to be_truthy }
     end
 
