@@ -1,0 +1,192 @@
+#!/usr/bin/env ruby
+
+class AliasToDirectory
+  Definition = Struct.new :alias, :directory
+
+  def initialize(raw_definitions, argv)
+    @raw_definitions, @argv = raw_definitions, argv
+  end
+
+  def call
+    @result ||= begin
+      definitions  = parse_defs @raw_definitions
+      flags, args  = parse_args @argv
+      output       = ''
+      error_output = ''
+      had_error    = false
+
+      aliases_with_no_directories = definitions.reject(&:directory)
+      if aliases_with_no_directories.any?
+        error_output << "The following aliases are missing directories:\n"
+        aliases_with_no_directories.each do |definition|
+          error_output << "  #{definition.alias}\n"
+        end
+        had_error = true
+      end
+
+      conflicting_definitions =
+        definitions.group_by(&:alias)
+                   .reject { |a, ds| ds.map(&:directory).uniq.size == 1 }
+      if conflicting_definitions.any?
+        error_output << "Multiple aliases with conflicting directories:\n"
+        conflicting_definitions.each do |a, definitions|
+          error_output << "  #{a}\n"
+          definitions.each { |d| error_output << "    #{d.directory}\n" }
+        end
+        had_error = true
+      end
+
+      unless had_error
+        definition = definitions.find do |definition|
+          provided_alias = args.first
+          definition.alias == provided_alias
+        end
+        output << definition.directory
+      end
+      [output, error_output, had_error]
+    end
+  end
+
+  private
+
+  def parse_args(argv)
+    argv.each_with_object([[], []]) do |arg, (flags, args)|
+      (arg.start_with?('-') ? flags : args) << arg
+    end
+  end
+
+  def parse_defs(raw_definitions)
+    raw_definitions.lines.map do |raw_definition|
+      Definition.new *raw_definition.strip.split(/\s+/, 2)
+    end
+  end
+end
+
+
+if $0 !~ /rspec/
+  output, error_output, had_error = AliasToDirectory.new($stdin.read, ARGV).call
+  $stdout.print output
+  $stderr.print error_output
+  exit had_error
+else
+  RSpec.configure &:disable_monkey_patching!
+
+  RSpec.describe 'alias-to-directory' do
+    def call(aliases, argv)
+      AliasToDirectory.new(aliases, argv).call
+    end
+
+    def expect_result(aliases, argv, expected)
+      output, error_output, had_error = call(aliases, argv)
+      expect(error_output).to be_empty
+      expect(had_error   ).to be_falsy
+      expect(output      ).to eq expected
+    end
+
+    def expect_error_matches(aliases, argv, *expected_patterns)
+      _, error_output, _ = call(aliases, argv)
+      expected_patterns.each do |expected_pattern|
+        expect(error_output).to match expected_pattern
+      end
+    end
+
+    def expect_error(aliases, argv)
+      *, had_error = call(aliases, argv)
+      expect(had_error).to be_truthy
+    end
+
+    context 'reading alias list' do
+      it 'reads the list as "alias1 dir1\n alias2 dir2\n ..."' do
+        aliases = "alias1 dir1\n alias2 dir2"
+        expect_result aliases, ['alias1'], 'dir1'
+        expect_result aliases, ['alias2'], 'dir2'
+      end
+
+      it 'doesn\'t care about trailing newline in the alias list' do
+        expect_result "alias dir",   ['alias'], 'dir'
+        expect_result "alias dir\n", ['alias'], 'dir'
+      end
+
+      it "doesn't care about leading/trailing whitespace" do
+        expect_result " \t    alias dir    \t  ",   ['alias'], 'dir'
+      end
+
+      it "doesn't care about whitespace between the alias and dir" do
+        expect_result "alias  \t    dir",   ['alias'], 'dir'
+      end
+
+      it "treats all whitespace after the first one as being part of the path" do
+        expect_result "alias d i r",   ['alias'], 'd i r'
+      end
+    end
+
+    context 'when alias has no directory' do
+      alias_name = 'alias-with-no-dir'
+
+      it 'says so and errors' do
+        expect_error_matches alias_name, [alias_name], /missing director/i
+        expect_error_matches alias_name, [alias_name], /#{alias_name}/
+        expect_error alias_name, [alias_name]
+      end
+    end
+
+    context 'when same alias multiple times' do
+      context 'with same directory' do
+        output, error_output, had_error = AliasToDirectory.new("a d\na d", ['a']).call
+
+        it 'has no error' do
+          expect(had_error).to equal false
+        end
+
+        it 'does not have error output' do
+          expect(error_output).to be_empty
+        end
+
+        it 'prints the match only once' do
+          expect(output).to eq "d"
+        end
+      end
+
+      context 'with different directories' do
+        alias_defs = "a d1\n a d2"
+        it 'says so in error output' do
+          expect_error_matches alias_defs, ['a'], /conflicting director/i, /\ba\b/, /\bd1\b/, /\bd2\b/
+        end
+
+        it 'has an error' do
+          expect_error alias_defs, ['a']
+        end
+      end
+    end
+
+    context 'when a search alias is not provided' do
+      it 'prints help to stderr'
+      it 'exits with 1 if not given args'
+    end
+
+    context 'when there is an alias match' do
+      it 'prints the directory to stdout'
+      it 'exits with 0'
+    end
+
+    context 'when there is a partial alias match' do
+      it 'prints the possible matches to stderr'
+      it 'exits with 1'
+    end
+
+    context 'when there is more than one argument provided' do
+      it 'prints an error message to stderr'
+      it 'exits with 1'
+    end
+
+    context '--help, -h' do
+      it 'prints help to stdout'
+      it 'exits with 0'
+    end
+
+    context 'when given --fish-completions' do
+      it 'prints all completions in fish "complete" format and exits with 0'
+      it 'prints the possible completions in fish "complete" format and exits with 0'
+    end
+  end
+end
