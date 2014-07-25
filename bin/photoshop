@@ -1,0 +1,2 @@
+#!/bin/sh
+open -a 'Adobe Photoshop CC' "$@"
