@@ -1,0 +1,44 @@
+#!/usr/bin/env ruby
+
+
+if $0 !~ /rspec/
+else
+  describe 'alias-to-directory' do
+    context 'reading alias list' do
+      it 'reads the list of possible aliases from stdin as "alias1 dir1\n alias2 dir2\n ..."'
+      it "doesn't care about leading/trailing whitespace"
+      it "doesn't care about whitespace between the alias and dir"
+      it "treats all whitespace after the first one as being part of the path"
+    end
+
+    context 'when an alias is not provided' do
+      it 'prints help to stderr'
+      it 'exits with 1 if not given args'
+    end
+
+    context 'when there is an alias match' do
+      it 'prints the directory to stdout'
+      it 'exits with 0'
+    end
+
+    context 'when there is a partial alias match' do
+      it 'prints the possible matches to stderr'
+      it 'exits with 1'
+    end
+
+    context 'when there is more than one argument provided' do
+      it 'prints an error message to stderr'
+      it 'exits with 1'
+    end
+
+    context '--help, -h' do
+      it 'prints help to stdout'
+      it 'exits with 0'
+    end
+
+    context 'when given --fish-completions' do
+      it 'prints all completions in fish "complete" format and exits with 0'
+      it 'prints the possible completions in fish "complete" format and exits with 0'
+    end
+  end
+end
