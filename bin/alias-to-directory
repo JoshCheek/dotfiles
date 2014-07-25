@@ -7,6 +7,10 @@ class AliasToDirectory
     @raw_definitions, @argv = raw_definitions, argv
   end
 
+  def self.help_text
+    "HELP SCREEN"
+  end
+
   def call
     @result ||= begin
       definitions  = parse_defs @raw_definitions
@@ -14,6 +18,10 @@ class AliasToDirectory
       output       = ''
       error_output = ''
       had_error    = false
+
+      if flags.include?('-h') || flags.include?('--help')
+        return self.class.help_text, "", false
+      end
 
       aliases_with_no_directories = definitions.reject(&:directory)
       if aliases_with_no_directories.any?
@@ -95,6 +103,7 @@ else
       expect(had_error).to be_truthy
     end
 
+    # TODO: WHEN DEFINITION LIST IS EMPTY
     context 'reading alias list' do
       it 'reads the list as "alias1 dir1\n alias2 dir2\n ..."' do
         aliases = "alias1 dir1\n alias2 dir2"
@@ -130,31 +139,27 @@ else
       end
     end
 
+    context 'when there is an alias match' do
+      output, error_output, had_error = AliasToDirectory.new("a d", ['a']).call
+      it('outputs the directory')  { expect(output      ).to eq "d" }
+      it('it has no error output') { expect(error_output).to be_empty }
+      it('exits with 0')           { expect(had_error   ).to be_falsy }
+    end
+
+
     context 'when same alias multiple times' do
       context 'with same directory' do
         output, error_output, had_error = AliasToDirectory.new("a d\na d", ['a']).call
-
-        it 'has no error' do
-          expect(had_error).to equal false
-        end
-
-        it 'does not have error output' do
-          expect(error_output).to be_empty
-        end
-
-        it 'prints the match only once' do
-          expect(output).to eq "d"
-        end
+        it('prints the match only once') { expect(output).to eq "d" }
+        it('does not have error output') { expect(error_output).to be_empty }
+        it('has no error')               { expect(had_error).to equal false }
       end
 
       context 'with different directories' do
         alias_defs = "a d1\n a d2"
+        it('has an error') { expect_error alias_defs, ['a'] }
         it 'says so in error output' do
           expect_error_matches alias_defs, ['a'], /conflicting director/i, /\ba\b/, /\bd1\b/, /\bd2\b/
-        end
-
-        it 'has an error' do
-          expect_error alias_defs, ['a']
         end
       end
     end
@@ -162,11 +167,6 @@ else
     context 'when a search alias is not provided' do
       it 'prints help to stderr'
       it 'exits with 1 if not given args'
-    end
-
-    context 'when there is an alias match' do
-      it 'prints the directory to stdout'
-      it 'exits with 0'
     end
 
     context 'when there is a partial alias match' do
@@ -180,8 +180,31 @@ else
     end
 
     context '--help, -h' do
-      it 'prints help to stdout'
-      it 'exits with 0'
+      let(:directory_name) { 'DIRECTORY_NAME' }
+
+      def for_each
+        ['-h', '--help'].each do |flag|
+          yield call('', [flag])
+          yield call('a', [flag])
+          yield call("a #{directory_name}", ['a', flag])
+        end
+      end
+
+      it 'outputs help' do
+        for_each { |output, *| expect(output).to eq AliasToDirectory.help_text }
+      end
+
+      it 'does not output a directory match' do
+        for_each { |output, *| expect(output).to_not include directory_name }
+      end
+
+      it 'has no error output, even if it would otherwise exist' do
+        for_each { |_, error_output| expect(error_output).to be_empty }
+      end
+
+      it 'has no errors, even if they would otherwise exist' do
+        for_each { |*, had_error| expect(error_output).to be_empty }
+      end
     end
 
     context 'when given --fish-completions' do
