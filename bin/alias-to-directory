@@ -11,12 +11,15 @@ class AliasToDirectory
     "HELP SCREEN"
   end
 
+  # returns primary_output_string   (e.g. print it to stdout)
+  #         info_output_string      (e.g. print it to stderr)
+  #         whether_program_errored (e.g. false implies exit status 0)
   def call
     @result ||= begin
       definitions  = parse_defs @raw_definitions
       flags, args  = parse_args @argv
       output       = ''
-      error_output = ''
+      info_output = ''
       had_error    = false
 
       if flags.include?('-h') || flags.include?('--help')
@@ -25,9 +28,9 @@ class AliasToDirectory
 
       aliases_with_no_directories = definitions.reject(&:directory)
       if aliases_with_no_directories.any?
-        error_output << "The following aliases are missing directories:\n"
+        info_output << "The following aliases are missing directories:\n"
         aliases_with_no_directories.each do |definition|
-          error_output << "  #{definition.alias}\n"
+          info_output << "  #{definition.alias}\n"
         end
         had_error = true
       end
@@ -36,10 +39,10 @@ class AliasToDirectory
         definitions.group_by(&:alias)
                    .reject { |a, ds| ds.map(&:directory).uniq.size == 1 }
       if conflicting_definitions.any?
-        error_output << "Multiple aliases with conflicting directories:\n"
+        info_output << "Multiple aliases with conflicting directories:\n"
         conflicting_definitions.each do |a, definitions|
-          error_output << "  #{a}\n"
-          definitions.each { |d| error_output << "    #{d.directory}\n" }
+          info_output << "  #{a}\n"
+          definitions.each { |d| info_output << "    #{d.directory}\n" }
         end
         had_error = true
       end
@@ -51,7 +54,7 @@ class AliasToDirectory
         end
         output << definition.directory
       end
-      [output, error_output, had_error]
+      [output, info_output, had_error]
     end
   end
 
@@ -72,9 +75,9 @@ end
 
 
 if $0 !~ /rspec/
-  output, error_output, had_error = AliasToDirectory.new($stdin.read, ARGV).call
+  output, info_output, had_error = AliasToDirectory.new($stdin.read, ARGV).call
   $stdout.print output
-  $stderr.print error_output
+  $stderr.print info_output
   exit had_error
 else
   RSpec.configure &:disable_monkey_patching!
@@ -85,16 +88,16 @@ else
     end
 
     def expect_result(aliases, argv, expected)
-      output, error_output, had_error = call(aliases, argv)
-      expect(error_output).to be_empty
+      output, info_output, had_error = call(aliases, argv)
+      expect(info_output).to be_empty
       expect(had_error   ).to be_falsy
       expect(output      ).to eq expected
     end
 
-    def expect_error_matches(aliases, argv, *expected_patterns)
-      _, error_output, _ = call(aliases, argv)
+    def expect_info_matches(aliases, argv, *expected_patterns)
+      _, info_output, _ = call(aliases, argv)
       expected_patterns.each do |expected_pattern|
-        expect(error_output).to match expected_pattern
+        expect(info_output).to match expected_pattern
       end
     end
 
@@ -133,25 +136,25 @@ else
       alias_name = 'alias-with-no-dir'
 
       it 'says so and errors' do
-        expect_error_matches alias_name, [alias_name], /missing director/i
-        expect_error_matches alias_name, [alias_name], /#{alias_name}/
+        expect_info_matches alias_name, [alias_name], /missing director/i
+        expect_info_matches alias_name, [alias_name], /#{alias_name}/
         expect_error alias_name, [alias_name]
       end
     end
 
     context 'when there is an alias match' do
-      output, error_output, had_error = AliasToDirectory.new("a d", ['a']).call
+      output, info_output, had_error = AliasToDirectory.new("a d", ['a']).call
       it('outputs the directory')  { expect(output      ).to eq "d" }
-      it('it has no error output') { expect(error_output).to be_empty }
+      it('it has no error output') { expect(info_output).to be_empty }
       it('exits with 0')           { expect(had_error   ).to be_falsy }
     end
 
 
     context 'when same alias multiple times' do
       context 'with same directory' do
-        output, error_output, had_error = AliasToDirectory.new("a d\na d", ['a']).call
-        it('prints the match only once') { expect(output).to eq "d" }
-        it('does not have error output') { expect(error_output).to be_empty }
+        output, info_output, had_error = AliasToDirectory.new("a d\na d", ['a']).call
+        it('outputs the match only once') { expect(output).to eq "d" }
+        it('does not have error output') { expect(info_output).to be_empty }
         it('has no error')               { expect(had_error).to equal false }
       end
 
@@ -159,23 +162,23 @@ else
         alias_defs = "a d1\n a d2"
         it('has an error') { expect_error alias_defs, ['a'] }
         it 'says so in error output' do
-          expect_error_matches alias_defs, ['a'], /conflicting director/i, /\ba\b/, /\bd1\b/, /\bd2\b/
+          expect_info_matches alias_defs, ['a'], /conflicting director/i, /\ba\b/, /\bd1\b/, /\bd2\b/
         end
       end
     end
 
     context 'when a search alias is not provided' do
-      it 'prints help to stderr'
+      it 'includes help in info string'
       it 'exits with 1 if not given args'
     end
 
     context 'when there is a partial alias match' do
-      it 'prints the possible matches to stderr'
+      it 'shows possible matches in info string'
       it 'exits with 1'
     end
 
     context 'when there is more than one argument provided' do
-      it 'prints an error message to stderr'
+      it 'has the error message in the info string'
       it 'exits with 1'
     end
 
@@ -199,17 +202,17 @@ else
       end
 
       it 'has no error output, even if it would otherwise exist' do
-        for_each { |_, error_output| expect(error_output).to be_empty }
+        for_each { |_, info_output| expect(info_output).to be_empty }
       end
 
       it 'has no errors, even if they would otherwise exist' do
-        for_each { |*, had_error| expect(error_output).to be_empty }
+        for_each { |*, had_error| expect(info_output).to be_empty }
       end
     end
 
     context 'when given --fish-completions' do
-      it 'prints all completions in fish "complete" format and exits with 0'
-      it 'prints the possible completions in fish "complete" format and exits with 0'
+      it 'outputs all completions in fish "complete" format and exits with 0'
+      it 'outputs the possible completions in fish "complete" format and exits with 0'
     end
   end
 end
