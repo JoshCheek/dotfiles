@@ -74,13 +74,30 @@ class AliasToDirectory
 end
 
 
+
 if $0 !~ /rspec/
-  output, info_output, had_error = AliasToDirectory.new($stdin.read, ARGV).call
-  $stdout.print output
-  $stderr.print info_output
-  exit had_error
+  lambda { # execute in a lambda to get a new binding so that local vars here don't override let blocks down below
+    output, info_output, had_error = AliasToDirectory.new($stdin.read, ARGV).call
+    $stdout.print output
+    $stderr.print info_output
+    exit had_error
+  }.call
 else
   RSpec.configure &:disable_monkey_patching!
+
+  module ::RSpec::Core::MemoizedHelpers::ClassMethods
+    def lets(*names, &block)
+      results = {}
+      set_results = lambda do
+        block.call.zip(names).each { |value, name| results[name] = value }
+        results
+      end
+
+      names.each do |name|
+        let(name) { results.fetch(name) { set_results.call[name] } }
+      end
+    end
+  end
 
   RSpec.describe 'alias-to-directory' do
     def call(aliases, argv)
@@ -133,7 +150,7 @@ else
     end
 
     context 'when alias has no directory' do
-      alias_name = 'alias-with-no-dir'
+      let(:alias_name) { 'alias-with-no-dir' }
 
       it 'says so and errors' do
         expect_info_matches alias_name, [alias_name], /missing director/i
@@ -143,7 +160,7 @@ else
     end
 
     context 'when there is an alias match' do
-      output, info_output, had_error = AliasToDirectory.new("a d", ['a']).call
+      lets(:output, :info_output, :had_error) { AliasToDirectory.new("a d", ['a']).call }
       it('outputs the directory')  { expect(output      ).to eq "d" }
       it('it has no error output') { expect(info_output).to be_empty }
       it('exits with 0')           { expect(had_error   ).to be_falsy }
@@ -152,14 +169,14 @@ else
 
     context 'when same alias multiple times' do
       context 'with same directory' do
-        output, info_output, had_error = AliasToDirectory.new("a d\na d", ['a']).call
+        lets(:output, :info_output, :had_error) { AliasToDirectory.new("a d\na d", ['a']).call }
         it('outputs the match only once') { expect(output).to eq "d" }
         it('does not have error output') { expect(info_output).to be_empty }
         it('has no error')               { expect(had_error).to equal false }
       end
 
       context 'with different directories' do
-        alias_defs = "a d1\n a d2"
+        let(:alias_defs) { "a d1\n a d2" }
         it('has an error') { expect_error alias_defs, ['a'] }
         it 'says so in error output' do
           expect_info_matches alias_defs, ['a'], /conflicting director/i, /\ba\b/, /\bd1\b/, /\bd2\b/
@@ -206,7 +223,7 @@ else
       end
 
       it 'has no errors, even if they would otherwise exist' do
-        for_each { |*, had_error| expect(info_output).to be_empty }
+        for_each { |*, had_error| expect(had_error).to be_falsy }
       end
     end
 
