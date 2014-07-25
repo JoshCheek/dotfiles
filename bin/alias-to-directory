@@ -53,11 +53,22 @@ class AliasToDirectory
       end
 
       unless had_error
-        definition = definitions.find do |definition|
-          provided_alias = args.first
-          definition.alias == provided_alias
+        provided_alias = args.first
+
+        definition = definitions.find { |definition| definition.alias == provided_alias }
+        partial_matched_definitions = definitions.select do |definition|
+          definition.alias.start_with? provided_alias
         end
-        output << definition.directory
+
+        if definition
+          output << definition.directory
+        else
+          info_output << "No matches, here are partial matches:\n"
+          partial_matched_definitions.each do |definition|
+            info_output << "  #{definition.alias}  #{definition.directory}\n"
+          end
+          had_error = true
+        end
       end
       [output, info_output, had_error]
     end
@@ -201,8 +212,16 @@ else
     end
 
     context 'when there is a partial alias match' do
-      it 'shows possible matches in info string'
-      it 'exits with 1'
+      lets(:output, :info_output, :had_error) { AliasToDirectory.new("ab 1\nac 2", ["a"]).call }
+
+      specify('output is empty') { expect(output).to be_empty }
+      it('exits with 1') { expect(had_error).to be_truthy }
+
+      it 'shows possible matches in info string' do
+        expect(info_output).to match /no matches/i
+        expect(info_output).to match /ab\s+1/
+        expect(info_output).to match /ac\s+2/
+      end
     end
 
     context 'when there is more than one argument provided' do
