@@ -59,14 +59,24 @@ nnoremap <c-h> <c-w>h
 nnoremap <c-l> <c-w>l
 
 " Emacs/Readline keybindings for commandline mode
-cnoremap <C-A> <Home>
-cnoremap <C-F> <Right>
-cnoremap <C-B> <Left>
-cnoremap <Esc>b <S-Left>
-cnoremap <Esc>f <S-Right>
-
-
-"" :set guifont=Monaco:h14
+" http://tiswww.case.edu/php/chet/readline/readline.html#SEC4
+" many of these taken from vimacs http://www.vim.org/scripts/script.php?script_id=300
+"
+" navigation
+cnoremap <C-a> <Home>
+cnoremap <C-e> <End>
+cnoremap <C-f> <Right>
+cnoremap <C-b> <Left>
+" cnoremap <Esc>b <S-Left> " commenting out b/c makes it pause
+" cnoremap <Esc>f <S-Right>
+cnoremap <M-b> <S-Left>
+cnoremap <M-f> <S-Right>
+" editing
+cnoremap <M-p> <Up>
+cnoremap <M-n> <Down>
+cnoremap <C-k> <C-f>d$<C-c><End>
+cnoremap <C-y> <C-r><C-o>"
+cnoremap <C-d> <Right><C-h>
 
 
 "" strip trailing whitespace
