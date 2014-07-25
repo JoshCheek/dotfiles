@@ -47,6 +47,11 @@ class AliasToDirectory
         had_error = true
       end
 
+      if definitions.empty?
+        info_output << "You must provide a list of directories to match on stdin"
+        had_error = true
+      end
+
       unless had_error
         definition = definitions.find do |definition|
           provided_alias = args.first
@@ -123,7 +128,6 @@ else
       expect(had_error).to be_truthy
     end
 
-    # TODO: WHEN DEFINITION LIST IS EMPTY
     context 'reading alias list' do
       it 'reads the list as "alias1 dir1\n alias2 dir2\n ..."' do
         aliases = "alias1 dir1\n alias2 dir2"
@@ -147,6 +151,13 @@ else
       it "treats all whitespace after the first one as being part of the path" do
         expect_result "alias d i r",   ['alias'], 'd i r'
       end
+    end
+
+    context 'when the alias definition list is empty' do
+      lets(:output, :info_output, :had_error) { AliasToDirectory.new("", ["a"]).call }
+      it('has nothing in the output string') { expect(output).to be_empty }
+      it('says so in the info string')       { expect(info_output).to include "must provide a list" }
+      it('has an error')                     { expect(had_error).to be_truthy }
     end
 
     context 'when alias has no directory' do
