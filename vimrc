@@ -37,15 +37,12 @@ call Pl#Theme#RemoveSegment('filetype')
 call Pl#Theme#RemoveSegment('lineinfo')
 
 "" ========== NERDTree  ==========
-" autocmd vimenter * if !argc() | NERDTree | endif  " load NERDTree automatically if started with no files
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif " close vim if NERDTree is the only open buffer
 
 "" ========== vim-textobj-rubyblock ==========
 runtime macros/matchit.vim " a dependency
 
 "" ==========  My shit  ==========
-" colorscheme Autumn " for gvim, really, which I don't use any more
-
 set nobackup                                        " no backup files
 set nowritebackup                                   " only in case you don't want a backup file while editing
 set noswapfile                                      " no swap files
@@ -71,8 +68,6 @@ cnoremap <Esc>f <S-Right>
 
 "" :set guifont=Monaco:h14
 
-"" filetypes
-au  BufRead,BufNewFile *.rabl setfiletype ruby    " .rabl -> ruby
 
 "" strip trailing whitespace
 function! <SID>StripTrailingWhitespaces()
@@ -91,11 +86,6 @@ autocmd BufWritePre * :call <SID>StripTrailingWhitespaces()
 " replaces %/ with current directory, and %% with current file
 cmap %/ <C-R>=expand("%:p:h")."/"<CR>
 cmap %% <C-R>=expand("%")<CR>
-
-
-" .vm, from TECS, should be highlighted with assembly
-au BufNewFile,BufRead *.vm set filetype=asm
-au BufNewFile,BufRead *.jack set filetype=java "not really, but close enough
 
 " ========== Pathogen plugins ==========
 "
