@@ -109,7 +109,7 @@ if $0 !~ /rspec/
   AliasToDirectory.new($stdin.read, ARGV).call.tap do |output, info_output, had_error|
     $stdout.print output
     $stderr.print info_output
-    exit had_error
+    exit !had_error
   end
 else
   RSpec.configure &:disable_monkey_patching!
