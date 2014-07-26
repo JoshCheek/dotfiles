@@ -67,8 +67,8 @@ cnoremap <C-a> <Home>
 cnoremap <C-e> <End>
 cnoremap <C-f> <Right>
 cnoremap <C-b> <Left>
-" cnoremap <Esc>b <S-Left> " commenting out b/c makes it pause
-" cnoremap <Esc>f <S-Right>
+cnoremap <Esc>b <S-Left> " commenting out b/c makes it pause
+cnoremap <Esc>f <S-Right>
 cnoremap <M-b> <S-Left>
 cnoremap <M-f> <S-Right>
 " editing
