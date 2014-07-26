@@ -101,19 +101,29 @@ if $0 !~ /rspec/
 else
   RSpec.configure &:disable_monkey_patching!
 
+  # https://gist.github.com/JoshCheek/09f01dcced9bea02360d
   module ::RSpec::Core::MemoizedHelpers::ClassMethods
-    def lets(*names, &block)
-      results = {}
-      set_results = lambda do
-        block.call.zip(names).each { |value, name| results[name] = value }
-        results
-      end
+    def lets!(*names, &definition)
+      lets(*names, &definition)
+      before { names.each &method(:__send__) }
+    end
 
+    def lets(*names, &definition)
+      definition_class = self
       names.each do |name|
-        let(name) { results.fetch(name) { set_results.call[name] } }
+        let name do
+          namespace = __memoized.fetch [definition_class, names] do |key|
+            values = instance_eval(&definition).to_ary
+            names.size < values.size && raise("Too few definition names (#{names.inspect}) for #{values.size} returned values")
+            names.size > values.size && raise("Too many definition names (#{names.inspect}) for #{values.size} returned values")
+            __memoized[key] = Hash[names.zip values]
+          end
+          namespace.fetch(name)
+        end
       end
     end
   end
+
 
   RSpec.describe 'alias-to-directory' do
     def call(aliases, argv)
@@ -165,10 +175,10 @@ else
     end
 
     context 'when the alias definition list is empty' do
-      lets(:output, :info_output, :had_error) { AliasToDirectory.new("", ["a"]).call }
-      it('has nothing in the output string') { expect(output).to be_empty }
-      it('says so in the info string')       { expect(info_output).to include "must provide a list" } # kinda fragile
-      it('has an error')                     { expect(had_error).to be_truthy }
+      lets(:output, :info_output, :had_error) { call "", ["a"] }
+      it('has nothing in the output string')  { expect(output).to be_empty }
+      it('says so in the info string')        { expect(info_output).to include "must provide a list" } # kinda fragile
+      it('has an error')                      { expect(had_error).to be_truthy }
     end
 
     context 'when alias has no directory' do
@@ -182,7 +192,7 @@ else
     end
 
     context 'when there is an alias match' do
-      lets(:output, :info_output, :had_error) { AliasToDirectory.new("a d", ['a']).call }
+      lets(:output, :info_output, :had_error) { call "a d", ['a'] }
       it('outputs the directory')  { expect(output      ).to eq "d" }
       it('it has no error output') { expect(info_output).to be_empty }
       it('exits with 0')           { expect(had_error   ).to be_falsy }
@@ -191,7 +201,7 @@ else
 
     context 'when same alias multiple times' do
       context 'with same directory' do
-        lets(:output, :info_output, :had_error) { AliasToDirectory.new("a d\na d", ['a']).call }
+        lets(:output, :info_output, :had_error) { call "a d\na d", ['a'] }
         it('outputs the match only once') { expect(output).to eq "d" }
         it('does not have error output') { expect(info_output).to be_empty }
         it('has no error')               { expect(had_error).to equal false }
@@ -212,7 +222,7 @@ else
     end
 
     context 'when there is a partial alias match' do
-      lets(:output, :info_output, :had_error) { AliasToDirectory.new("ab 1\nac 2", ["a"]).call }
+      lets(:output, :info_output, :had_error) { call "ab 1\nac 2", ["a"] }
 
       specify('output is empty') { expect(output).to be_empty }
       it('exits with 1') { expect(had_error).to be_truthy }
