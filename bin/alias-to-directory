@@ -95,9 +95,10 @@ class AliasToDirectory
   end
 
   def parse_defs(raw_definitions)
-    raw_definitions.lines.map do |raw_definition|
-      Definition.new *raw_definition.strip.split(/\s+/, 2)
-    end
+    raw_definitions
+      .lines
+      .reject { |line| line =~ /^\s*$/ }
+      .map { |raw_definition| Definition.new *raw_definition.strip.split(/\s+/, 2) }
   end
 end
 
@@ -184,6 +185,16 @@ else
 
       it "treats all whitespace after the first one as being part of the path" do
         expect_result "alias d i r",   ['alias'], 'd i r'
+      end
+
+      it 'ignores blank lines' do
+        expect_result "a b
+
+                       c d
+
+                       e f
+
+                       ", ['c'], 'd'
       end
     end
 
@@ -306,11 +317,6 @@ else
       it 'has no errors, even if they would otherwise exist' do
         for_each { |*, had_error| expect(had_error).to be_falsy }
       end
-    end
-
-    context 'when given --fish-completions' do
-      it 'outputs all completions in fish "complete" format and exits with 0'
-      it 'outputs the possible completions in fish "complete" format and exits with 0'
     end
   end
 end
