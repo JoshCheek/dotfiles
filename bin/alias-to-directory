@@ -52,6 +52,18 @@ class AliasToDirectory
         had_error = true
       end
 
+      if args.empty?
+        info_output << "No alias was provided!\n"
+        info_output << self.class.help_text
+        had_error = true
+      end
+
+      if 1 < args.size
+        info_output << "You provided #{args.size} aliases (#{args.inspect}), but should have only provided one\n"
+        info_output << self.class.help_text
+        had_error = true
+      end
+
       unless had_error
         provided_alias = args.first
 
@@ -124,6 +136,7 @@ else
     end
   end
 
+  gem 'rspec', '~> 3.0.0' # I think this should blow it up if an incompatible version is used, not totally sure
 
   RSpec.describe 'alias-to-directory' do
     def call(aliases, argv)
@@ -216,11 +229,6 @@ else
       end
     end
 
-    context 'when a search alias is not provided' do
-      it 'includes help in info string'
-      it 'exits with 1 if not given args'
-    end
-
     context 'when there is a partial alias match' do
       lets(:output, :info_output, :had_error) { call "ab 1\nac 2", ["a"] }
 
@@ -234,9 +242,42 @@ else
       end
     end
 
-    context 'when there is more than one argument provided' do
-      it 'has the error message in the info string'
-      it 'exits with 1'
+    context 'when a search alias is not provided' do
+      lets(:output, :info_output, :had_error) { call 'a d', [] }
+      it 'has no output' do
+        expect(output).to eq ''
+      end
+
+      it 'says this is the issue in the info output' do
+        expect(info_output).to match /no alias/i
+      end
+
+      it 'includes help in info string' do
+        expect(info_output).to include AliasToDirectory.help_text
+      end
+
+      it 'exits with 1 if not given args' do
+        expect(had_error).to equal true
+      end
+    end
+
+    context 'when more than one search alias is provided' do
+      lets(:output, :info_output, :had_error) { call 'a d', ['a', 'b'] }
+      it 'has no output' do
+        expect(output).to eq ''
+      end
+
+      it 'says this is the issue in the info output' do
+        expect(info_output).to match /2 aliases/i
+      end
+
+      it 'includes help in info string' do
+        expect(info_output).to include AliasToDirectory.help_text
+      end
+
+      it 'exits with 1 if not given args' do
+        expect(had_error).to equal true
+      end
     end
 
     context '--help, -h' do
