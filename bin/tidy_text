@@ -25,7 +25,8 @@ usage: #$0 [options] STRINGS
       --keep-matching MATCHER    # remove lines which don't match the MATCHER
     conversions
       --strip                    # strip leading and trailing whitespace (not the line-end)
-      --gsub FROM_MATCHER TO_STR # convert matches of from into to
+      --sub  FROM_MATCHER TO_STR # substitute: convert matches of from into to
+      --gsub FROM_MATCHER TO_STR # global substitute: convert matches of from into to
       --tr FROM_CHARS TO_CHARS   # translate chars positionally (should be the same as unix tr)
 
   examples
@@ -87,12 +88,23 @@ class Strip
 end
 
 class Gsub
-  def initialize(raw_matcher_from, to)
-    @from = to_string_or_pattern raw_matcher_from
+  def initialize(from, to)
+    @from = to_string_or_pattern from
     @to   = to
   end
   def call(line)
     line.gsub @from, @to
+  end
+end
+
+class Sub
+  def initialize(from, to)
+    @from = to_string_or_pattern from
+    @to   = to
+  end
+
+  def call(line)
+    line.sub @from, @to
   end
 end
 
@@ -118,6 +130,7 @@ def extract_options(args)
     when '--keep-matching'    then conversions << KeepMatching.new(remaining.shift)
     when '--strip'            then conversions << Strip.new
     when '--gsub'             then conversions << Gsub.new(*remaining.shift(2))
+    when '--sub'              then conversions << Sub.new(*remaining.shift(2))
     when '--tr'               then conversions << Tr.new(*remaining.shift(2))
     when '-', nil             then break
     else
@@ -258,10 +271,18 @@ if options.fetch(:test)
       end
 
       specify '--gsub substitutes MATCHER for text' do
-        assert_convert '--gsub', '.b', 'AB', [['.b', 'AB'],
+        assert_convert '--gsub', '.b', 'AB', [['.b',   'AB'],
                                               ['..bb', '.ABb'],
                                               ['b.',   'b.']]
         assert_convert '--gsub', '/(.)b/', '(\1)B', [['ab',  '(a)B'],
+                                                     ['omg', 'omg']]
+      end
+
+      specify '--sub substitutes MATCHER for text' do
+        assert_convert '--sub', '.b', 'AB', [['.b.b',   'AB.b'],
+                                             ['..bb.b', '.ABb.b'],
+                                             ['b.',     'b.']]
+        assert_convert '--sub', '/(.)b/', '(\1)B', [['abab',  '(a)Bab'],
                                                      ['omg', 'omg']]
       end
 
