@@ -7,66 +7,71 @@ function jcd --description "Josh's cd"
 
   # dirh, dirs <-- might be interesting stuffs that would be worth adding?
 
-  set -u definitions (tidy_text --strip           \
-                                --remove-blank    \
-                                --gsub '/ +/' ' ' \
-                                "
-                                  c  $HOME/code
-                                  l  $HOME/code/life
-                                  w  $HOME/code/jsl
+  # trying to get this variable set has been so fucking painful :(
+  # Lets say there is a program with output that I want in a variable
+  # e.g. (seq 3), so my var should have "1\n2\n3\n"... HOW DO I DO THAT?
+  set -u definitions \
+         "
+           c  $HOME/code
+           l  $HOME/code/life
+           w  $HOME/code/jsl
 
-                                  d  $HOME/code/dotfiles
-                                  db $HOME/code/dotfiles/bin
-                                  df $HOME/code/dotfiles/fish
+           d  $HOME/code/dotfiles
+           db $HOME/code/dotfiles/bin
+           df $HOME/code/dotfiles/fish
 
-                                  D  $HOME/Dropbox
-                                ")
+           Dr $HOME/Dropbox
+           De $HOME/Desktop
+         "
 
-  set show_help        ''
-  set show_list        ''
-  set show_completions ''
+  set print_help        ''
+  set print_list        ''
+  set print_completions ''
+  set diraliases
   for arg in $argv
     switch $arg
-      case '-h' '--help'
-        set show_help true
-      case '-l' '--list'
-        set show_list true
-      case '--completions'
-        set show_completions true
+      case -h --help
+        set print_help true
+      case -l --list
+        set print_list true
+      case --completions --completion
+        set print_completions true
       case '*'
         set diraliases $arg $diraliases
     end
   end
 
-  if test -n $show_help
+  if test -n $print_help
     echo $program_name' [flag | diralias]'
     echo ''
     echo '  CD to dirs I care about'
     echo ''
     echo '  Flags:'
-    echo '    -l, --list  # list directory aliases'
-    echo '    -h, --help  # this screen'
+    echo '    -l, --list     # list directory aliases'
+    echo '    -h, --help     # this screen'
+    echo '    --completions  # print fish completions'
     echo ''
     echo '  diralias:'
     echo '    one of the aliases on the left'
     echo ''
-    echo alias directory \n \
-         ===== ========= \n \
-         $dirs              | column -t | sed 's/^/    /'
+    begin
+      echo alias directory
+      echo ===== =========
+      echo $definitions
+    end | column -t | sed 's/^/    /'
 
-  else if test -n $show_list
-    echo $dirs | column -t
+  else if test -n $print_list
+    echo $definitions | column -t
 
-  else if test -n $show_completions
-    for definition in $dirs
+  else if test -n $print_completions
+    for definition in (tidy_text --gsub '/ +/' ' ' --strip --remove-blank $definitions)
       echo $definition | read diralias dir
       echo -c $program_name --no-files -a $diralias -d $dir
     end
 
-  else if test -n $directory
-    set directory (echo $dirs | alias-to-directory $diraliases ^/dev/null)
+  else if test -n "$diraliases"
+    set directory (echo $definitions | alias-to-directory $diraliases ^/dev/null)
     and echo cd $directory
     and cd $directory
   end
 end
-
