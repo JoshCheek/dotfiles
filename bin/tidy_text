@@ -1,0 +1,291 @@
+#!/usr/bin/ruby
+
+help_screen = <<HELP
+usage: #$0 [options] STRINGS
+
+  Will apply instructions to non-flags in args if it finds them there
+  otherwise will pull from stdin.
+
+  Applies conversions and filters in the same order they were declared.
+
+  types
+    *STR      # A normal string
+    *MATCHER  # A string or a regex ("str" -> "str",    "/^[abc].*/" -> /^[abc].*/)
+    *CHARS    # A string that will be interpreted as an array of characters
+
+  options
+    general
+      -h                         # view this screen
+      --help                     # view this screen
+      -                          # everything after this is treated as an input rather than an option
+    filters
+      --remove-blank             # remove empty lines
+      --remove-matching MATCHER  # remove lines which match the MATCHER
+      --keep-matching MATCHER    # remove lines which don't match the MATCHER
+    conversions
+      --strip                    # strip leading and trailing whitespace (not the line-end)
+      --gsub FROM_MATCHER TO_STR # convert matches of from into to
+      --tr FROM_CHARS TO_CHARS   # translate chars positionally (should be the same as unix tr)
+
+  examples
+HELP
+
+# maybe for later:
+# --squish ' '      # gsub(/(?:#{Regexp.escape string})+/, string)
+# --insert-before 0 '  '   # insert 2 spaces at index 0
+# --insert-before "/./" ":D"   # insert smiley faces between each character
+# --insert-before "a" " "
+# --insert-after  ...
+
+
+def to_string_or_pattern(string)
+  return string unless string[%r{\A/(.*)/([mxi]*)\Z}]
+  flags = 0
+  $2.chars.uniq.each do |char|
+    flags += {'i' => 0b001,
+              'x' => 0b010,
+              'm' => 0b100}[char]
+  end
+  return Regexp.new $1, flags
+end
+
+class RemoveBlank
+  def call(line)
+    line if line !~ /^\s*$/
+  end
+end
+
+class RemoveMatching
+  def initialize(raw_matcher)
+    @matcher = to_string_or_pattern raw_matcher
+  end
+  def call(line)
+    line unless line[@matcher]
+  end
+end
+
+class KeepMatching
+  def initialize(raw_matcher)
+    @matcher = to_string_or_pattern raw_matcher
+  end
+  def call(line)
+    line if line[@matcher]
+  end
+end
+
+class Strip
+  def call(line)
+    result   = line.strip
+    line_end = line[line.chomp.size..-1]
+    "#{result}#{line_end}"
+  end
+end
+
+class Gsub
+  def initialize(raw_matcher_from, to)
+    @from = to_string_or_pattern raw_matcher_from
+    @to   = to
+  end
+  def call(line)
+    line.gsub @from, @to
+  end
+end
+
+class Tr
+  def initialize(from_chars, to_chars)
+    @from_chars, @to_chars = from_chars, to_chars
+  end
+  def call(line)
+    line.tr @from_chars, @to_chars
+  end
+end
+
+def extract_options(args)
+  remaining   = args.dup
+  conversions = []
+  options     = { help: false, conversions: conversions, remaining: remaining }
+  loop do
+    case (arg = remaining.shift)
+    when '-h', '--help'       then options[:help] = true
+    when '--remove-blank'     then conversions << RemoveBlank.new
+    when '--remove-matching'  then conversions << RemoveMatching.new(remaining.shift)
+    when '--keep-matching'    then conversions << KeepMatching.new(remaining.shift)
+    when '--strip'            then conversions << Strip.new
+    when '--gsub'             then conversions << Gsub.new(*remaining.shift(2))
+    when '--tr'               then conversions << Tr.new(*remaining.shift(2))
+    when '-', nil             then break
+    else
+      remaining.unshift arg
+      break
+    end
+  end
+  options
+end
+
+def apply(blocks, line)
+  blocks.reduce(line) { |line, block| line && block.call(line) }
+end
+
+if $0 !~ /rspec/
+  options = extract_options ARGV
+  applier = method(:apply).to_proc.curry[options.fetch(:conversions) + [method(:print)]]
+  if options.fetch(:help)
+    puts help_screen
+  elsif options.fetch(:remaining).any?
+    options.fetch(:remaining).each { |text| text.each_line &applier }
+  else
+    $stdin.each_line &applier
+  end
+else
+  gem 'rspec', '~> 3.0'
+  RSpec.configure &:disable_monkey_patching!
+
+  RSpec.describe 'tidy_text' do
+    describe 'apply' do
+      it 'takes a series of filters, calling them in order, passing the result of the previous to the next' do
+        filters = [Tr.new("w", "b"), Tr.new("b", "c")]
+        expect(apply(filters, "wat")).to eq "cat"
+      end
+
+      it 'stops passing as soon as it hits a newline' do
+        filters = [RemoveBlank.new, lambda { |arg| raise "SHOULD NOT HAVE SEEN #{arg.inspect}!" }]
+        expect(apply(filters, "")).to eq nil
+      end
+    end
+
+    describe 'to_string_or_pattern' do
+      def call(input, output)
+        expect(to_string_or_pattern input).to eq output
+      end
+
+      it 'leaves strings alone' do
+        call '',    ''
+        call 'a',   'a'
+        call '/a',  '/a'
+        call 'a/',  'a/'
+        call '/',   '/'
+        call '/i',  '/i'
+      end
+
+      it 'converts regexes, respecting their flags' do
+        call '/a/',     %r(a)
+        call '/a//',    %r(a/)
+        call '//a/',    %r(/a)
+        call '/a/i',    %r(a)i
+        call '/a/im',   %r(a)im
+        call '/a/xim',  %r(a)xim
+        call '/a/mix',  %r(a)mix
+        call '/a/mixi', %r(a)mixi
+      end
+    end
+
+    context 'arg parsing and filters' do
+      specify '-h and --help set the help flag' do
+        expect(extract_options(        [])[:help]).to equal false
+        expect(extract_options(    ['-h'])[:help]).to equal true
+        expect(extract_options(['--help'])[:help]).to equal true
+      end
+
+      def get(*args)
+        conversions = extract_options(args)[:conversions]
+        expect(conversions.size).to eq 1
+        conversions.first
+      end
+
+      def assert_convert(*args, from_to)
+        from_to.each { |from, to| expect(get(*args).call(from)).to eq to }
+      end
+
+      specify 'there are no default conversions' do
+        expect(extract_options([]).fetch(:conversions)).to be_empty
+      end
+
+      specify '--remove-blank removes blank lines' do
+        assert_convert '--remove-blank', [['',   nil],
+                                          ["\n", nil],
+                                          ["a",  "a"]]
+      end
+
+      specify '--remove-matching removes lines that match the MATCHER' do
+        assert_convert '--remove-matching', "a", [["a",   nil],
+                                                  ["abc", nil],
+                                                  ["A",   "A"],
+                                                  ["x",   "x"]]
+        assert_convert '--remove-matching', "/a/i", [["a",   nil],
+                                                     ["abc", nil],
+                                                     ["A",   nil],
+                                                     ["x",   "x"]]
+      end
+
+      specify '--keep-matching removes lines that don\'t match the MATCHER' do
+        assert_convert '--keep-matching', 'a', [['a',   'a'],
+                                                ['wat', 'wat'],
+                                                ['A',    nil],
+                                                ['x',    nil]]
+        assert_convert '--keep-matching', '/a/i', [['a',   'a'],
+                                                   ['wat', 'wat'],
+                                                   ['A',    'A'],
+                                                   ['x',    nil]]
+      end
+
+      specify '--strip removes leading and trailing whitespace, but not line-ends' do
+        assert_convert '--strip', [["a",              "a"],
+                                   [" a",             "a"],
+                                   ["a ",             "a"],
+                                   ["\t a \t ",       "a"],
+                                   ["a a",            "a a"],
+                                   [" \t a \t a \t ", "a \t a"],
+                                   ["a\n",            "a\n"],
+                                   ["\n",             "\n"],
+                                   ["a\r\n",          "a\r\n"],
+                                   ["\r\n",           "\r\n"]]
+      end
+
+      specify '--gsub substitutes MATCHER for text' do
+        assert_convert '--gsub', '.b', 'AB', [['.b', 'AB'],
+                                              ['..bb', '.ABb'],
+                                              ['b.',   'b.']]
+        assert_convert '--gsub', '/(.)b/', '(\1)B', [['ab',  '(a)B'],
+                                                     ['omg', 'omg']]
+      end
+
+      specify '--tr translates chars positionally' do
+        assert_convert '--tr', 'ab', 'AB', [['ab', 'AB'],
+                                            ['a',  'A'],
+                                            ['b',  'B'],
+                                            ['ba',  'BA'],
+                                            ['wat', 'wAt'],
+                                            ['x',   'x']]
+      end
+
+      specify '- tells it to treat everything else as an arg' do
+        options = extract_options(['-h', '-'])
+        expect(options.fetch(:help)).to eq true
+        expect(options.fetch(:remaining)).to eq []
+
+        options = extract_options(['-', '-h'])
+        expect(options.fetch(:help)).to eq false
+        expect(options.fetch(:remaining)).to eq ['-h']
+
+        options = extract_options(['-', '-h', "z\no\nm\ng"])
+        expect(options.fetch(:help)).to eq false
+        expect(options.fetch(:remaining)).to eq ['-h', "z\no\nm\ng"]
+      end
+
+      specify 'a non-flag ends the flag finding process' do
+        options = extract_options(['a', '-h'])
+        expect(options.fetch(:help)).to eq false
+        expect(options.fetch(:remaining)).to eq ['a', '-h']
+      end
+
+      specify 'several chained together are all pulled out, and are ordered by position in args' do
+        options = extract_options(%w[--tr w s --strip])
+        conversions = options.fetch(:conversions)
+        expect(conversions.size).to eq 2
+        tr, strip = conversions
+        expect(tr.call(" wat ")).to eq " sat "
+        expect(strip.call(" wat ")).to eq "wat"
+      end
+    end
+  end
+end
