@@ -17,6 +17,7 @@ usage: #$0 [options] STRINGS
     general
       -h                         # view this screen
       --help                     # view this screen
+      --test                     # have #$0 run its test suite
       -                          # everything after this is treated as an input rather than an option
     filters
       --remove-blank             # remove empty lines
@@ -36,6 +37,10 @@ HELP
 # --insert-before "/./" ":D"   # insert smiley faces between each character
 # --insert-before "a" " "
 # --insert-after  ...
+# --trim-head
+# --trim-tail
+# --head (to take + or -)
+# --tail (to take + or -)
 
 
 def to_string_or_pattern(string)
@@ -103,10 +108,11 @@ end
 def extract_options(args)
   remaining   = args.dup
   conversions = []
-  options     = { help: false, conversions: conversions, remaining: remaining }
+  options     = { help: false, test: false, conversions: conversions, remaining: remaining }
   loop do
     case (arg = remaining.shift)
     when '-h', '--help'       then options[:help] = true
+    when '--test'             then options[:test] = true
     when '--remove-blank'     then conversions << RemoveBlank.new
     when '--remove-matching'  then conversions << RemoveMatching.new(remaining.shift)
     when '--keep-matching'    then conversions << KeepMatching.new(remaining.shift)
@@ -126,18 +132,23 @@ def apply(blocks, line)
   blocks.reduce(line) { |line, block| line && block.call(line) }
 end
 
-if $0 !~ /rspec/
-  options = extract_options ARGV
-  applier = method(:apply).to_proc.curry[options.fetch(:conversions) + [method(:print)]]
-  if options.fetch(:help)
-    puts help_screen
-  elsif options.fetch(:remaining).any?
-    options.fetch(:remaining).each { |text| text.each_line &applier }
-  else
-    $stdin.each_line &applier
-  end
+options = extract_options ARGV
+applier = method(:apply).to_proc.curry[options.fetch(:conversions) + [method(:print)]]
+
+if options.fetch(:help)
+  puts help_screen
+elsif options.fetch(:test)
+  # no op, we'll pick it up below
+elsif options.fetch(:remaining).any?
+  options.fetch(:remaining).each { |text| text.each_line &applier }
 else
+  $stdin.each_line &applier
+end
+
+if options.fetch(:test)
+  ARGV.delete '--test'
   gem 'rspec', '~> 3.0'
+  require 'rspec/autorun'
   RSpec.configure &:disable_monkey_patching!
 
   RSpec.describe 'tidy_text' do
@@ -181,9 +192,14 @@ else
 
     context 'arg parsing and filters' do
       specify '-h and --help set the help flag' do
-        expect(extract_options(        [])[:help]).to equal false
-        expect(extract_options(    ['-h'])[:help]).to equal true
-        expect(extract_options(['--help'])[:help]).to equal true
+        expect(extract_options(        []).fetch(:help)).to equal false
+        expect(extract_options(    ['-h']).fetch(:help)).to equal true
+        expect(extract_options(['--help']).fetch(:help)).to equal true
+      end
+
+      specify '--test sets the test flag' do
+        expect(extract_options(        []).fetch(:test)).to equal false
+        expect(extract_options(['--test']).fetch(:test)).to equal true
       end
 
       def get(*args)
