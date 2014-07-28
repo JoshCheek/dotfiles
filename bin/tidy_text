@@ -42,10 +42,12 @@ HELP
 # --trim-tail
 # --head (to take + or -)
 # --tail (to take + or -)
+# --hr FILL_CHAR INDEX/INDEX_PATTERN FILL_STYLE
 
 
 def to_string_or_pattern(string)
-  return string unless string[%r{\A/(.*)/([mxi]*)\Z}]
+  return string if string.kind_of? Regexp
+  return string if string !~ %r{\A/(.*)/([mxi]*)\Z}
   flags = 0
   $2.chars.uniq.each do |char|
     flags += {'i' => 0b001,
@@ -55,18 +57,18 @@ def to_string_or_pattern(string)
   return Regexp.new $1, flags
 end
 
-class RemoveBlank
-  def call(line)
-    line if line !~ /^\s*$/
-  end
-end
-
 class RemoveMatching
   def initialize(raw_matcher)
     @matcher = to_string_or_pattern raw_matcher
   end
   def call(line)
     line unless line[@matcher]
+  end
+end
+
+class RemoveBlank < RemoveMatching
+  def initialize
+    @matcher = /^\s*$/
   end
 end
 
@@ -81,9 +83,8 @@ end
 
 class Strip
   def call(line)
-    result   = line.strip
     line_end = line[line.chomp.size..-1]
-    "#{result}#{line_end}"
+    "#{line.strip}#{line_end}"
   end
 end
 
@@ -102,7 +103,6 @@ class Sub
     @from = to_string_or_pattern from
     @to   = to
   end
-
   def call(line)
     line.sub @from, @to
   end
