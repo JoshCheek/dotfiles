@@ -27,6 +27,7 @@ function jcd --description "Josh's cd"
   set print_help        ''
   set print_list        ''
   set print_completions ''
+  set edit_this_script  ''
   set diraliases
   for arg in $argv
     switch $arg
@@ -36,6 +37,8 @@ function jcd --description "Josh's cd"
         set print_list true
       case --completions --completion
         set print_completions true
+      case --edit
+        set edit_this_script true
       case '*'
         set diraliases $arg $diraliases
     end
@@ -50,6 +53,7 @@ function jcd --description "Josh's cd"
     echo '    -l, --list     # list directory aliases'
     echo '    -h, --help     # this screen'
     echo '    --completions  # print fish completions'
+    echo '    --edit         # edit this script'
     echo ''
     echo '  diralias:'
     echo '    one of the aliases on the left'
@@ -68,6 +72,9 @@ function jcd --description "Josh's cd"
       echo $definition | read diralias dir
       echo -c $program_name --no-files -a $diralias -d $dir
     end
+
+  else if test -n $edit_this_script
+    vim (status -f)
 
   else if test -n "$diraliases"
     set directory (echo $definitions | alias-to-directory $diraliases ^/dev/null)
