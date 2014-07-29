@@ -15,6 +15,8 @@ function jcd --description "Josh's cd"
            c  $HOME/code
            l  $HOME/code/life
            w  $HOME/code/jsl
+           wa $HOME/code/jsl/apply
+           we $HOME/code/jsl/enroll
 
            d  $HOME/code/dotfiles
            db $HOME/code/dotfiles/bin
