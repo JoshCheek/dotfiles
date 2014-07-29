@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby -n
 
-# strip! returns nil when it made no changes
-print $_.strip
+# if you're trying to remove the newlines, use chomp, instead
+
+puts $_.strip # use strip because strip! returns nil when it made no changes
