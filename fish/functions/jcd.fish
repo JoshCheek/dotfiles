@@ -90,31 +90,27 @@ function jcd --description "Josh's cd"
     end
 
     echo $help_screen | sed -E -n '
-      # For lines between flags and the table header for diraliases, continue, otherwise delete
-      /^[[:space:]]*Flags:$/,/^[=[:space:]]+$/b in-paragraph
-      d
+      # keep lines between flags and the table header for diraliases
+      /^[[:space:]]*Flags:$/,/^[=[:space:]]+$/ !d
 
-      :in-paragraph
-        # for lines with dashes continue, otherwise delete
-        /-.*#/b has-flag
-        d
+      # keep lines with dashes
+      /-.*#/ !d
 
-      :has-flag
-        # save current line in hold space
-        h
+      # save current line in hold space
+      h
 
-        # print short flag completions (going with "old" instead b/c they look the same, but don\'t get combined
-        /.*[^-]-([[:alnum:]])[^[:alnum:]][^#]*#[[:space:]]*(.*)$/ {
-          s//-c '$program_name' --old-option \1 -d "\2" --no-files/p
-        }
+      # print short flag completions (going with "old" instead b/c they look the same, but don\'t get combined
+      /.*[^-]-([[:alnum:]])[^[:alnum:]][^#]*#[[:space:]]*(.*)$/ {
+        s//-c '$program_name' --old-option \1 -d "\2" --no-files/p
+      }
 
-        # load hold space into pattern space
-        g
+      # load hold space into pattern space
+      g
 
-        # print long flag completions
-        /.*[^-]--([[:alnum:]]+)[^#]*#[[:space:]]*(.*)$/ {
-          s//-c '$program_name' --long-option \1 -d "\2" --no-files/p
-        }
+      # print long flag completions
+      /.*[^-]--([[:alnum:]]+)[^#]*#[[:space:]]*(.*)$/ {
+        s//-c '$program_name' --long-option \1 -d "\2" --no-files/p
+      }
     ' # I CONQUERED YOU, SED!
 
 
