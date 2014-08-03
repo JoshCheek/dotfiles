@@ -12,19 +12,44 @@ function jcd --description "Josh's cd"
   # e.g. (seq 3), so my var should have "1\n2\n3\n"... HOW DO I DO THAT?
   set -u definitions \
          "
-           c  $HOME/code
-           l  $HOME/code/life
-           w  $HOME/code/jsl
-           wa $HOME/code/jsl/apply
-           we $HOME/code/jsl/enroll
+           code                    $HOME/code
+           life                    $HOME/code/life
 
-           d  $HOME/code/dotfiles
-           db $HOME/code/dotfiles/bin
-           df $HOME/code/dotfiles/fish
+           ruby                    $HOME/deleteme/ruby
+           rails                   $HOME/deleteme/rails
+           activemodel             $HOME/deleteme/rails/activemodel
+           activesupport           $HOME/deleteme/rails/activesupport
+           activerecord            $HOME/deleteme/rails/activerecord
 
-           Dr $HOME/Dropbox
-           De $HOME/Desktop
+           work                    $HOME/code/jsl
+           work/apply              $HOME/code/jsl/apply
+           work/enroll             $HOME/code/jsl/enroll
+
+           dotfiles                $HOME/code/dotfiles
+           dotfiles/bin            $HOME/code/dotfiles/bin
+           dotfiles/fish           $HOME/code/dotfiles/fish
+           dotfiles/fish/functions $HOME/code/dotfiles/fish
+
+           Dropbox                 $HOME/Dropbox
+           Desktop                 $HOME/Desktop
          "
+
+
+   set -u help_screen \
+    "
+    $program_name [flag | diralias]
+
+      CD to dirs I care about
+
+      Flags:
+        -l, --list     # list directory aliases
+        -h, --help     # this screen
+        --completions  # print fish completions
+        --edit         # edit this script
+
+      diralias:
+        one of the aliases on the left
+    "
 
   set print_help        ''
   set print_list        ''
@@ -46,20 +71,9 @@ function jcd --description "Josh's cd"
     end
   end
 
+
   if test -n $print_help
-    echo $program_name' [flag | diralias]'
-    echo ''
-    echo '  CD to dirs I care about'
-    echo ''
-    echo '  Flags:'
-    echo '    -l, --list     # list directory aliases'
-    echo '    -h, --help     # this screen'
-    echo '    --completions  # print fish completions'
-    echo '    --edit         # edit this script'
-    echo ''
-    echo '  diralias:'
-    echo '    one of the aliases on the left'
-    echo ''
+    echo $help_screen | tidy_text --sub '/^ {,4}/' ''
     begin
       echo alias directory
       echo ===== =========
@@ -74,6 +88,35 @@ function jcd --description "Josh's cd"
       echo $definition | read diralias dir
       echo -c $program_name --no-files -a $diralias -d $dir
     end
+
+    echo $help_screen | sed -E -n '
+      # For lines between flags and the table header for diraliases, continue, otherwise delete
+      /^[[:space:]]*Flags:$/,/^[=[:space:]]+$/b in-paragraph
+      d
+
+      :in-paragraph
+        # for lines with dashes continue, otherwise delete
+        /-.*#/b has-flag
+        d
+
+      :has-flag
+        # save current line in hold space
+        h
+
+        # print short flag completions (going with "old" instead b/c they look the same, but don\'t get combined
+        /.*[^-]-([[:alnum:]])[^[:alnum:]][^#]*#[[:space:]]*(.*)$/ {
+          s//-c '$program_name' --old-option \1 -d "\2" --no-files/p
+        }
+
+        # load hold space into pattern space
+        g
+
+        # print long flag completions
+        /.*[^-]--([[:alnum:]]+)[^#]*#[[:space:]]*(.*)$/ {
+          s//-c '$program_name' --long-option \1 -d "\2" --no-files/p
+        }
+    ' # I CONQUERED YOU, SED!
+
 
   else if test -n $edit_this_script
     vim (status -f)
