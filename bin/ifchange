@@ -1,0 +1,46 @@
+#!/usr/bin/env ruby
+
+begin
+  # looks like this might be a good all-environment alternative: https://github.com/guard/listen
+  require 'rb-fsevent'
+rescue LoadError
+  $stderr.puts 'Looks like you need to `gem install rb-fsevent` or fix your $LOAD_PATH or something'
+  exit 1
+end
+
+if $0 !~ /rspec/
+
+  paths   = ARGV.reject { |arg| arg.start_with? '-' }
+  fsevent = FSEvent.new
+  fsevent.watch paths do |directories|
+    puts "Detected change inside: #{directories.inspect}"
+  end
+  fsevent.run
+else
+  describe 'parsing options' do
+    it 'sets show_help? on -h and --help' do
+      expect(call([]).show_help?).to be_false
+      expect(call(['-h']).show_help?).to be_false
+      expect(call(['--help']).show_help?).to be_false
+    end
+
+    it 'aggregates non-flags into expanded watch_paths' do
+      expect(call([   ]).watch_paths).to eq [   ]
+      expect(call(['a']).watch_paths).to eq ['a']
+      expect(call(['b', '-h', 'c', '--help']).watch_paths).to eq ['b', 'c']
+    end
+
+    it 'aggregates -unknown-flag into expanded ignore_paths' do
+      expect(call([]).ignore_paths).to eq [  ]
+      expect(call(['-not-a-flag']).ignore_paths).to eq [  ]
+      expect(call(['path --help -not-a-flag -h -other-dir']).ignore_paths).to eq ['-not-a-flag', '-other-dir']
+    end
+
+    it 'aggregates --then into responders'
+
+    describe 'responders' do
+      it 'considers "{}" as a macro to be filled in with the changed path'
+      it 'shell escapes the result'
+    end
+  end
+end
