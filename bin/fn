@@ -1,10 +1,51 @@
-#!/bin/sh
+#!/usr/bin/env ruby
 
-command="find . | grep -v .git | grep -v /coverage/"
+run_command  = true
+verbose      = false
+dry_run      = false
+show_help    = false
+find_args    = ""
+find_dir     = "."
+greps        = ""
 
-for search_string in $@
-do
-  command="$command | grep -i $search_string"
-done
+until ARGV.empty?
+  arg = ARGV.shift
+  case arg
+  when '-h', '--help' then show_help = true; run_command = false
+  when '-v'           then verbose   = true
+  when '--dry-run'    then dry_run   = true; run_command = false
+  when /\A[\/~.]/     then find_dir  = arg
+  when '-d'           then find_args << " -type d"
+  when '-f'           then find_args << " -type f"
+  when /\A-(.*)\n?\z/ then greps     << " | grep -i -v #{$1}"
+  else                     greps     << " | grep -i #{arg}"
+  end
+end
 
-eval $command
+
+command = "find " << find_dir << find_args << greps
+
+if show_help
+  puts "Usage: #{$0} [./searchdir | /searchdir | ~/searchdir] [-v] [-d | -f] [match-pattern*] [-omit-pattern*]"
+  puts ""
+  puts "  * Finds files/dirs"
+  puts "  * If any arg begins with a dot, slash, or tilde"
+  puts "    it is assumed to be the dir to search within"
+  puts "  * non-flags beginning with dashes are considered omit patterns"
+  puts "  * non-flags are considered match patterns"
+  puts ""
+  puts "Arguments:"
+  puts "  -h, --help     # this help screen"
+  puts "  -d             # only find directories"
+  puts "  -f             # only find files"
+  puts "  -v             # verbose: print command before running it"
+  puts "  --dry-run      # print command, don't run it"
+end
+
+if verbose || dry_run
+  $stderr.puts command
+end
+
+if run_command
+  exec command
+end
