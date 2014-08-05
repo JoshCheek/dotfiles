@@ -29,7 +29,11 @@ module IfChange
     end
   end
 
-  def self.parse_args(args)
+  def self.fullpath(cwd, path)
+    File.expand_path(path, cwd)
+  end
+
+  def self.parse_args(cwd, args)
     args  = args.dup
     flags = Flags.new
     until args.empty?
@@ -37,9 +41,9 @@ module IfChange
       case arg
       when '-h', '--help' then flags.show_help = true
       when '--then'       then flags.responders << responder_from(args.shift)
-      when '-'            then flags.watch_paths.concat args
-      when /\A-(.*)/      then flags.ignore_paths << $1
-      else                     flags.watch_paths << arg
+      when '-'            then flags.watch_paths.concat args.map { |path| fullpath cwd, path }
+      when /\A-(.*)/      then flags.ignore_paths << fullpath(cwd, $1)
+      else                     flags.watch_paths  << fullpath(cwd, arg)
       end
     end
     flags
@@ -47,56 +51,84 @@ module IfChange
 end
 
 if $0 !~ /rspec/
+  flags   = IfChange.parse_args(Dir.pwd, ARGV)
+  if flags.show_help?
+    puts <<-HELP.gsub(/^    /, '')
+    Usage: ifchange PATH[ PATH] [-PATH] --then 'shell command'
 
-  paths   = ARGV.reject { |arg| arg.start_with? '-' }
-  fsevent = FSEvent.new
-  fsevent.watch paths do |directories|
-    puts "Detected change inside: #{directories.inspect}"
+      If you would like the directory that changed
+      (ignoring specific files for now, b/c they seem a lot slower)
+      You can pass '{}' in the shell command.
+
+    Flags:
+      -h or --help # this screen
+      -PATH        # ignore this path
+      - [PATH]     # everything after the dash is treated as a watch dir
+
+    Examples:
+      ifchange . --then rspec
+      ifchange spec --then 'rspec {}'
+
+    Maybe in the future (but prob not, I'm lazy):
+      * Expand splats
+      * allow path1 --then command1   path1 --then command1
+    HELP
+  else
+    fsevent = FSEvent.new
+    fsevent.watch(flags.watch_paths) do |paths|
+      paths.uniq.each do |path|
+        next if flags.ignore_paths.any? { |ignore_path| path.start_with? ignore_path }
+        flags.responders.each { |responder| system *responder.call(path) }
+      end
+    end
+    fsevent.run
   end
-  fsevent.run
 else
   describe 'parsing options' do
-    def call(args)
-      IfChange.parse_args(args)
+    def call(cwd, args)
+      IfChange.parse_args(cwd, args)
     end
 
     it 'does not mutate the input array' do
       ary = ['-h']
-      call ary
+      call '/', ary
       expect(ary).to eq ['-h']
     end
 
     it 'sets show_help? on -h and --help' do
-      expect(call([]).show_help?).to be_falsy
-      expect(call(['-h']).show_help?).to be_truthy
-      expect(call(['--help']).show_help?).to be_truthy
+      expect(call('/', []).show_help?).to be_falsy
+      expect(call('/', ['-h']).show_help?).to be_truthy
+      expect(call('/', ['--help']).show_help?).to be_truthy
     end
 
     it 'aggregates non-flags into expanded watch_paths' do
-      expect(call([   ]).watch_paths).to eq [   ]
-      expect(call(['a']).watch_paths).to eq ['a']
-      expect(call(['b', '-h', 'c', '--help']).watch_paths).to eq ['b', 'c']
+      expect(call('/a',      [   ]).watch_paths).to eq [   ]
+      expect(call('/a',      ['a']).watch_paths).to eq ['/a/a']
+      expect(call('/a/',     ['a']).watch_paths).to eq ['/a/a']
+      expect(call('/a/b',    ['a']).watch_paths).to eq ['/a/b/a']
+      expect(call('/a/b/..', ['a']).watch_paths).to eq ['/a/a']
+      expect(call('/a',      ['b', '-h', 'c', '--help']).watch_paths).to eq ['/a/b', '/a/c']
     end
 
     it 'aggregates -unknown-flag into expanded ignore_paths' do
-      expect(call([]).ignore_paths).to eq [  ]
-      expect(call(['-not-a-flag']).ignore_paths).to eq ['not-a-flag']
-      expect(call(%w[path --help -not-a-flag -h -other-dir]).ignore_paths).to eq ['not-a-flag', 'other-dir']
+      expect(call('/a', []).ignore_paths).to eq [  ]
+      expect(call('/a', ['-not-a-flag']).ignore_paths).to eq ['/a/not-a-flag']
+      expect(call('/a', %w[path --help -not-a-flag -h -other-dir]).ignore_paths).to eq ['/a/not-a-flag', '/a/other-dir']
     end
 
     it 'considers everything after a dash to be an include filename' do
-      expect(call(['-h']).watch_paths).to eq []
-      expect(call(['-', '-h']).watch_paths).to eq ['-h']
-      expect(call(['-', '--help']).watch_paths).to eq ['--help']
-      expect(call(['-', '-other']).watch_paths).to eq ['-other']
+      expect(call('/a', ['-h']).watch_paths).to eq []
+      expect(call('/a', ['-', '-h']).watch_paths).to eq ['/a/-h']
+      expect(call('/a', ['-', '--help']).watch_paths).to eq ['/a/--help']
+      expect(call('/a', ['-', '-other']).watch_paths).to eq ['/a/-other']
     end
 
     it 'aggregates --then into responders' do
-      expect(call([]).responders).to eq []
-      expect(call(['--then', 'something']).responders.map { |r| r.call "some/path" }).to eq [['something']]
-      expect(call(['--help', '--then', 'something', 'path', '--then', 'other', 'another-path']).responders.map { |r| r.call "some/path" }).to eq [['something'], ['other']]
+      expect(call('/a/b/c', []).responders).to eq []
+      expect(call('/a/b/c', ['--then', 'something']).responders.map { |r| r.call "some/path" }).to eq [['something']]
+      expect(call('/a/b/c', ['--help', '--then', 'something', 'path', '--then', 'other', 'another-path']).responders.map { |r| r.call "irrelevant/path" }).to eq [['something'], ['other']]
 
-      responder = call(['--then', 'omg']).responders.first
+      responder = call('/a', ['--then', 'omg']).responders.first
       expect(responder.arity).to eq 1
     end
 
