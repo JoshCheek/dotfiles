@@ -9,6 +9,30 @@ rescue LoadError
   exit 1
 end
 
+help_screen = <<HELP
+Usage: ifchange [WATCHPATH]* [-IGNOREPATH]* --then 'shell command'
+
+  EXAMPLE: ifchange lib spec --then rspec
+    (if lib or spec change, then run `rspec`)
+
+  You can receive the directory with the change as an argument by passing '{}'
+
+Flags:
+  -h or --help   # this screen
+  -PATH          # ignore this path
+  - [PATH]       # everything after the dash is treated as a watch dir
+  --then SCRIPT  # what to do when you see the change
+
+Maybe in the future (but prob not, I'm lazy):
+  * Expand splats
+  * Allow path1 --then command1   path1 --then command1
+  * The shell escaping seems annoying, e.g. this won't work as a result:
+    $ ifchange . -log -tmp --then 'echo {} >> changes_seen'
+  * Error if no watchpath provided
+  * Error if watch path and ignore path are the same
+  * Debug flag so user can see how invocation expands
+HELP
+
 module IfChange
   class Flags
     attr_accessor :show_help, :watch_paths, :ignore_paths, :responders
@@ -53,26 +77,7 @@ end
 if $0 !~ /rspec/
   flags   = IfChange.parse_args(Dir.pwd, ARGV)
   if flags.show_help?
-    puts <<-HELP.gsub(/^    /, '')
-    Usage: ifchange PATH[ PATH] [-PATH] --then 'shell command'
-
-      If you would like the directory that changed
-      (ignoring specific files for now, b/c they seem a lot slower)
-      You can pass '{}' in the shell command.
-
-    Flags:
-      -h or --help # this screen
-      -PATH        # ignore this path
-      - [PATH]     # everything after the dash is treated as a watch dir
-
-    Examples:
-      ifchange . --then rspec
-      ifchange spec --then 'rspec {}'
-
-    Maybe in the future (but prob not, I'm lazy):
-      * Expand splats
-      * allow path1 --then command1   path1 --then command1
-    HELP
+    puts help_screen
   else
     fsevent = FSEvent.new
     fsevent.watch(flags.watch_paths) do |paths|
