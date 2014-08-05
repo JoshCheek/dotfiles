@@ -12,26 +12,30 @@ function jcd --description "Josh's cd"
   # e.g. (seq 3), so my var should have "1\n2\n3\n"... HOW DO I DO THAT?
   set -u definitions \
          "
-           code                    $HOME/code
-           life                    $HOME/code/life
+           code                     $HOME/code
+           life                     $HOME/code/life
 
-           ruby                    $HOME/deleteme/ruby
-           rails                   $HOME/deleteme/rails
-           activemodel             $HOME/deleteme/rails/activemodel
-           activesupport           $HOME/deleteme/rails/activesupport
-           activerecord            $HOME/deleteme/rails/activerecord
+           ruby                     $HOME/deleteme/ruby
+           rails                    $HOME/deleteme/rails
+           activemodel              $HOME/deleteme/rails/activemodel
+           activesupport            $HOME/deleteme/rails/activesupport
+           activerecord             $HOME/deleteme/rails/activerecord
 
-           work                    $HOME/code/jsl
-           work/apply              $HOME/code/jsl/apply
-           work/enroll             $HOME/code/jsl/enroll
+           work                     $HOME/code/jsl
+           work/apply               $HOME/code/jsl/apply
+           work/enroll              $HOME/code/jsl/enroll
+           work/curriculum          $HOME/code/jsl/curriculum
+           work/standard            $HOME/code/jsl/standard
+           work/student-assessments $HOME/code/jsl/student-assessments
 
-           dotfiles                $HOME/code/dotfiles
-           dotfiles/bin            $HOME/code/dotfiles/bin
-           dotfiles/fish           $HOME/code/dotfiles/fish
-           dotfiles/fish/functions $HOME/code/dotfiles/fish
+           dotfiles                 $HOME/code/dotfiles
+           dotfiles/bin             $HOME/code/dotfiles/bin
+           dotfiles/fish            $HOME/code/dotfiles/fish
+           dotfiles/fish/functions  $HOME/code/dotfiles/fish
 
-           Dropbox                 $HOME/Dropbox
-           Desktop                 $HOME/Desktop
+           Dropbox                  $HOME/Dropbox
+           Desktop                  $HOME/Desktop
+           deleteme                 $HOME/deleteme
          "
 
 
