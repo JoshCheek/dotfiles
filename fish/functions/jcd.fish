@@ -12,8 +12,36 @@ function jcd --description "Josh's cd"
   # e.g. (seq 3), so my var should have "1\n2\n3\n"... HOW DO I DO THAT?
   set -u definitions \
          "
-           code                     $HOME/code
-           life                     $HOME/code/life
+           code                                                               $HOME/code
+           code/PresentationFiles                                             $HOME/code/PresentationFiles
+           code/bindable_block                                                $HOME/code/bindable_block
+           code/cln                                                           $HOME/code/cln
+           code/command_line_launcher                                         $HOME/code/command_line_launcher
+           code/deject                                                        $HOME/code/deject
+           code/drinking-with-josh-on-march-14                                $HOME/code/drinking-with-josh-on-march-14
+           code/ghost_in_the_machine                                          $HOME/code/ghost_in_the_machine
+           code/haiti                                                         $HOME/code/haiti
+           code/joshcheek                                                     $HOME/code/joshcheek
+           code/keyboard_magician                                             $HOME/code/keyboard_magician
+           code/letter_press_is_not_as_good_as_boggle                         $HOME/code/letter_press_is_not_as_good_as_boggle
+           code/ruby-kickstart                                                $HOME/code/ruby-kickstart
+           code/rubytags                                                      $HOME/code/rubytags
+           code/seeing_is_believing                                           $HOME/code/seeing_is_believing
+           code/she_told_me_she_had_a_god_complex_i_told_her_i_was_an_atheist $HOME/code/she_told_me_she_had_a_god_complex_i_told_her_i_was_an_atheist
+           code/source-blogs                                                  $HOME/code/source-blogs
+           code/surrogate                                                     $HOME/code/surrogate
+           code/tetris                                                        $HOME/code/tetris
+           code/text_indentation_to_tree                                      $HOME/code/text_indentation_to_tree
+           code/todo-game                                                     $HOME/code/todo-game
+           code/under_the_hood                                                $HOME/code/under_the_hood
+           code/view_ruby_regexes                                             $HOME/code/view_ruby_regexes
+           code/words                                                         $HOME/code/words
+
+
+           dotfiles                 $HOME/code/dotfiles
+           dotfiles/bin             $HOME/code/dotfiles/bin
+           dotfiles/fish            $HOME/code/dotfiles/fish
+           dotfiles/fish/functions  $HOME/code/dotfiles/fish
 
            ruby                     $HOME/deleteme/ruby
            rails                    $HOME/deleteme/rails
@@ -23,16 +51,13 @@ function jcd --description "Josh's cd"
 
            work                     $HOME/code/jsl
            work/apply               $HOME/code/jsl/apply
+           work/today               $HOME/code/jsl/today
            work/enroll              $HOME/code/jsl/enroll
            work/curriculum          $HOME/code/jsl/curriculum
            work/standard            $HOME/code/jsl/standard
            work/student-assessments $HOME/code/jsl/student-assessments
 
-           dotfiles                 $HOME/code/dotfiles
-           dotfiles/bin             $HOME/code/dotfiles/bin
-           dotfiles/fish            $HOME/code/dotfiles/fish
-           dotfiles/fish/functions  $HOME/code/dotfiles/fish
-
+           life                     $HOME/code/life
            Dropbox                  $HOME/Dropbox
            Desktop                  $HOME/Desktop
            deleteme                 $HOME/deleteme
