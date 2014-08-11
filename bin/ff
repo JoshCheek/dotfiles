@@ -1,51 +1,59 @@
 #!/usr/bin/env ruby
+require 'shellwords'
 
-run_command  = true
-verbose      = false
-dry_run      = false
-show_help    = false
-find_args    = ""
-find_dir     = "."
-greps        = ""
+def translate_regex(omit, string_pattern)
+  regexp = Regexp.new(string_pattern).inspect.gsub("'", "'\\\\''")
+  regexp = "!#{regexp}" if omit
+  regexp
+end
+
+run_command     = true
+verbose         = false
+show_help       = false
+absolute        = false
+find_args       = ""
+find_dir        = "."
+regexes         = []
 
 until ARGV.empty?
   arg = ARGV.shift
   case arg
-  when '-h', '--help' then show_help = true; run_command = false
-  when '-v'           then verbose   = true
-  when '--dry-run'    then dry_run   = true; run_command = false
-  when /\A[\/~.]/     then find_dir  = arg
-  when '-d'           then find_args << " -type d"
-  when '-f'           then find_args << " -type f"
-  when /\A-(.*)\n?\z/ then greps     << " | grep -i -v #{$1}"
-  else                     greps     << " | grep -i #{arg}"
+  when '--help'               then show_help = true; run_command = false
+  when '--in'                 then find_dir  = ARGV.shift || raise("Must provide an argument with #{arg}")
+  when '--dir', '--directory' then find_args << " -type d"
+  when '--file'               then find_args << " -type f"
+  when '--absolute'           then absolute  = true
+  when '--verbose'            then verbose   = true
+  when '--dry-run'            then verbose   = true; run_command = false
+  when '--edit'               then exec "vim #{__FILE__}"
+  else
+    /\A(?<omit>-)?(?<pattern>.*)\n?\z/ =~ arg
+    regexes << translate_regex(omit, pattern)
   end
 end
 
-
-command = "find " << find_dir << find_args << greps
-
 if show_help
-  puts "Usage: #{$0} [./searchdir | /searchdir | ~/searchdir] [-v] [-d | -f] [match-pattern*] [-omit-pattern*]"
+  puts "Usage: #{$0} [--verbose] [--absolute] [--dir | --file] [--in DIR] [match-pattern*] [-omit-pattern*]"
   puts ""
   puts "  * Finds files/dirs"
-  puts "  * If any arg begins with a dot, slash, or tilde"
-  puts "    it is assumed to be the dir to search within"
-  puts "  * non-flags beginning with dashes are considered omit patterns"
   puts "  * non-flags are considered match patterns"
+  puts "  * non-flags beginning with dashes are considered omit patterns"
   puts ""
   puts "Arguments:"
-  puts "  -h, --help     # this help screen"
-  puts "  -d             # only find directories"
-  puts "  -f             # only find files"
-  puts "  -v             # verbose: print command before running it"
-  puts "  --dry-run      # print command, don't run it"
+  puts "  --help     # this help screen"
+  puts "  --in DIR   # only search in dir, defaults to CWD"
+  puts "  --dir      # only find directories"
+  puts "  --file     # only find files"
+  puts "  --absolute # print full path of each result"
+  puts "  --verbose  # print command to stderr before running it"
+  puts "  --dry-run  # verbose and don't run command"
+  puts "  --edit     # edit this script"
 end
 
-if verbose || dry_run
-  $stderr.puts command
-end
+pipeline = []
+pipeline << "find #{find_dir.shellescape}#{find_args}"
+pipeline << "ruby -ne 'print File.expand_path(File.absolute_path($_))'" if absolute
+pipeline << "ruby -ne 'print if #{regexes.join ' && '}'"                if regexes.any?
 
-if run_command
-  exec command
-end
+$stderr.puts pipeline.join " |\n  " if verbose
+exec         pipeline.join " | "    if run_command
