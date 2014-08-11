@@ -44,6 +44,7 @@ function jcd --description "Josh's cd"
            dotfiles/fish/functions  $HOME/code/dotfiles/fish
 
            ruby                     $HOME/deleteme/ruby
+           rubinius                 $HOME/deleteme/rubinius
            rails                    $HOME/deleteme/rails
            activemodel              $HOME/deleteme/rails/activemodel
            activesupport            $HOME/deleteme/rails/activesupport
