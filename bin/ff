@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 require 'shellwords'
 
+# explanation of how hard it was to figure out how to escape this shit
+# https://gist.github.com/JoshCheek/4194d82c27986a535368
 def translate_regex(omit, string_pattern)
   regexp = Regexp.new(string_pattern).inspect.gsub("'", "'\\\\''")
   regexp = "!#{regexp}" if omit
