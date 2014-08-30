@@ -30,12 +30,16 @@ function jcd --description "Josh's cd"
            code/she_told_me_she_had_a_god_complex_i_told_her_i_was_an_atheist $HOME/code/she_told_me_she_had_a_god_complex_i_told_her_i_was_an_atheist
            code/source-blogs                                                  $HOME/code/source-blogs
            code/surrogate                                                     $HOME/code/surrogate
+           code/mountain_berry_fields                                         $HOME/code/mountain_berry_fields
+           code/mountain_berry_fields-rspec                                   $HOME/code/mountain_berry_fields-rspec
+           code/mountain_berry_fields-magic_comments                          $HOME/code/mountain_berry_fields-magic_comments
            code/tetris                                                        $HOME/code/tetris
            code/text_indentation_to_tree                                      $HOME/code/text_indentation_to_tree
            code/todo-game                                                     $HOME/code/todo-game
            code/under_the_hood                                                $HOME/code/under_the_hood
            code/view_ruby_regexes                                             $HOME/code/view_ruby_regexes
            code/words                                                         $HOME/code/words
+           code/pry                                                           $HOME/code/pry
 
 
            dotfiles                 $HOME/code/dotfiles
@@ -44,7 +48,7 @@ function jcd --description "Josh's cd"
            dotfiles/fish/functions  $HOME/code/dotfiles/fish
 
            ruby                     $HOME/deleteme/ruby
-           rubinius                 $HOME/deleteme/rubinius
+           rbx                      $HOME/deleteme/rubinius
            rails                    $HOME/deleteme/rails
            activemodel              $HOME/deleteme/rails/activemodel
            activesupport            $HOME/deleteme/rails/activesupport
@@ -54,8 +58,9 @@ function jcd --description "Josh's cd"
            work/apply               $HOME/code/jsl/apply
            work/today               $HOME/code/jsl/today
            work/enroll              $HOME/code/jsl/enroll
-           work/curriculum          $HOME/code/jsl/curriculum
+           work/roster              $HOME/code/jsl/roster
            work/standard            $HOME/code/jsl/standard
+           work/curriculum          $HOME/code/jsl/curriculum
            work/student-assessments $HOME/code/jsl/student-assessments
 
            life                     $HOME/code/life
