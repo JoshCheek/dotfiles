@@ -1,0 +1,2 @@
+#!/bin/sh
+chruby-exec 2.1.2 -- ruby "$@"
