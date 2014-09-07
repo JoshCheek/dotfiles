@@ -1,0 +1,14 @@
+#!/bin/sh
+
+if test "$1" = "-"
+then
+  shift 1
+  prepended="$*"
+else
+  prepended="$* "
+fi
+
+while read line
+do
+  echo "$prepended$line"
+done
