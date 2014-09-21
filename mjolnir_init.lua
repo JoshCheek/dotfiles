@@ -5,6 +5,9 @@
 
 
 ----- GENERAL NOTES -----
+--  helpers:
+--    function ks(t) for k, v in pairs(t) do print(k) end end
+--    print(whatever)
 --
 -- console:
 --   muast assign all vars as globals or they don't show
@@ -22,12 +25,9 @@
 -- Other things I can require:
 --   local Application = require "mjolnir.application"
 --   local Fnutils = require "mjolnir.fnutils"
---   local Screen = require "mjolnir.screen"
-
-
------ REQUIRE HELPER LIBS -----
-local Hotkey = require "mjolnir.hotkey"
-local Window = require "mjolnir.window"
+--   local Screen  = require "mjolnir.screen"
+--   local Hotkey  = require "mjolnir.hotkey"
+--   local Window  = require "mjolnir.window"
 
 
 ----- HELPER FUNCTIONS -----
@@ -36,83 +36,84 @@ local zero = function(n) return 0     end
 local full = function(n) return n     end
 
 
------ FINDING WINDOWS -----
-local currentWindow = function()
-  return Window.focusedwindow()
-end
-
-
 ----- FUNCTIONS TO MOVE WINDOWS AROUND -----
 -- might be nice to have a vertical half and horizontal half
 -- I'd probably need to figure out how to make my own classes in order to do this
 -- and not be totally annoyed by it, though.
 
-local windowFromScreen = function(win, transformations)
-  local windowFrame = win:frame()
-  local screenFrame = win:screen():frame()
-  local width       = screenFrame.x + screenFrame.w
-  local height      = screenFrame.y + screenFrame.h
-
-  if transformations.x then windowFrame.x = transformations.x(width)  end
-  if transformations.w then windowFrame.w = transformations.w(width)  end
-  if transformations.y then windowFrame.y = transformations.y(height) end
-  if transformations.h then windowFrame.h = transformations.h(height) end
-  win:setframe(windowFrame)
+local newFrame = function(frame, sizes, transformations)
+  frame.x = transformations.x(sizes.width)
+  frame.w = transformations.w(sizes.width)
+  frame.y = transformations.y(sizes.height)
+  frame.h = transformations.h(sizes.height)
+  return frame
 end
 
-local windowTopLeft = function(win)
-  windowFromScreen(win, {x=zero, y=zero, w=half, h=half})
+local windowTopLeft = function(frame, sizes)
+  return newFrame(frame, sizes, {x=zero, y=zero, w=half, h=half})
 end
 
-local windowTopRight = function(win)
-  windowFromScreen(win, {x=half, y=zero, w=half, h=half})
+local windowTopRight = function(frame, sizes)
+  return newFrame(frame, sizes, {x=half, y=zero, w=half, h=half})
 end
 
-local windowBotLeft = function(win)
-  windowFromScreen(win, {x=zero, y=half, w=half, h=half})
+local windowBotLeft = function(frame, sizes)
+  return newFrame(frame, sizes, {x=zero, y=half, w=half, h=half})
 end
 
-local windowBotRight = function(win)
-  windowFromScreen(win, {x=half, y=half, w=half, h=half})
+local windowBotRight = function(frame, sizes)
+  return newFrame(frame, sizes, {x=half, y=half, w=half, h=half})
 end
 
-local windowFullScreen = function(win)
-  windowFromScreen(win, {x=zero, y=zero, w=full, h=full})
+local windowFullScreen = function(frame, sizes)
+  return newFrame(frame, sizes, {x=zero, y=zero, w=full, h=full})
 end
 
-local windowLeft = function(win)
-  windowFromScreen(win, {x=zero, y=zero, w=half, h=full})
+local windowLeft = function(frame, sizes)
+  return newFrame(frame, sizes, {x=zero, y=zero, w=half, h=full})
 end
 
-local windowRight = function(win)
-  windowFromScreen(win, {x=half, y=zero, w=half, h=full})
+local windowRight = function(frame, sizes)
+  return newFrame(frame, sizes, {x=half, y=zero, w=half, h=full})
 end
 
-local windowTop = function(win)
-  windowFromScreen(win, {x=zero, y=zero, w=full, h=half})
+local windowTop = function(frame, sizes)
+  return newFrame(frame, sizes, {x=zero, y=zero, w=full, h=half})
 end
 
-local windowBot = function(win)
-  windowFromScreen(win, {x=zero, y=half, w=full, h=half})
+local windowBot = function(frame, sizes)
+  return newFrame(frame, sizes, {x=zero, y=half, w=full, h=half})
+end
+
+
+----- WINDOW MANAGEMENT -----
+local Window = require "mjolnir.window"
+local currentWindow = function()
+  return Window.focusedwindow()
+end
+
+local updateWindow = function(getWindow, f)
+  return function()
+    local window      = getWindow()
+    local screenFrame = window:screen():frame()
+    local newFrame    = f(window:frame(), {width  = (screenFrame.x + screenFrame.w),
+                                           height = (screenFrame.y + screenFrame.h)})
+    window:setframe(newFrame)
+  end
 end
 
 
 ----- HOTKEYS -----
-local forWindow = function(win, f)
-  return function()
-    f(win())
-  end
-end
-
 local mash = {"cmd", "alt", "ctrl"}
 
-Hotkey.bind(mash, "F", forWindow(currentWindow, windowFullScreen))
-Hotkey.bind(mash, "L", forWindow(currentWindow, windowLeft))
-Hotkey.bind(mash, "R", forWindow(currentWindow, windowRight))
-Hotkey.bind(mash, "T", forWindow(currentWindow, windowTop))
-Hotkey.bind(mash, "B", forWindow(currentWindow, windowBot))
-Hotkey.bind(mash, "1", forWindow(currentWindow, windowTopLeft))
-Hotkey.bind(mash, "2", forWindow(currentWindow, windowTopRight))
-Hotkey.bind(mash, "3", forWindow(currentWindow, windowBotRight))
-Hotkey.bind(mash, "4", forWindow(currentWindow, windowBotLeft))
+local Hotkey = require "mjolnir.hotkey"
+Hotkey.bind(mash, "F", updateWindow(currentWindow, windowFullScreen))
+Hotkey.bind(mash, "L", updateWindow(currentWindow, windowLeft))
+Hotkey.bind(mash, "R", updateWindow(currentWindow, windowRight))
+Hotkey.bind(mash, "T", updateWindow(currentWindow, windowTop))
+Hotkey.bind(mash, "B", updateWindow(currentWindow, windowBot))
+Hotkey.bind(mash, "1", updateWindow(currentWindow, windowTopLeft))
+Hotkey.bind(mash, "2", updateWindow(currentWindow, windowTopRight))
+Hotkey.bind(mash, "3", updateWindow(currentWindow, windowBotRight))
+Hotkey.bind(mash, "4", updateWindow(currentWindow, windowBotLeft))
 
