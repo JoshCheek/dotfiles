@@ -6,6 +6,9 @@
 --   https://github.com/sdegutis/mjolnir
 --   in case he deletes it: https://github.com/JoshCheek/mjolnir/
 --
+-- evolved a bit, but requires more oo:
+--   https://gist.github.com/JoshCheek/5377f1e2b0803245a9dd
+--
 -- helpers:
 --    function ks(t) for k, v in pairs(t) do print(k) end end
 --    print(whatever)
