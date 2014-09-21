@@ -41,48 +41,48 @@ local full = function(n) return n     end
 -- I'd probably need to figure out how to make my own classes in order to do this
 -- and not be totally annoyed by it, though.
 
-local newFrame = function(frame, sizes, transformations)
-  frame.x = transformations.x(sizes.width)
-  frame.w = transformations.w(sizes.width)
-  frame.y = transformations.y(sizes.height)
-  frame.h = transformations.h(sizes.height)
+local newFrame = function(frame, containerSizes, transformations)
+  frame.x = transformations.x(containerSizes.width)
+  frame.w = transformations.w(containerSizes.width)
+  frame.y = transformations.y(containerSizes.height)
+  frame.h = transformations.h(containerSizes.height)
   return frame
 end
 
-local windowTopLeft = function(frame, sizes)
-  return newFrame(frame, sizes, {x=zero, y=zero, w=half, h=half})
+local windowTopLeft = function(frame, containerSizes)
+  return newFrame(frame, containerSizes, {x=zero, y=zero, w=half, h=half})
 end
 
-local windowTopRight = function(frame, sizes)
-  return newFrame(frame, sizes, {x=half, y=zero, w=half, h=half})
+local windowTopRight = function(frame, containerSizes)
+  return newFrame(frame, containerSizes, {x=half, y=zero, w=half, h=half})
 end
 
-local windowBotLeft = function(frame, sizes)
-  return newFrame(frame, sizes, {x=zero, y=half, w=half, h=half})
+local windowBotLeft = function(frame, containerSizes)
+  return newFrame(frame, containerSizes, {x=zero, y=half, w=half, h=half})
 end
 
-local windowBotRight = function(frame, sizes)
-  return newFrame(frame, sizes, {x=half, y=half, w=half, h=half})
+local windowBotRight = function(frame, containerSizes)
+  return newFrame(frame, containerSizes, {x=half, y=half, w=half, h=half})
 end
 
-local windowFullScreen = function(frame, sizes)
-  return newFrame(frame, sizes, {x=zero, y=zero, w=full, h=full})
+local windowFullScreen = function(frame, containerSizes)
+  return newFrame(frame, containerSizes, {x=zero, y=zero, w=full, h=full})
 end
 
-local windowLeft = function(frame, sizes)
-  return newFrame(frame, sizes, {x=zero, y=zero, w=half, h=full})
+local windowLeft = function(frame, containerSizes)
+  return newFrame(frame, containerSizes, {x=zero, y=zero, w=half, h=full})
 end
 
-local windowRight = function(frame, sizes)
-  return newFrame(frame, sizes, {x=half, y=zero, w=half, h=full})
+local windowRight = function(frame, containerSizes)
+  return newFrame(frame, containerSizes, {x=half, y=zero, w=half, h=full})
 end
 
-local windowTop = function(frame, sizes)
-  return newFrame(frame, sizes, {x=zero, y=zero, w=full, h=half})
+local windowTop = function(frame, containerSizes)
+  return newFrame(frame, containerSizes, {x=zero, y=zero, w=full, h=half})
 end
 
-local windowBot = function(frame, sizes)
-  return newFrame(frame, sizes, {x=zero, y=half, w=full, h=half})
+local windowBot = function(frame, containerSizes)
+  return newFrame(frame, containerSizes, {x=zero, y=half, w=full, h=half})
 end
 
 
