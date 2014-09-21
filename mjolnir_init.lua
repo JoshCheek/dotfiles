@@ -49,41 +49,15 @@ local newFrame = function(frame, containerSizes, transformations)
   return frame
 end
 
-local windowTopLeft = function(frame, containerSizes)
-  return newFrame(frame, containerSizes, {x=zero, y=zero, w=half, h=half})
-end
-
-local windowTopRight = function(frame, containerSizes)
-  return newFrame(frame, containerSizes, {x=half, y=zero, w=half, h=half})
-end
-
-local windowBotLeft = function(frame, containerSizes)
-  return newFrame(frame, containerSizes, {x=zero, y=half, w=half, h=half})
-end
-
-local windowBotRight = function(frame, containerSizes)
-  return newFrame(frame, containerSizes, {x=half, y=half, w=half, h=half})
-end
-
-local windowFullScreen = function(frame, containerSizes)
-  return newFrame(frame, containerSizes, {x=zero, y=zero, w=full, h=full})
-end
-
-local windowLeft = function(frame, containerSizes)
-  return newFrame(frame, containerSizes, {x=zero, y=zero, w=half, h=full})
-end
-
-local windowRight = function(frame, containerSizes)
-  return newFrame(frame, containerSizes, {x=half, y=zero, w=half, h=full})
-end
-
-local windowTop = function(frame, containerSizes)
-  return newFrame(frame, containerSizes, {x=zero, y=zero, w=full, h=half})
-end
-
-local windowBot = function(frame, containerSizes)
-  return newFrame(frame, containerSizes, {x=zero, y=half, w=full, h=half})
-end
+local windowTopLeft    = function(frame, containerSizes) return newFrame(frame, containerSizes, {x=zero, y=zero, w=half, h=half}) end
+local windowTopRight   = function(frame, containerSizes) return newFrame(frame, containerSizes, {x=half, y=zero, w=half, h=half}) end
+local windowBotLeft    = function(frame, containerSizes) return newFrame(frame, containerSizes, {x=zero, y=half, w=half, h=half}) end
+local windowBotRight   = function(frame, containerSizes) return newFrame(frame, containerSizes, {x=half, y=half, w=half, h=half}) end
+local windowFullScreen = function(frame, containerSizes) return newFrame(frame, containerSizes, {x=zero, y=zero, w=full, h=full}) end
+local windowLeft       = function(frame, containerSizes) return newFrame(frame, containerSizes, {x=zero, y=zero, w=half, h=full}) end
+local windowRight      = function(frame, containerSizes) return newFrame(frame, containerSizes, {x=half, y=zero, w=half, h=full}) end
+local windowTop        = function(frame, containerSizes) return newFrame(frame, containerSizes, {x=zero, y=zero, w=full, h=half}) end
+local windowBot        = function(frame, containerSizes) return newFrame(frame, containerSizes, {x=zero, y=half, w=full, h=half}) end
 
 
 ----- WINDOW MANAGEMENT -----
@@ -92,12 +66,12 @@ local currentWindow = function()
   return Window.focusedwindow()
 end
 
-local updateWindow = function(getWindow, f)
+local updateWindow = function(getWindow, getFrame)
   return function()
     local window      = getWindow()
     local screenFrame = window:screen():frame()
-    local newFrame    = f(window:frame(), {width  = (screenFrame.x + screenFrame.w),
-                                           height = (screenFrame.y + screenFrame.h)})
+    local sizes       = {width=(screenFrame.x + screenFrame.w), height=(screenFrame.y + screenFrame.h)}
+    local newFrame    = getFrame(window:frame(), sizes)
     window:setframe(newFrame)
   end
 end
@@ -116,4 +90,3 @@ Hotkey.bind(mash, "1", updateWindow(currentWindow, windowTopLeft))
 Hotkey.bind(mash, "2", updateWindow(currentWindow, windowTopRight))
 Hotkey.bind(mash, "3", updateWindow(currentWindow, windowBotRight))
 Hotkey.bind(mash, "4", updateWindow(currentWindow, windowBotLeft))
-
