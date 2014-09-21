@@ -1,11 +1,12 @@
--- https://github.com/sdegutis/mjolnir
--- in case he deletes it: https://github.com/JoshCheek/mjolnir/
---
 -- this file goes in: ~/.mjolnir/init.lua
 
 
 ----- GENERAL NOTES -----
---  helpers:
+-- mjolnir source:
+--   https://github.com/sdegutis/mjolnir
+--   in case he deletes it: https://github.com/JoshCheek/mjolnir/
+--
+-- helpers:
 --    function ks(t) for k, v in pairs(t) do print(k) end end
 --    print(whatever)
 --
@@ -41,23 +42,23 @@ local full = function(n) return n     end
 -- I'd probably need to figure out how to make my own classes in order to do this
 -- and not be totally annoyed by it, though.
 
-local newFrame = function(frame, containerSizes, transformations)
-  frame.x = transformations.x(containerSizes.width)
-  frame.w = transformations.w(containerSizes.width)
-  frame.y = transformations.y(containerSizes.height)
-  frame.h = transformations.h(containerSizes.height)
-  return frame
+local newFrame = function(containerSizes, transformations)
+  return { x = transformations.x(containerSizes.width),
+           w = transformations.w(containerSizes.width),
+           y = transformations.y(containerSizes.height),
+           h = transformations.h(containerSizes.height),
+         }
 end
 
-local windowTopLeft    = function(frame, containerSizes) return newFrame(frame, containerSizes, {x=zero, y=zero, w=half, h=half}) end
-local windowTopRight   = function(frame, containerSizes) return newFrame(frame, containerSizes, {x=half, y=zero, w=half, h=half}) end
-local windowBotLeft    = function(frame, containerSizes) return newFrame(frame, containerSizes, {x=zero, y=half, w=half, h=half}) end
-local windowBotRight   = function(frame, containerSizes) return newFrame(frame, containerSizes, {x=half, y=half, w=half, h=half}) end
-local windowFullScreen = function(frame, containerSizes) return newFrame(frame, containerSizes, {x=zero, y=zero, w=full, h=full}) end
-local windowLeft       = function(frame, containerSizes) return newFrame(frame, containerSizes, {x=zero, y=zero, w=half, h=full}) end
-local windowRight      = function(frame, containerSizes) return newFrame(frame, containerSizes, {x=half, y=zero, w=half, h=full}) end
-local windowTop        = function(frame, containerSizes) return newFrame(frame, containerSizes, {x=zero, y=zero, w=full, h=half}) end
-local windowBot        = function(frame, containerSizes) return newFrame(frame, containerSizes, {x=zero, y=half, w=full, h=half}) end
+local windowTopLeft    = function(containerSizes) return newFrame(containerSizes, {x=zero, y=zero, w=half, h=half}) end
+local windowTopRight   = function(containerSizes) return newFrame(containerSizes, {x=half, y=zero, w=half, h=half}) end
+local windowBotLeft    = function(containerSizes) return newFrame(containerSizes, {x=zero, y=half, w=half, h=half}) end
+local windowBotRight   = function(containerSizes) return newFrame(containerSizes, {x=half, y=half, w=half, h=half}) end
+local windowFullScreen = function(containerSizes) return newFrame(containerSizes, {x=zero, y=zero, w=full, h=full}) end
+local windowLeft       = function(containerSizes) return newFrame(containerSizes, {x=zero, y=zero, w=half, h=full}) end
+local windowRight      = function(containerSizes) return newFrame(containerSizes, {x=half, y=zero, w=half, h=full}) end
+local windowTop        = function(containerSizes) return newFrame(containerSizes, {x=zero, y=zero, w=full, h=half}) end
+local windowBot        = function(containerSizes) return newFrame(containerSizes, {x=zero, y=half, w=full, h=half}) end
 
 
 ----- WINDOW MANAGEMENT -----
@@ -66,12 +67,12 @@ local currentWindow = function()
   return Window.focusedwindow()
 end
 
-local updateWindow = function(getWindow, getFrame)
+local updateWindow = function(getWindow, frameFor)
   return function()
     local window      = getWindow()
     local screenFrame = window:screen():frame()
     local sizes       = {width=(screenFrame.x + screenFrame.w), height=(screenFrame.y + screenFrame.h)}
-    local newFrame    = getFrame(window:frame(), sizes)
+    local newFrame    = frameFor(sizes)
     window:setframe(newFrame)
   end
 end
