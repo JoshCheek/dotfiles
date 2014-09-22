@@ -2,13 +2,16 @@
 
 macvim="/Applications/MacVim.app/Contents/MacOS/Vim" # get it with `brew install macvim && brew linkapps`
 systemvim="/usr/bin/vim"
+selectedvim=""
 
 if test -e "$macvim"
 then
-  "$macvim" "$@"
+  selectedvim="$macvim"
 elif test -e "$systemvim"
 then
-  "$systemvim" "$@"
+  selectedvim="$systemvim"
 else
-  "$(whereis vim)" "$@"
+  selectedvim="$(whereis vim)"
 fi
+
+exec "$selectedvim" "$@"
