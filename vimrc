@@ -51,6 +51,7 @@ set cursorline                                      " colours the line the curso
 set number                                          " line numbers
 nmap <Leader>p orequire "pry"<CR>binding.pry<ESC>;  " pry insertion
 vnoremap . :norm.<CR>                               " in visual mode, "." will for each line, go into normal mode and execute the "."
+set pastetoggle=<Leader>v
 
 " easier navigation between split windows
 nnoremap <c-j> <c-w>j
@@ -96,6 +97,9 @@ autocmd BufWritePre * :call <SID>StripTrailingWhitespaces()
 " replaces %/ with current directory, and %% with current file
 cmap %/ <C-R>=expand("%:p:h")."/"<CR>
 cmap %% <C-R>=expand("%")<CR>
+
+"" filetypes
+au  BufRead,BufNewFile *.elm setfiletype haskell
 
 " ========== Pathogen plugins ==========
 "
