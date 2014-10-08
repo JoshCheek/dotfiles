@@ -18,6 +18,7 @@ function jcd --description "Josh's cd"
            code/cln                                                           $HOME/code/cln
            code/command_line_launcher                                         $HOME/code/command_line_launcher
            code/deject                                                        $HOME/code/deject
+           code/eval_in                                                       $HOME/code/eval_in
            code/drinking-with-josh-on-march-14                                $HOME/code/drinking-with-josh-on-march-14
            code/ghost_in_the_machine                                          $HOME/code/ghost_in_the_machine
            code/haiti                                                         $HOME/code/haiti
@@ -47,6 +48,7 @@ function jcd --description "Josh's cd"
            dotfiles/fish            $HOME/code/dotfiles/fish
            dotfiles/fish/functions  $HOME/code/dotfiles/fish
 
+           atom                     $HOME/deleteme/atom
            ruby                     $HOME/deleteme/ruby
            rbx                      $HOME/deleteme/rubinius
            rails                    $HOME/deleteme/rails
@@ -59,7 +61,7 @@ function jcd --description "Josh's cd"
            work/today               $HOME/code/jsl/today
            work/enroll              $HOME/code/jsl/enroll
            work/roster              $HOME/code/jsl/roster
-           work/standard            $HOME/code/jsl/standard
+           work/standards           $HOME/code/jsl/standards
            work/curriculum          $HOME/code/jsl/curriculum
            work/student-assessments $HOME/code/jsl/student-assessments
 
