@@ -43,15 +43,16 @@ autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTree
 runtime macros/matchit.vim " a dependency
 
 "" ==========  My shit  ==========
-set nobackup                                        " no backup files
-set nowritebackup                                   " only in case you don't want a backup file while editing
-set noswapfile                                      " no swap files
-set scrolloff=4                                     " adds top/bottom buffer between cursor and window
-set cursorline                                      " colours the line the cursor is on
-set number                                          " line numbers
-nmap <Leader>p orequire "pry"<CR>binding.pry<ESC>;  " pry insertion
-vnoremap . :norm.<CR>                               " in visual mode, "." will for each line, go into normal mode and execute the "."
-set pastetoggle=<Leader>v
+set nobackup                                              " no backup files
+set nowritebackup                                         " only in case you don't want a backup file while editing
+set noswapfile                                            " no swap files
+set scrolloff=4                                           " adds top/bottom buffer between cursor and window
+set cursorline                                            " colours the line the cursor is on
+set number                                                " line numbers
+nmap <Leader>p orequire "pry"<CR>binding.pry<ESC>;        " pry insertion
+vnoremap . :norm.<CR>;                                    " in visual mode, "." will for each line, go into normal mode and execute the "."
+nnoremap <Leader>w :w!<CR>;                               " Fuck you x1million, vim (http://stackoverflow.com/questions/26070153/vim-wont-write-file-without-a-sometimes-e13)
+nnoremap <Leader>v :set paste<CR>"*p<CR>:set nopaste<CR>; " paste without being stupid ("*p means to paste on next line (p) from the register (") that represents the clipboard (*))
 
 " easier navigation between split windows
 nnoremap <c-j> <c-w>j
