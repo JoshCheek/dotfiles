@@ -1,24 +1,20 @@
 #!/usr/bin/env ruby
 
-copy1 = ARGV.delete '-c'
-copy2 = ARGV.delete '--copy'
-should_copy = copy1 || copy2
+def self.relative_dirs(argv, stdin)
+  return argv if argv.any?     # if we have args, they are considered relative paths
+  return stdin.read.each_line  # otherwise assume we're piping paths through the program
+end
 
-relative_dirs = (ARGV.empty? ? $stdin.read.each_line : ARGV)
-absolute_dirs = relative_dirs.map { |path| File.expand_path(path) }
-
-def pbcopy(str)
+# pbcopy is only available on mac AFAIK
+def self.copy_to_clipboard(str)
   require 'open3'
   Open3.popen3("pbcopy") { |stdin, stdout, stderr, wait_thr|
     stdin.write str
   }
 end
 
-if absolute_dirs.size == 1
-  name = absolute_dirs.first.chomp # no newline when there is only one dir
-  pbcopy name
-  print name
-else
-  absolute_dirs.each { |dir| puts dir }
-  pbcopy absolute_dirs.join("\n")
-end
+should_copy   = ARGV.delete('-c') || ARGV.delete('--copy')
+absolute_dirs = relative_dirs(ARGV, $stdin).map { |path| File.expand_path(path).chomp }
+printer       = method(absolute_dirs.one? ? :print : :puts)
+absolute_dirs.each &printer
+copy_to_clipboard(absolute_dirs.join "\n") if should_copy
