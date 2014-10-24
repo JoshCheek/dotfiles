@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 
 def self.relative_dirs(argv, stdin)
-  return argv if argv.any?     # if we have args, they are considered relative paths
-  return stdin.read.each_line  # otherwise assume we're piping paths through the program
+  return argv if argv.any? # if we have args, they are considered relative paths
+  return stdin.read.lines  # otherwise assume we're piping paths through the program
 end
 
 # pbcopy is only available on mac AFAIK
@@ -13,8 +13,14 @@ def self.copy_to_clipboard(str)
   }
 end
 
+# arg processing
 should_copy   = ARGV.delete('-c') || ARGV.delete('--copy')
-absolute_dirs = relative_dirs(ARGV, $stdin).map { |path| File.expand_path(path).chomp }
-printer       = method(absolute_dirs.one? ? :print : :puts)
-absolute_dirs.each &printer
-copy_to_clipboard(absolute_dirs.join "\n") if should_copy
+
+# normalizing dirs
+absolute_dirs = relative_dirs(ARGV, $stdin).map(&:chomp).reject(&:empty?).map { |path| File.expand_path path }
+absolute_dirs.each { |dir| dir << "\n" } unless absolute_dirs.one?
+dir_string = absolute_dirs.join("")
+
+# output
+print dir_string
+copy_to_clipboard dir_string if should_copy
