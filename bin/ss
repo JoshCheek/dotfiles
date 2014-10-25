@@ -1,0 +1,24 @@
+#!/usr/bin/env ruby
+
+require 'time'
+
+most_recent_screenshot_path =
+  Dir[File.expand_path("~/Dropbox/Screenshots/*.png")]
+    .grep(/\d\d\d\d-\d\d-\d\d \d\d\.\d\d\.\d\d\.png$/)
+    .max_by(&Time.method(:parse))
+
+if ['-h', '--help', 'help'].any? { |flag| ARGV.include? flag }
+  puts "ss [-p] [location]"
+  puts
+  puts "  Common screenshot shit I wind up wanting to do"
+  puts
+  puts "  no args           # prints out the name"
+  puts "  location          # copy the screenshot to this location"
+  puts "  -p | --photoshop  # open the screenshot in photoshop"
+elsif ['-p', '--photoshop'].any? { |flag| ARGV.include? flag }
+  system 'photoshop', most_recent_screenshot_path
+elsif ARGV.any?
+  system 'cp', most_recent_screenshot_path, ARGV.first
+else
+  puts most_recent_screenshot_path
+end
