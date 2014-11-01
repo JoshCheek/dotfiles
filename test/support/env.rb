@@ -42,6 +42,20 @@ define_steps.call(
   expect(out).to eq eval_curlies(to_add)
 }
 
+define_steps.call(
+  'the directory "$dirname"',
+  "the directory '$dirname'",
+) { |dirname|
+  Haiti::CommandLineHelpers.in_proving_grounds {
+    FileUtils.mkdir_p dirname
+  }
+}
+
+Then 'the program ran successfully' do
+  expect(@last_executed.stderr).to eq ""
+  expect(@last_executed.exitstatus).to eq 0
+end
+
 # Then 'stdout is the JSON:' do |json|
 #   require 'json'
 #   expected = JSON.parse(json)

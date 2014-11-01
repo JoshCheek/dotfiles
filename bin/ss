@@ -2,10 +2,22 @@
 
 require 'time'
 
+screenshot_dir = File.expand_path \
+  ENV.fetch('SCREENSHOT_DIR', "~/Dropbox/Screenshots/")
+
+long_long_ago = Time.parse('1900-01-01') # a "null" time value
+
 most_recent_screenshot_path =
-  Dir[File.expand_path("~/Dropbox/Screenshots/*.png")]
-    .grep(/\d\d\d\d-\d\d-\d\d \d\d\.\d\d\.\d\d\.png$/)
-    .max_by(&Time.method(:parse))
+  Dir[File.join screenshot_dir, '*.png']
+    .grep(/Screenshot \d\d\d\d-\d\d-\d\d \d\d\.\d\d\.\d\d\.png$/)
+    .max_by { |filepath|
+      begin
+        filename = File.basename(filepath)
+        Time.strptime filename, "Screenshot %Y-%m-%d %H.%M.%S.png"
+      rescue ArgumentError
+        long_long_ago
+      end
+    }
 
 if ['-h', '--help', 'help'].any? { |flag| ARGV.include? flag }
   puts "ss [-p] [location]"
