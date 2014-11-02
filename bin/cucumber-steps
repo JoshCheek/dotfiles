@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+
+if ARGV.delete('-h') || ARGV.delete('--help') || ARGV.delete('help')
+  puts "Shows step defs for Cucumber"
+  puts "Run it the same way you would run Cucumber (same args, same cwd)"
+  puts "so it can find all your libs and stuffs"
+  exit
+end
+
+spec_path = Gem::Specification.find_by_path('cucumber').full_gem_path
+$LOAD_PATH.unshift File.join(spec_path, 'lib')
+
+require 'cucumber/rspec/disable_option_parser'
+require 'cucumber/cli/main'
+
+# Cucumber::Runtime -- so stupid that I have to do this, but it gives itself to other objects -.-
+Class.new(Cucumber::Runtime) {
+  def stepdefs
+    load_step_definitions
+    disable_minitest_test_unit_autorun
+    fire_after_configuration_hook
+    @support_code.step_definitions
+  end
+}
+.new(Cucumber::Cli::Configuration
+       .new($stdout, $stderr)
+       .tap { |c| c.parse! ARGV.dup })
+.stepdefs
+.map { |stepdef| [stepdef.regexp_source, stepdef.file_colon_line] }
+.tap { |sources_to_locations|
+  max_source_size = sources_to_locations.transpose.first.map(&:length).max
+  sources_to_locations.each do |source, location|
+    printf "%-#{max_source_size}s | %s\n", source, location
+  end
+}
