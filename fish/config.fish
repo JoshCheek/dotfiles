@@ -1,9 +1,9 @@
 # various paths
-set --export PATH "$HOME/bin"               \
-                  "/usr/local/bin"          \
-                  "$HOME/.rbenv/shims"      \
-                  "$HOME/.cabal/bin"        \
-                  $PATH
+set --export PATH $HOME/bin          \
+                  /usr/local/bin     \
+                  $HOME/.rbenv/shims \
+                  $PATH              \
+                  $HOME/.cabal/bin
 
 # Rails cucumber integration looks for this env var to decide how to display output
 set --export CUCUMBER_FORMAT pretty
@@ -29,4 +29,3 @@ set --erase fish_greeting
 if test -e ~/.config/fish/private_config.fish
   source   ~/.config/fish/private_config.fish
 end
-
