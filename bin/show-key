@@ -1,0 +1,39 @@
+#!/usr/bin/env ruby
+
+require 'io/console'
+
+return_ord = 13
+print "Enter a key and hit return: "
+input_line, input_char = "", ""
+$stdin.raw do
+  loop do
+    input_line += input_char
+    input_char = $stdin.getch
+    break if input_char.ord == return_ord
+  end
+  input_line = input_char if input_line.empty?
+end
+puts
+puts
+puts "chars: #{input_line.chars.inspect}"
+puts "bytes: #{input_line.bytes.inspect}"
+
+__END__
+$stdin.raw {
+  modifiers = ['C', 'M', 'S']
+  chars = [*'a'..'z', *'0'..'9', *%w[` - = \[ \] \\ ; ' , . / ]]
+
+  modifiers.each do |mod|
+    chars.each do |char|
+      prompt = "Enter #{mod}-#{char} followed by space, or return to quit: "
+      print prompt
+      input_line, input_char = "", ""
+      until input_char == " "
+        input_line += input_char
+        input_char = $stdin.getch
+        exit if input_char.ord == 13
+      end
+      print "\r#{' ' * prompt.size}\r#{mod}-#{char} #{input_line.bytes.inspect}\r\n"
+    end
+  end
+}
