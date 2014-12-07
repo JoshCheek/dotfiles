@@ -1,5 +1,9 @@
 #!/usr/bin/env ruby
 
+def arg?(*potential_args)
+  potential_args.any?  { |arg| ARGV.include? arg }
+end
+
 require 'time'
 
 screenshot_dir = File.expand_path \
@@ -19,7 +23,7 @@ most_recent_screenshot_path =
       end
     }
 
-if ['-h', '--help', 'help'].any? { |flag| ARGV.include? flag }
+if arg? '-h', '--help', 'help'
   puts "ss [-p] [location]"
   puts
   puts "  Common screenshot shit I wind up wanting to do"
@@ -27,8 +31,14 @@ if ['-h', '--help', 'help'].any? { |flag| ARGV.include? flag }
   puts "  no args           # prints out the name"
   puts "  location          # copy the screenshot to this location"
   puts "  -p | --photoshop  # open the screenshot in photoshop"
-elsif ['-p', '--photoshop'].any? { |flag| ARGV.include? flag }
+  puts "  -o | --open       # open with preview"
+  puts "  -R | --reveal     # Open with finder"
+elsif arg? '-p', '--photoshop'
   system 'photoshop', most_recent_screenshot_path
+elsif arg? '-o', '--open'
+  system 'open', most_recent_screenshot_path
+elsif arg? '-R', '--reveal'
+  system 'open', '--reveal', most_recent_screenshot_path
 elsif ARGV.any?
   system 'cp', most_recent_screenshot_path, ARGV.first
 else
