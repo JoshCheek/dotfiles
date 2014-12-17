@@ -1,7 +1,128 @@
 #!/usr/bin/env ruby
 
-[0, *30..37].each do |fg|
-  [0, *40..47].each do |bg|
+# Used these ideas to print pictures to the terminal: https://github.com/JoshCheek/print-png
+
+
+# to do it for real, would wind up wanting a pixel object
+# which tracks each color in 256 shades
+# then translates to appropriate swatch set at time of rendering
+# but I'm mostly just playing
+
+def system_resolution;                                            8 end # 0=black, 1=red, 2=green, 3=yellow, 4=blue, 5=magenta, 6=cyan, 7=white
+def color_resolution;                                             6 end # red, green, and blue can each be 0, 1, 2, 3, 4, or 5
+def grayscale_resolution;                                        24 end # 0=black, 23=white
+
+def system_offset;                                                0 end
+def intense_system_offset;     system_offset +    system_resolution end
+def rgb_offset;        intense_system_offset +    system_resolution end
+def grayscale_offset;             rgb_offset +  color_resolution**3 end # 3 is cardinality of [r,g,b]
+def upper_bound;            grayscale_offset + grayscale_resolution end
+
+def color_from_rgb(r:0, g:0, b:0)
+  rgb_offset                              +
+  r * color_resolution * color_resolution +
+  g * color_resolution                    +
+  b
+end
+
+def color_to_rgb(color)
+  rgb = color - rgb_offset
+  [ rgb / color_resolution / color_resolution % color_resolution, # Rxx
+    rgb / color_resolution                    % color_resolution, # xGx
+    rgb                                       % color_resolution, # xxB
+  ]
+end
+
+def color_from_gray(amount_gray)
+  return amount_gray + grayscale_offset if (0...grayscale_resolution).include? amount_gray
+  raise "Invalid amount gray: #{amount_gray.inspect} expected 0...#{grayscale_resolution}"
+end
+
+def color_to_grayscale(n)
+  case n
+  when system_offset...rgb_offset
+    case n % system_resolution # normalize (remove high-intensity)
+    when 0 then color_to_grayscale color_from_rgb(r:0, g:0, b:0) # black
+    when 1 then color_to_grayscale color_from_rgb(r:5, g:0, b:0) # red
+    when 2 then color_to_grayscale color_from_rgb(r:0, g:5, b:0) # green
+    when 3 then color_to_grayscale color_from_rgb(r:5, g:5, b:0) # yellow
+    when 4 then color_to_grayscale color_from_rgb(r:0, g:0, b:5) # blue
+    when 5 then color_to_grayscale color_from_rgb(r:5, g:0, b:5) # magenta
+    when 6 then color_to_grayscale color_from_rgb(r:0, g:5, b:0) # cyan
+    when 7 then color_to_grayscale color_from_rgb(r:5, g:5, b:5) # white
+    else raise "Should not be possible! #{n}%#{system_resolution} should be in 0...8"
+    end
+  when rgb_offset...grayscale_offset
+    color_to_rgb(n).zip([0.3, 0.59, 0.11])
+                   .map { |c, m| c*m }
+                   .inject(0, :+)
+                   .*(grayscale_resolution)
+                   ./(color_resolution)
+                   .round
+                   .+(grayscale_offset)
+  when grayscale_offset...upper_bound
+    n
+  else
+    raise "Invalid color: #{n.inspect}"
+  end
+end
+
+# =====  For Display  =====
+
+def primary_secondary_swatches(primary, secondary)
+  [ [5, 4], [5, 3], [5, 2], [5, 1],
+    [4, 3], [4, 2], [4, 1],
+    [3, 2], [3, 1],
+    [2, 1], [2, 0],
+    [1, 0],
+  ].map { |p, s| color_from_rgb(primary => p, secondary => s) }
+end
+
+def print_swatches(heading, swatches)
+  swatches = swatches.map { |color|
+    brightness = color_to_grayscale(color) - grayscale_offset
+    text_color = brightness < (grayscale_resolution/2) ?
+                   color_from_rgb(r:5,g:5,b:5) : # dark colors get white text
+                   color_from_rgb(r:0,g:0,b:0)   # light colors get dark text
+    foreground = "38;5;#{text_color}" # 38=background
+    background = "48;5;#{color}"      # 48=background, no idea why 5, maybe multiple terminals supported 48 for different uses?
+    "\e[#{foreground};#{background}m #{color.to_s.ljust(3)} \e[0m"
+  }
+  print heading, ' '
+  print *swatches, "\e[0m\n"
+end
+
+def banner(text)
+  print "┌", "─"*(text.size+2), "┐\n"
+  print "│ #{text} "            "│\n"
+  print "└", "─"*(text.size+2), "┘\n"
+end
+
+# 256 color swatches
+banner 'Background of 256 colours, enter like this: "\e[48m;5;<number>m", change 48 to 38 for foreground'
+print_swatches 'Standard      ', system_offset...intense_system_offset
+print_swatches 'High Intensity', intense_system_offset...rgb_offset
+print_swatches 'All Swatches  ', rgb_offset...grayscale_offset
+print_swatches 'Red           ', (0...color_resolution).map { |n| color_from_rgb r: n }
+print_swatches 'Green         ', (0...color_resolution).map { |n| color_from_rgb g: n }
+print_swatches 'Yellow        ', (0...color_resolution).map { |n| color_from_rgb r: n, g: n }
+print_swatches 'Blue          ', (0...color_resolution).map { |n| color_from_rgb b: n }
+print_swatches 'Magenta       ', (0...color_resolution).map { |n| color_from_rgb r: n, b: n }
+print_swatches 'Cyan          ', (0...color_resolution).map { |n| color_from_rgb b: n, g: n }
+print_swatches 'White         ', (0...color_resolution).map { |n| color_from_rgb r: n, g: n, b: n }
+print_swatches 'red   > green ', primary_secondary_swatches(:r, :g)
+print_swatches 'red   > blue  ', primary_secondary_swatches(:r, :b)
+print_swatches 'green > red   ', primary_secondary_swatches(:g, :r)
+print_swatches 'green > blue  ', primary_secondary_swatches(:g, :b)
+print_swatches 'blue  > red   ', primary_secondary_swatches(:b, :r)
+print_swatches 'blue  > geen  ', primary_secondary_swatches(:b, :g)
+print_swatches 'Grayscale     ', grayscale_offset...upper_bound
+
+# normal swatches (non-256)
+puts
+banner "Foreground / Background of non-256 color swatches"
+[0, *30..37].flat_map do |fg|
+  [0, *40..47].map do |bg|
     code = "\e[#{fg};#{bg}m"
     code = "\e[#{bg};#{fg}m" if bg.zero? # b/c fg will be overridden by the zero which is only meant to reset the bg
     print code, " ", code.sub("\e", "\\e").ljust(9), " "
