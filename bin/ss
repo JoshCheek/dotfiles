@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# tests in test/ss.feature (https://github.com/JoshCheek/dotfiles/blob/master/test/ss.feature)
 
 def arg?(*potential_args)
   potential_args.any?  { |arg| ARGV.include? arg }
