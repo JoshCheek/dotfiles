@@ -9,5 +9,6 @@
 --type-add=comma_separated_values:ext:csv
 --type-add=ruby:ext:thor,rabl,gemspec
 --type-add=ruby:is:config.ru
+--type-add=haxe:ext:hx
 --ignore-dir=coverage
 --ignore-dir=tmp
