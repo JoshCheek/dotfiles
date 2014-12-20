@@ -29,6 +29,9 @@ if arg? '-h', '--help', 'help'
   puts
   puts "  Common screenshot shit I wind up wanting to do"
   puts
+  puts "  Examples: https://github.com/JoshCheek/dotfiles/blob/master/test/ss.feature"
+  puts
+  puts
   puts "  no args           # prints out the name"
   puts "  location          # copy the screenshot to this location"
   puts "  -p | --photoshop  # open the screenshot in photoshop"
