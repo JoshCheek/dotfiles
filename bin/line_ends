@@ -1,67 +1,79 @@
 #!/usr/bin/env ruby
 
-class LineEnds
-  def self.escaped_for(text)
-    text.each_char
-        .inject(new) { |line_ends, char| line_ends.next_char_is char }
-        .map { |ending| ending.gsub("\n", "\\n").gsub("\r", "\\r") }
+module LineEnds
+  extend self
+
+  def escaped_for(input)
+    parse(input)
+      .select { |index, type, chars| type == :line_end }
+      .map    { |index, type, chars| chars.gsub("\n", "\\n").gsub("\r", "\\r") }
   end
 
-  def initialize
-    self.endings = []
-  end
-
-  include Enumerable
-
-  def each(&block)
-    endings.each &block
-  end
-
-  def next_char_is(char)
-    track char if should_track? char
-    self.previous_char = char
-    self
+  def tr_to(new_line_end, input, outstream)
+    parse(input).each do |index, type, chars|
+      case type
+      when :char     then outstream << chars
+      when :line_end then outstream << new_line_end
+      else raise "shouldn't happen!"
+      end
+    end
+    outstream
   end
 
   private
 
   attr_accessor :previous_char, :endings
 
-  def should_track?(char)
-    char == "\n" || char == "\r"
-  end
+  def parse(text)
+    endings   = []
+    prev_type = :null
+    prev_char = ""
 
-  def track(char)
-    if appending_would_make_a_line_end?(char)
-      endings[-1] += char
-    else
-      endings.push char
+    text.each_char.with_index do |char, index|
+      if char != "\r" && char != "\n" # not a line end
+        endings << [
+          index,
+          prev_type = :char,
+          prev_char = char,
+        ]
+      elsif prev_type == :line_end && prev_char != char # not a continuation of previous line end
+        prev_char << char
+        prev_type = :null
+        prev_char = ""
+      else # new line end
+        endings << [
+          index,
+          prev_type = :line_end,
+          prev_char = char,
+        ]
+      end
     end
-  end
 
-  def appending_would_make_a_line_end?(char)
-    # guards from trying to append after a gap of non-ends
-    previous_char == endings.last && (
-      # guards from trying to make groups with 3 chars
-      # current possibilities are only \r\n and \n\r
-      previous_char == "\r" && char == "\n" ||
-      previous_char == "\n" && char == "\r"
-    )
+    endings
   end
 end
 
 
 
 if $0 !~ /rspec/
-  File.open ARGV.first, 'r' do |file|
-    LineEnds.escaped_for(file).each { |ending| puts ending }
+  filename, new_line_end, * = ARGV
+  File.open filename, 'r' do |file|
+    if new_line_end
+      LineEnds.tr_to(new_line_end, file, $stdout)
+    else
+      LineEnds.escaped_for(file).each { |ending| puts ending }
+    end
   end
 else
 
   gem 'rspec', '~> 3.0'
   require 'stringio'
 
+  BodyHasNotBeenSet = Module.new
+
   RSpec.describe 'line_ends binary' do
+    before { @body = BodyHasNotBeenSet }
+
     def write_file(body)
       @body = body
     end
@@ -70,7 +82,7 @@ else
       expect(LineEnds.escaped_for @body).to eq ends
     end
 
-    describe 'successful uses' do
+    describe 'no args: display ends' do
       it 'works for strings and streams' do
         expect(LineEnds.escaped_for "\n").to eq ['\n']
         expect(LineEnds.escaped_for StringIO.new "\n").to eq ['\n']
@@ -128,8 +140,60 @@ else
           write_file "\n\r\n\r"
           expect_ends '\n\r', '\n\r'
         end
+
+        example '\n\r' do
+          write_file "\n\r\n\r"
+          expect_ends '\n\r', '\n\r'
+        end
+
+        example '\n\r\r is seen as two line ends' do
+          write_file "\n\r\r"
+          expect_ends '\n\r', '\r'
+        end
+      end
+    end
+
+    describe 'arg: new line-end replaces any discovered ends' do
+      def rewrite_ends(new_end)
+        @result = LineEnds.tr_to(new_end, @body, "")
       end
 
+      def assert_file(expected)
+        expect(@result).to eq expected
+      end
+
+      it 'works for strings and streams' do
+        expect(LineEnds.tr_to "x", "a\n\rb\n", "").to eq 'axbx'
+        expect(LineEnds.tr_to "x", StringIO.new("a\n\rb\n"), "").to eq 'axbx'
+
+        LineEnds.tr_to "x", "a\n\rb\n", out=StringIO.new
+        expect(out.string).to eq "axbx"
+      end
+
+      it 'does not modify the original' do
+        original = "ab\ncd\r\n"
+        write_file original
+        rewrite_ends "!"
+        expect(original).to eq "ab\ncd\r\n"
+      end
+
+      example 'to a non-line end character' do
+        write_file "abc\ndef\r\nghi\n\rjkl\nmno\r"
+        rewrite_ends "!"
+        assert_file "abc!def!ghi!jkl!mno!"
+      end
+
+      example 'to a line-end character' do
+        write_file "abc\ndef\r\nghi\n\rjkl\nmno\r"
+        rewrite_ends "\n"
+        assert_file "abc\ndef\nghi\njkl\nmno\n"
+      end
+
+      example 'to a multiline string' do
+        write_file "abc\ndef\r\nghi\n\rjkl\nmno\r"
+        rewrite_ends "<12>"
+        assert_file "abc<12>def<12>ghi<12>jkl<12>mno<12>"
+      end
     end
   end
 end
