@@ -58,21 +58,22 @@ if $0 !~ /rspec/
   end
 else
 
+  gem 'rspec', '~> 3.0'
   require 'stringio'
 
-  describe 'line_ends binary' do
+  RSpec.describe 'line_ends binary' do
     def write_file(body)
       @body = body
     end
 
     def expect_ends(*ends)
-      LineEnds.escaped_for(@body).should == ends
+      expect(LineEnds.escaped_for @body).to eq ends
     end
 
     describe 'successful uses' do
       it 'works for strings and streams' do
-        LineEnds.escaped_for("\n").should == ['\n']
-        LineEnds.escaped_for(StringIO.new "\n").should == ['\n']
+        expect(LineEnds.escaped_for "\n").to eq ['\n']
+        expect(LineEnds.escaped_for StringIO.new "\n").to eq ['\n']
       end
 
       it 'outputs nothing for an empty file' do
