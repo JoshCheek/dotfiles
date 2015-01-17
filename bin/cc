@@ -5,13 +5,15 @@ module CC
   extend self
 
   HELP_SCREEN = <<-HELP_SCREEN.gsub(/^    /, '')
-    Cat Code, a `cat` like interface with syntax highlighting
+    Name:
+      Cat Code -- a `cat` like interface with syntax highlighting
 
-    If no filenames are given, it assumes file is on stdin and is Ruby
-    If the filename has an extension, it will infer the type
-    If the filename has a shebang, it will infer the type
-    To override the language, pass -langname
-    If it cannot determine the filetype, it will assume Ruby. Eat it.
+    Behaviour:
+      If no filenames are given, it assumes file is on stdin and is Ruby
+      If the filename has an extension, it will infer the type
+      If the filename has a shebang, it will infer the type
+      To override the language, pass -langname
+      If it cannot determine the filetype, it will assume Ruby. Eat it.
 
     Options:
       --list    # List the languages, flags to specify them, extensions that become them
@@ -29,9 +31,19 @@ module CC
       cc --themes f.rb         # Show the themes against the body of f.rb
       cc --themes --wait f.rb  # Show the themes against f.rb, pausing between each
       cc f.py f.ry --wait      # Print em both, but wait between each
-      cc --list                # See filetype flags you can provide (e.g. -ruby)
-                                 and what extensions map to a given language.
+      cc --list                # See filetype filetype overrides and extension mapping
   HELP_SCREEN
+
+  HELP_SCREEN.gsub!(/^(\w+:)/,     "\e[33m\\1\e[0m") # titles are orange
+  HELP_SCREEN.gsub!(/(Cat Code)/,  "\e[31m\\1\e[0m") # program name is red
+  HELP_SCREEN.gsub!(/(--?[+\w]*)/, "\e[36m\\1\e[0m") # flags are teal
+  HELP_SCREEN.gsub!(/(#.*$)/,      "\e[34m\\1\e[0m") # explanations are blue
+  HELP_SCREEN.gsub!(/\b(cc)\b/,    "\e[35m\\1\e[0m") # program invocation is purple
+  HELP_SCREEN.gsub!(/\b(no filenames|an extension|a shebang)\b/,
+                                   "\e[32m\\1\e[0m") # green to help locate needles in the haystack
+
+
+
 
   LANGS = [] # will be populated when we load coderay
 
