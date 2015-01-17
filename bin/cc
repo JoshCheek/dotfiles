@@ -59,6 +59,7 @@ module CC
 
   def highlight(body, lang, stream)
     ::CodeRay.encode(body, lang, :terminal, out: stream)
+    stream
   end
 
   def stream_for(string)
@@ -68,7 +69,7 @@ module CC
     read_end
   end
 
-  def best_instream(streams)
+  def best_instream(*streams)
     readable_streams, * = ::IO.select streams.map { |s| s.kind_of?(::IO) ? s : stream_for(s) }
     readable_streams.first
   end
@@ -103,6 +104,18 @@ module CC
   end
 end
 
+# =====  GRACEFUL DEATH  =====
+
+# don't splode when user tries to gtfo
+trap 'INT' do
+  exit 1
+end
+
+# don't print errors when stdout closes (ie cc --themes | head -20)
+at_exit do
+  $! && $!.kind_of?(Errno::EPIPE) && exit!(1)
+end
+
 
 # =====  CODERAY  =====
 
@@ -120,7 +133,7 @@ begin
 
   # grab relevant information out of the plugins
   langs_by_id = {}
-  CodeRay::Scanners.all_plugins.map do |p|
+  CodeRay::Scanners.all_plugins.each do |p|
     langs_by_id[p.plugin_id] =
       CC::Lang.new p.plugin_id, p.title, (p.aliases - [:default])
   end
@@ -173,8 +186,10 @@ begin
 
   # activate the theme!
   # these were my faves: github, pry-classic-256, vim-default
+  # try `cc --themes cc`, it's is a nice way to actually get a feel for the theme
   # also, the default Coderay theme is really nice, but doesn't seem to be in the list
   # Might even my fav b/c it accentuates things like the \e inside strings, like the github one does
+  # but I like how the vim-default one accentuates interpolation, and I'm used to it b/c I use vim, so...
   theme = ENV.fetch 'CC_THEME', 'vim-default'
   PryTheme::ThemeList.activate_theme(theme)
 rescue LoadError
@@ -185,13 +200,7 @@ end
 
 # =====  DO SOMETHING ALREADY!  =====
 
-# don't stacktrace if user realizes this is more than they bargained for
 wait_between_each = ARGV.delete '--wait'
-if wait_between_each
-  trap 'INT' do
-    exit 1
-  end
-end
 
 # help screen
 if ARGV.include?("-h") || ARGV.include?("--help")
@@ -215,7 +224,7 @@ elsif ARGV.include?('--themes')
   ARGV.delete '--themes'
 
   # I didn't actually try this code out to see if it works :P
-  instream = CC.best_instream([$stdin, <<-CODE.gsub(/^    /, '')])
+  instream = CC.best_instream($stdin, <<-CODE.gsub(/^    /, ''))
     class Theme # this is a comment
       def self.a_method(req, opt=1, *rest, keyopt: 1, keyreq:, **keyrest, &block)
         [$gvar, @ivar, @@cvar, lvar, 10_000, 400.00, /regex/]
@@ -242,13 +251,11 @@ elsif ARGV.include?('--themes')
     exit 1
   end
 
-  # print the themes, fkn finally!
+  # print the themes
   PryTheme::ThemeList.themes.each do |theme|
     $stdout.puts "\e[48;5;24;38;5;228;1m #{theme.name}\e[38;5;51m #{theme.description} \e[49m"
     theme.activate
-    buffer = ""
-    CC.highlight code_info.body, code_info.lang, buffer
-    $stdout.puts buffer.gsub(/^/, "  ")
+    $stdout.puts CC.highlight(code_info.body, code_info.lang, "").gsub(/^/, "  ")
     $stdout.puts
     $stdout.puts
     $stdin.gets if wait_between_each
