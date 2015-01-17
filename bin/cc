@@ -1,0 +1,104 @@
+#!/usr/bin/env ruby
+
+# help screen
+if ARGV.include?("-h") || ARGV.include?("--help")
+  puts "Cat Code, a `cat` like interface with syntax highlighting"
+  puts
+  puts "If no files are given, it assumes file is on stdin and is Ruby"
+  puts "If the file has an extension, it will infer the type"
+  puts "If the file has a shebang, it will infer the type"
+  puts "To override the language, pass -langname"
+  puts "If it cannot determine the filetype, it will assume Ruby"
+  puts
+  puts "Options:"
+  puts "  --list # List the languages, flags to specify them, extensions that become them"
+  puts "  --help # This screen"
+  puts
+  puts "Examples:"
+  puts %[  echo "'a'" | cc      # Ruby from stdin, b/c it is the default]
+  puts %[  echo "'a'" | cc -c++ # C++ from stdin, b/c it was specified]
+  puts %[  cc f.py              # Python from a file]
+  puts %[  cc f.py -ruby        # Ruby from a Python file]
+  puts %[  cc f.py f.rb         # Python file and then Ruby file]
+  exit 0
+end
+
+# load lib
+begin
+  require 'coderay'
+rescue LoadError
+  $stderr.puts "Could not load coderay, try `gem install coderay`"
+  exit 1
+end
+
+# fix bug in lib
+require 'coderay/helpers/plugin'
+module CodeRay::PluginHost
+  def validate_id(id)
+    id.to_s.downcase # fix a bug where it blows up on c++
+  end
+end
+
+# discover languages and such -- really, just for printing
+module CC
+  def self.print(body, lang, stream)
+    CodeRay.encode(body, lang, :terminal, out: stream)
+  end
+
+  Lang = Struct.new :id, :title, :flags, :extensions, :filenames do
+    def initialize(id, title, flags, extensions=[], filenames=[])
+      super(id, title, flags, extensions, filenames)
+    end
+  end
+
+  langs_by_id = {}
+  CodeRay::Scanners.all_plugins.map do |p|
+    langs_by_id[p.plugin_id] =
+      Lang.new p.plugin_id, p.title, (p.aliases - [:default])
+  end
+  CodeRay::FileType::TypeFromExt.each do |ext, type|
+    langs_by_id[type].extensions << ext
+  end
+  CodeRay::FileType::TypeFromName.each do |name, type|
+    langs_by_id[type].filenames << name
+  end
+
+  LANGS = langs_by_id.values.sort_by(&:id)
+end
+
+
+# --list
+if ARGV == ['--list']
+  def color(text)
+    "\e[34m#{text}\e[39m"
+  end
+  CC::LANGS.each do |lang|
+    puts "\e[35m#{lang.title}\e[39m"
+    puts color("  flag:      ") << lang.flags.map { |f| "-#{f}" }.sort_by(&:length).join(' ')
+    if lang.extensions.any?
+      puts color("  extension: ") << lang.extensions.map { |e| ".#{e}" }.sort_by(&:length).join(' ')
+    end
+    if lang.filenames.any?
+      puts color("  filenames: ") << lang.filenames.join(' ')
+    end
+  end
+
+# stdin, implicit ruby
+elsif ARGV.empty?
+  CC.print $stdin.read, :ruby, $stdout
+
+# stdin, lang specified
+elsif ARGV.size == 1 && ARGV.first =~ /^-([^-].*)$/
+  CC.print $stdin.read, $1.intern, $stdout
+
+# file list
+else
+  force_lang = ARGV.find { |arg| arg =~ /^-/ }
+  force_lang && ARGV.delete(force_lang)
+  force_lang &&= force_lang[1..-1].intern
+
+  ARGV.each do |filename|
+    lang = force_lang || CodeRay::FileType[filename, true] || :ruby
+    CC.print File.read(filename), lang, $stdout
+  end
+end
