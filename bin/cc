@@ -1,49 +1,39 @@
 #!/usr/bin/env ruby
 
-# help screen
-if ARGV.include?("-h") || ARGV.include?("--help")
-  puts "Cat Code, a `cat` like interface with syntax highlighting"
-  puts
-  puts "If no files are given, it assumes file is on stdin and is Ruby"
-  puts "If the file has an extension, it will infer the type"
-  puts "If the file has a shebang, it will infer the type"
-  puts "To override the language, pass -langname"
-  puts "If it cannot determine the filetype, it will assume Ruby"
-  puts
-  puts "Options:"
-  puts "  --list # List the languages, flags to specify them, extensions that become them"
-  puts "  --help # This screen"
-  puts
-  puts "Examples:"
-  puts %[  echo "'a'" | cc      # Ruby from stdin, b/c it is the default]
-  puts %[  echo "'a'" | cc -c++ # C++ from stdin, b/c it was specified]
-  puts %[  cc f.py              # Python from a file]
-  puts %[  cc f.py -ruby        # Ruby from a Python file]
-  puts %[  cc f.py f.rb         # Python file and then Ruby file]
-  exit 0
-end
-
-# load lib
-begin
-  require 'coderay'
-rescue LoadError
-  $stderr.puts "Could not load coderay, try `gem install coderay`"
-  exit 1
-end
-
-# fix bug in lib
-require 'coderay/helpers/plugin'
-module CodeRay::PluginHost
-  def validate_id(id)
-    id.to_s.downcase # fix a bug where it blows up on c++
-  end
-end
-
-# discover languages and such -- really, just for printing
+# =====  "LIBRARY" CODE  =====
 module CC
-  def self.print(body, lang, stream)
-    CodeRay.encode(body, lang, :terminal, out: stream)
-  end
+  extend self
+
+  HELP_SCREEN = <<-HELP_SCREEN.gsub(/^    /, '')
+    Cat Code, a `cat` like interface with syntax highlighting
+
+    If no filenames are given, it assumes file is on stdin and is Ruby
+    If the filename has an extension, it will infer the type
+    If the filename has a shebang, it will infer the type
+    To override the language, pass -langname
+    If it cannot determine the filetype, it will assume Ruby. Eat it.
+
+    Options:
+      --list    # List the languages, flags to specify them, extensions that become them
+      --themes  # List the available themes.
+      --wait    # Wait to print the next file / theme until ENTER has been pressed
+      --help    # This screen
+
+    Examples:
+      echo "'a'" | cc          # Ruby from stdin, b/c it is the default
+      echo "'a'" | cc -c++     # C++ from stdin, b/c it was specified
+      cc f.py                  # Python from a file
+      cc f.py -ruby            # Ruby from a Python file
+      cc f.py f.rb             # Python file and then Ruby file
+      cc --themes              # Show the themes against a sample body
+      cc --themes f.rb         # Show the themes against the body of f.rb
+      cc --themes --wait f.rb  # Show the themes against f.rb, pausing between each
+      cc f.py f.ry --wait      # Print em both, but wait between each
+      cc --list                # See filetype flags you can provide (e.g. -ruby)
+                                 and what extensions map to a given language.
+  HELP_SCREEN
+
+  LANGS = [] # will be populated when we load coderay
 
   Lang = Struct.new :id, :title, :flags, :extensions, :filenames do
     def initialize(id, title, flags, extensions=[], filenames=[])
@@ -51,10 +41,78 @@ module CC
     end
   end
 
+  CodeInfo = Struct.new :filename, :body, :lang, :error do
+    def error?
+      !!error
+    end
+  end
+
+  def highlight(body, lang, stream)
+    CodeRay.encode(body, lang, :terminal, out: stream)
+  end
+
+  def stream_for(string)
+    read_end, write_end = IO.pipe
+    write_end.puts string
+    write_end.close
+    read_end
+  end
+
+  def best_instream(streams)
+    readable_streams, * = IO.select streams.map { |s| s.kind_of?(IO) ? s : stream_for(s) }
+    readable_streams.first
+  end
+
+  def code_infos_from_args(args, instream, default_lang)
+    args = args.dup
+
+    # stdin, implicit ruby
+    if args.empty?
+      [CodeInfo.new("$stdin", instream.read, default_lang, nil)]
+
+    # stdin, lang specified
+    elsif args.size == 1 && args.first =~ /^-([^-].*)$/
+      [CodeInfo.new("$stdin", instream.read, $1.intern, nil)]
+
+    # file list
+    else
+      force_lang = args.find { |arg| arg =~ /^-/ }
+      force_lang && args.delete(force_lang)
+      force_lang &&= force_lang[1..-1].intern
+
+      args.map { |filename|
+        begin
+          lang = force_lang || CodeRay::FileType[filename, true] || default_lang
+          body = File.read filename
+          CodeInfo.new(filename, body, lang, nil)
+        rescue Errno::ENOENT
+          CodeInfo.new(filename, "", lang, $!.message)
+        end
+      }
+    end
+  end
+end
+
+
+# =====  CODERAY  =====
+
+begin
+  # load lib
+  require 'coderay'
+
+  # fix a bug where it blows up, b/c c++ fails its validation
+  require 'coderay/helpers/plugin'
+  module CodeRay::PluginHost
+    def validate_id(id)
+      id.to_s.downcase
+    end
+  end
+
+  # grab relevant information out of the plugins
   langs_by_id = {}
   CodeRay::Scanners.all_plugins.map do |p|
     langs_by_id[p.plugin_id] =
-      Lang.new p.plugin_id, p.title, (p.aliases - [:default])
+      CC::Lang.new p.plugin_id, p.title, (p.aliases - [:default])
   end
   CodeRay::FileType::TypeFromExt.each do |ext, type|
     langs_by_id[type].extensions << ext
@@ -63,42 +121,142 @@ module CC
     langs_by_id[type].filenames << name
   end
 
-  LANGS = langs_by_id.values.sort_by(&:id)
+  # populate our langs
+  CC::LANGS.concat langs_by_id.values.sort_by(&:id)
+rescue LoadError
+  $stderr.puts "Could not load coderay, try `gem install coderay`"
+  exit 1
 end
 
 
-# --list
-if ARGV == ['--list']
-  def color(text)
-    "\e[34m#{text}\e[39m"
+
+# =====  PRY-THEME <3 for Kyrylo!  =====
+
+begin
+  # I can't require pry-theme.rb file b/c it assumes Pry is present, so require its files independently
+  require 'pry-theme/config'
+  require 'pry-theme/theme_list'
+  require 'pry-theme/hex'
+  require 'pry-theme/rgb'
+  require 'pry-theme/term'
+  require 'pry-theme/formattable'
+  require 'pry-theme/declaration'
+  require 'pry-theme/definition'
+  require 'pry-theme/theme'
+  require 'pry-theme/theme_list'
+  require 'pry-theme/color'
+
+  # pry-theme.rb creates this convenience method, which the themes all invoke
+  module PryTheme
+    def self.create(config = {}, &block)
+      Theme.new(config, &block)
+    end
   end
+
+  # load themes
+  spec = Gem::Specification.stubs.find { |s| s.activated? and s.contains_requirable_file? 'pry-theme' }
+  theme_filenames = Dir[File.join spec.full_gem_path, 'themes', '*']
+  theme_filenames.each { |filename| require filename }
+
+  # fixes a bug where a and b would be coloured differently in `{:a => 1, b: 2}`
+  PryTheme::Config::Executor.new.paint_key_as_symbol
+
+  # activate the theme!
+  # these were my faves: github, pry-classic-256, vim-default
+  # also, the default Coderay theme is really nice, but doesn't seem to be in the list
+  # Might even my fav b/c it accentuates things like the \e inside strings, like the github one does
+  theme = ENV.fetch 'CC_THEME', 'vim-default'
+  # PryTheme::ThemeList.activate_theme(theme)
+rescue LoadError
+  $stderr.puts "Could not load pry-theme, try `gem install pry-theme`"
+end
+
+
+
+# =====  DO SOMETHING ALREADY!  =====
+
+# don't stacktrace if user realizes this is more than they bargained for
+wait_between_each = ARGV.delete '--wait'
+if wait_between_each
+  trap 'INT' do
+    exit 1
+  end
+end
+
+# help screen
+if ARGV.include?("-h") || ARGV.include?("--help")
+  $stdout.puts CC::HELP_SCREEN
+
+# list languages and their associated extensions and files
+elsif ARGV == ['--list']
   CC::LANGS.each do |lang|
-    puts "\e[35m#{lang.title}\e[39m"
-    puts color("  flag:      ") << lang.flags.map { |f| "-#{f}" }.sort_by(&:length).join(' ')
+    $stdout.puts "\e[35m#{lang.title}\e[39m"
+    $stdout.puts "\e[34m  flag:      \e[39m" << lang.flags.map { |f| "-#{f}" }.sort_by(&:length).join(' ')
     if lang.extensions.any?
-      puts color("  extension: ") << lang.extensions.map { |e| ".#{e}" }.sort_by(&:length).join(' ')
+      $stdout.puts "\e[34m  extension: \e[39m" << lang.extensions.map { |e| ".#{e}" }.sort_by(&:length).join(' ')
     end
     if lang.filenames.any?
-      puts color("  filenames: ") << lang.filenames.join(' ')
+      $stdout.puts "\e[34m  filenames: \e[39m" << lang.filenames.join(' ')
     end
   end
 
-# stdin, implicit ruby
-elsif ARGV.empty?
-  CC.print $stdin.read, :ruby, $stdout
+# list theme names and descriptions
+elsif ARGV.include?('--themes')
+  ARGV.delete '--themes'
 
-# stdin, lang specified
-elsif ARGV.size == 1 && ARGV.first =~ /^-([^-].*)$/
-  CC.print $stdin.read, $1.intern, $stdout
+  # I didn't actually try this code out to see if it works :P
+  instream = CC.best_instream([$stdin, <<-CODE.gsub(/^    /, '')])
+    class Theme # this is a comment
+      def self.a_method(req, opt=1, *rest, keyopt: 1, keyreq:, **keyrest, &block)
+        [$gvar, @ivar, @@cvar, lvar, 10_000, 400.00, /regex/]
+        {key: "\#@int1 \#{int2} normal", :symbol => ARGV}
+      end
+    end
+    Object::Theme.a_method(ordinal, 123, keyreq: :value) do |(arg1, *arg2)|
+      begin
+        arg1[arg2].map { |e| e.to_i }.map(&:to_s)
+      rescue NoMethodError => e
+        $stderr.puts e
+      ensure
+        whatevz
+      end
+    end
+  CODE
 
-# file list
-else
-  force_lang = ARGV.find { |arg| arg =~ /^-/ }
-  force_lang && ARGV.delete(force_lang)
-  force_lang &&= force_lang[1..-1].intern
+  # get the body and filetype
+  code_info = CC.code_infos_from_args(ARGV, instream, :ruby).first
 
-  ARGV.each do |filename|
-    lang = force_lang || CodeRay::FileType[filename, true] || :ruby
-    CC.print File.read(filename), lang, $stdout
+  # handle cases like giving a file that DNE
+  if code_info.error?
+    $stderr.puts "\e[41;1mError\e[49m #{code_info.error}"
+    exit 1
   end
+
+  # print the themes, fkn finally!
+  PryTheme::ThemeList.themes.each do |theme|
+    $stdout.puts "\e[48;5;24;38;5;228;1m #{theme.name}\e[38;5;51m #{theme.description} \e[49m"
+    theme.activate
+    buffer = ""
+    CC.highlight code_info.body, code_info.lang, buffer
+    $stdout.puts buffer.gsub(/^/, "  ")
+    $stdout.puts
+    $stdout.puts
+    $stdin.gets if wait_between_each
+  end
+
+# highlight them files!
+else
+  code_infos = CC.code_infos_from_args(ARGV, $stdin, :ruby)
+  multiple_files = code_infos.size > 1
+  code_infos.each do |info|
+    multiple_files && $stdout.puts("\e[44;37mFile: #{info.filename}\e[0m")
+    if info.error?
+      $stderr.puts "\e[41;1mError\e[49m #{info.error}"
+    else
+      CC.highlight info.body, info.lang, $stdout
+    end
+    multiple_files && $stdout.puts
+    multiple_files && wait_between_each && $stdin.gets
+  end
+  exit code_infos.none? &:error?
 end
