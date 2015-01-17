@@ -43,8 +43,6 @@ module CC
                                    "\e[32m\\1\e[0m") # green to help locate needles in the haystack
 
 
-
-
   LANGS = [] # will be populated when we load coderay
 
   Lang = Struct.new :id, :title, :flags, :extensions, :filenames do
@@ -60,18 +58,18 @@ module CC
   end
 
   def highlight(body, lang, stream)
-    CodeRay.encode(body, lang, :terminal, out: stream)
+    ::CodeRay.encode(body, lang, :terminal, out: stream)
   end
 
   def stream_for(string)
-    read_end, write_end = IO.pipe
+    read_end, write_end = ::IO.pipe
     write_end.puts string
     write_end.close
     read_end
   end
 
   def best_instream(streams)
-    readable_streams, * = IO.select streams.map { |s| s.kind_of?(IO) ? s : stream_for(s) }
+    readable_streams, * = ::IO.select streams.map { |s| s.kind_of?(::IO) ? s : stream_for(s) }
     readable_streams.first
   end
 
@@ -94,7 +92,7 @@ module CC
 
       args.map { |filename|
         begin
-          lang = force_lang || CodeRay::FileType[filename, true] || default_lang
+          lang = force_lang || ::CodeRay::FileType[filename, true] || default_lang
           body = File.read filename
           CodeInfo.new(filename, body, lang, nil)
         rescue Errno::ENOENT
@@ -178,7 +176,7 @@ begin
   # also, the default Coderay theme is really nice, but doesn't seem to be in the list
   # Might even my fav b/c it accentuates things like the \e inside strings, like the github one does
   theme = ENV.fetch 'CC_THEME', 'vim-default'
-  # PryTheme::ThemeList.activate_theme(theme)
+  PryTheme::ThemeList.activate_theme(theme)
 rescue LoadError
   $stderr.puts "Could not load pry-theme, try `gem install pry-theme`"
 end
