@@ -10,6 +10,8 @@
 # Anyway, this code has been modified from its original version.
 # It has been formatted to be colourful, have a help screen
 # and conform to my peculiar aesthetic preferences.
+# Also, I deleted the part where it spits out a fucking xml decoration on things that don't have it originally.
+# ...well, it might delete them for every document, I'm not sure. Correctness isn't exaclty my greatest concern here.
 
 require 'nokogiri'
 
@@ -46,6 +48,7 @@ rescue Errno::ENOENT, 'no dice'
 end
 
 # run xml through the whitespace transform and then the output stream (which may or may not colour it)
+# if Nokogiri starts freaking out, check these options here http://www.rubydoc.info/github/sparklemotion/nokogiri/Nokogiri/XML/ParseOptions
 xslt    = Nokogiri::XSLT DATA
 glamour = lambda { |ugly_xml| outstream.puts xslt.apply_to Nokogiri::XML ugly_xml }
 
@@ -55,8 +58,8 @@ ARGV.each { |filename| File.open filename, 'r', &glamour }
 
 __END__
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-  <xsl:output method="xml" encoding="ISO-8859-1"/>
   <xsl:param name="indent-increment" select="'   '"/>
+  <xsl:output omit-xml-declaration="yes"/>
 
   <xsl:template name="newline">
     <xsl:text disable-output-escaping="yes">
