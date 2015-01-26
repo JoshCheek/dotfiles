@@ -58,8 +58,8 @@ ARGV.each { |filename| File.open filename, 'r', &glamour }
 
 __END__
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  <xsl:output method="xml" encoding="ISO-8859-1"/>
   <xsl:param name="indent-increment" select="'   '"/>
-  <xsl:output omit-xml-declaration="yes"/>
 
   <xsl:template name="newline">
     <xsl:text disable-output-escaping="yes">
