@@ -9,7 +9,7 @@
 #
 # Anyway, this code has been modified from its original version.
 # It has been formatted to be colourful, have a help screen
-# and conform to my offkey aesthetic preferences.
+# and conform to my peculiar aesthetic preferences.
 
 require 'nokogiri'
 
@@ -28,26 +28,30 @@ if (%w[-h --help help -help] & ARGV).any?
   exit
 end
 
-$stdout.tty? and begin
+# don't blow up if our output is piped into something that closed (e.g. head)
+at_exit { $!.kind_of? Errno::EPIPE and exit! }
+
+# if stdout is a terminal, we want to print colour, so pipe the formatted xml through pygmentize
+begin raise Errno::ENOENT unless $stdout.tty?
   pygments_read, outstream = IO.pipe
   pid = spawn 'pygmentize', '-lxml', in: pygments_read, out: $stdout, err: $stderr
   pygments_read.close
   at_exit { outstream.close; Process.wait pid }
-rescue Errno::ENOENT # no pygmentize
-  pygments_read.close unless pygments_read.closed?
-  outstream.close     unless outstream.closed?
+
+# of course... not everyone has pygmentize
+rescue Errno::ENOENT, 'no dice'
+  pygments_read && !pygments_read.closed? && pygments_read.close
+  outstream     && !outstream.closed?     && outstream.close
+  outstream = $stdout
 end
 
-outstream ||= $stdout
+# run xml through the whitespace transform and then the output stream (which may or may not colour it)
+xslt    = Nokogiri::XSLT DATA
+glamour = lambda { |ugly_xml| outstream.puts xslt.apply_to Nokogiri::XML ugly_xml }
 
-xslt = Nokogiri::XSLT DATA
-pretty_inspect = lambda do |ugly_xml|
-  pretty_xml = xslt.apply_to(Nokogiri::XML ugly_xml).to_s
-  outstream.puts pretty_xml
-end
-
-ARGV.empty? && pretty_inspect[$stdin]
-ARGV.each { |filename| File.open filename, 'r', &pretty_inspect }
+# run stdin / provided filenames through the gauntlet of glamour
+ARGV.empty? && glamour[$stdin]
+ARGV.each { |filename| File.open filename, 'r', &glamour }
 
 __END__
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
