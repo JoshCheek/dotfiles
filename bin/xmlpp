@@ -1,0 +1,98 @@
+#!/usr/bin/env ruby
+
+# lol, I was about to write this exact code, nearly line for line:
+# https://gist.github.com/EmmanuelOga/322025
+#
+# It's based on Mislav's answer at http://stackoverflow.com/questions/1898829/how-do-i-pretty-print-html-with-nokogiri
+# which was based on https://emmanueloga.wordpress.com/2009/09/29/pretty-printing-xhtml-with-nokogiri-and-xslt/
+# which was based on some shit with dead links Anyway, slightly modified
+#
+# Anyway, this code has been modified from its original version.
+# It has been formatted to be colourful, have a help screen
+# and conform to my offkey aesthetic preferences.
+
+require 'nokogiri'
+
+if (%w[-h --help help -help] & ARGV).any?
+  puts "Pretty print xml"
+  puts
+  puts "  Example:"
+  puts "    ppxml myfile.xml"
+  puts "    cat myfile.xml | ppxml"
+  puts
+  puts "Give it a list of filenames. It will read them, format them, colour them."
+  puts "If no filenames are given, it assumes input is on stdin."
+  puts "It colours with pygmentize, I don't remember how I got the bin for that."
+  puts "If stdout isn't a tty, it doesn't colour."
+  puts "If there is no pygmentize binary, it doesn't colour."
+  exit
+end
+
+$stdout.tty? and begin
+  pygments_read, outstream = IO.pipe
+  pid = spawn 'pygmentize', '-lxml', in: pygments_read, out: $stdout, err: $stderr
+  pygments_read.close
+  at_exit { outstream.close; Process.wait pid }
+rescue Errno::ENOENT # no pygmentize
+  pygments_read.close unless pygments_read.closed?
+  outstream.close     unless outstream.closed?
+end
+
+outstream ||= $stdout
+
+xslt = Nokogiri::XSLT DATA
+pretty_inspect = lambda do |ugly_xml|
+  pretty_xml = xslt.apply_to(Nokogiri::XML ugly_xml).to_s
+  outstream.puts pretty_xml
+end
+
+ARGV.empty? && pretty_inspect[$stdin]
+ARGV.each { |filename| File.open filename, 'r', &pretty_inspect }
+
+__END__
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  <xsl:output method="xml" encoding="ISO-8859-1"/>
+  <xsl:param name="indent-increment" select="'   '"/>
+
+  <xsl:template name="newline">
+    <xsl:text disable-output-escaping="yes">
+</xsl:text>
+  </xsl:template>
+
+  <xsl:template match="comment() | processing-instruction()">
+    <xsl:param name="indent" select="''"/>
+    <xsl:call-template name="newline"/>
+    <xsl:value-of select="$indent"/>
+    <xsl:copy />
+  </xsl:template>
+
+  <xsl:template match="text()">
+    <xsl:param name="indent" select="''"/>
+    <xsl:call-template name="newline"/>
+    <xsl:value-of select="$indent"/>
+    <xsl:value-of select="normalize-space(.)"/>
+  </xsl:template>
+
+  <xsl:template match="text()[normalize-space(.)='']"/>
+
+  <xsl:template match="*">
+    <xsl:param name="indent" select="''"/>
+    <xsl:call-template name="newline"/>
+    <xsl:value-of select="$indent"/>
+      <xsl:choose>
+       <xsl:when test="count(child::*) > 0">
+        <xsl:copy>
+         <xsl:copy-of select="@*"/>
+         <xsl:apply-templates select="*|text()">
+           <xsl:with-param name="indent" select="concat ($indent, $indent-increment)"/>
+         </xsl:apply-templates>
+         <xsl:call-template name="newline"/>
+         <xsl:value-of select="$indent"/>
+        </xsl:copy>
+       </xsl:when>
+       <xsl:otherwise>
+        <xsl:copy-of select="."/>
+       </xsl:otherwise>
+     </xsl:choose>
+  </xsl:template>
+</xsl:stylesheet>
