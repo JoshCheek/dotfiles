@@ -8,6 +8,7 @@ if ARGV.empty? || ARGV == ['-h'] || ARGV == ['--help']
   puts "Forwards stdin"
   puts "Prints the program's stdout"
   puts "Exits with the program's exit status"
+  exit 0
 end
 
 

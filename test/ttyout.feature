@@ -49,9 +49,16 @@ Feature: ttyout
   Scenario: No args, or '-h', '--help' prints help
     When I run 'ttyout'
     Then stdout includes "USAGE"
+    And the exit status is 0
+
     When I run 'ttyout -h'
     Then stdout includes "USAGE"
+    And the exit status is 0
+
     When I run 'ttyout --help'
     Then stdout includes "USAGE"
+    And the exit status is 0
+
     When I run 'ttyout ls'
     Then stdout does not include "USAGE"
+    And the exit status is 0
