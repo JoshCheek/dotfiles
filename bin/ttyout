@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+
+if ARGV.empty? || ARGV == ['-h'] || ARGV == ['--help']
+  puts "USAGE: ttyout program [program-args]"
+  puts
+  puts "Executes the program with the given args"
+  puts "The program's stdout is a tty"
+  puts "Forwards stdin"
+  puts "Prints the program's stdout"
+  puts "Exits with the program's exit status"
+end
+
+
+require 'pty' # http://www.rubydoc.info/stdlib/pty/PTY
+
+# what's w/ the fkn slavery terminology? -.^
+master, slave = PTY.open
+
+pid = fork do
+  slave.close
+  $stdout.reopen master
+  exec *ARGV
+end
+
+master.close
+slave.each_char { |c| $stdout << c }
+
+Process.wait pid
+exit $?.exitstatus
