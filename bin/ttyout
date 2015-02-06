@@ -3,11 +3,11 @@
 if ARGV.empty? || ARGV == ['-h'] || ARGV == ['--help']
   puts "USAGE: ttyout program [program-args]"
   puts
-  puts "Executes the program with the given args"
-  puts "The program's stdout is a tty"
-  puts "Forwards stdin"
-  puts "Prints the program's stdout"
-  puts "Exits with the program's exit status"
+  puts "  Executes the program with the given args"
+  puts "  The program's stdout is a tty"
+  puts "  Forwards stdin"
+  puts "  Prints the program's stdout"
+  puts "  Exits with the program's exit status"
   exit 0
 end
 
