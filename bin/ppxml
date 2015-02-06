@@ -1,17 +1,17 @@
 #!/usr/bin/env ruby
 
-# lol, I was about to write this exact code, nearly line for line:
-# https://gist.github.com/EmmanuelOga/322025
+# lol, I was about to write pretty much this exact code: https://gist.github.com/EmmanuelOga/322025
 #
-# It's based on Mislav's answer at http://stackoverflow.com/questions/1898829/how-do-i-pretty-print-html-with-nokogiri
-# which was based on https://emmanueloga.wordpress.com/2009/09/29/pretty-printing-xhtml-with-nokogiri-and-xslt/
-# which was based on some shit with dead links Anyway, slightly modified
+# It's based on
+#    http://stackoverflow.com/questions/1898829/how-do-i-pretty-print-html-with-nokogiri
+# which was based on
+#   https://emmanueloga.wordpress.com/2009/09/29/pretty-printing-xhtml-with-nokogiri-and-xslt/
+# which was based on
+#   some shit with dead links
 #
 # Anyway, this code has been modified from its original version.
 # It has been formatted to be colourful, have a help screen
 # and conform to my peculiar aesthetic preferences.
-# Also, I deleted the part where it spits out a fucking xml decoration on things that don't have it originally.
-# ...well, it might delete them for every document, I'm not sure. Correctness isn't exaclty my greatest concern here.
 
 require 'nokogiri'
 
@@ -20,7 +20,7 @@ if (%w[-h --help help -help] & ARGV).any?
   puts
   puts "  Example:"
   puts "    ppxml myfile.xml"
-  puts "    cat myfile.xml | ppxml"
+  puts "    curl -s http://pygments.appspot.com/ -d lang=ruby -d code='5.times { puts \"hello, world!\" }' | ppxml"
   puts
   puts "Give it a list of filenames. It will read them, format them, colour them."
   puts "If no filenames are given, it assumes input is on stdin."
@@ -30,7 +30,7 @@ if (%w[-h --help help -help] & ARGV).any?
   exit
 end
 
-# don't blow up if our output is piped into something that closed (e.g. head)
+# don't blow up if our output stream closed (e.g. piped into head)
 at_exit { $!.kind_of? Errno::EPIPE and exit! }
 
 # if stdout is a terminal, we want to print colour, so pipe the formatted xml through pygmentize
@@ -41,7 +41,7 @@ begin raise Errno::ENOENT unless $stdout.tty?
   at_exit { outstream.close; Process.wait pid }
 
 # of course... not everyone has pygmentize
-rescue Errno::ENOENT, 'no dice'
+rescue Errno::ENOENT
   pygments_read && !pygments_read.closed? && pygments_read.close
   outstream     && !outstream.closed?     && outstream.close
   outstream = $stdout
