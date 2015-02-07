@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env dotfiles_ruby
 # tests in test/ss.feature (https://github.com/JoshCheek/dotfiles/blob/master/test/ss.feature)
 
 def arg?(*potential_args)

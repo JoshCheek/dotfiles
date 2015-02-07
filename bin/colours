@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env dotfiles_ruby
 
 # Used these ideas to print pictures to the terminal: https://github.com/JoshCheek/print-png
 

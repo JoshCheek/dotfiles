@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env dotfiles_ruby
 # Use like this:
 #   $ scan_notes < file
 # it will print the top-level of lines

@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env dotfiles_ruby
 
 # lol, I was about to write pretty much this exact code: https://gist.github.com/EmmanuelOga/322025
 #

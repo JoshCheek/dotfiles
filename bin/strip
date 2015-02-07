@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby -n
+#!/usr/bin/env dotfiles_ruby -n
 
 # if you're trying to remove the newlines, use chomp, instead
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env dotfiles_ruby
 
 if ARGV.delete('-h') || ARGV.delete('--help') || ARGV.delete('help')
   puts "Shows step defs for Cucumber"

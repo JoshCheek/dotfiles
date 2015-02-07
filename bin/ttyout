@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env dotfiles_ruby
 
 if ARGV.empty? || ARGV == ['-h'] || ARGV == ['--help']
   puts "USAGE: ttyout program [program-args]"

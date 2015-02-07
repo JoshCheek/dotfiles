@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env dotfiles_ruby
 # tests in test/fullpath.feature (https://github.com/JoshCheek/dotfiles/blob/master/test/fullpath.feature)
 
 def self.relative_dirs(argv, stdin)

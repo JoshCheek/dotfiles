@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env dotfiles_ruby
 require 'shellwords'
 
 # explanation of how hard it was to figure out how to escape this shit
