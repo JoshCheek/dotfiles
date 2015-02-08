@@ -36,12 +36,12 @@ Feature: ss
     And  stdout does not include "10.00.00"
     And  the recording program 'open' was invoked 0 times
 
-  Scenario: Opening with photoshop
+  Scenario: Opening with Sketch
     Given the file "Screenshots/Screenshot 2001-01-01 01.01.01.png" "fake-screenshot"
-    When I run "ss -p"
+    When I run "ss -s"
     Then stderr is empty
     And  the exit status is 0
-    And  the recording program 'open' was invoked with ["-a", "Adobe Photoshop CC", {{File.expand_path("Screenshots/Screenshot 2001-01-01 01.01.01.png").inspect}}]
+    And  the recording program 'open' was invoked with ["-a", "Sketch.app", {{File.expand_path("Screenshots/Screenshot 2001-01-01 01.01.01.png").inspect}}]
     And  the recording program 'open' was invoked 1 time
 
   Scenario: Opening with preview

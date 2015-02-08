@@ -34,11 +34,11 @@ if arg? '-h', '--help', 'help'
   puts
   puts "  no args           # prints out the name"
   puts "  location          # copy the screenshot to this location"
-  puts "  -p | --photoshop  # open the screenshot in photoshop"
+  puts "  -s | --sketch     # open the screenshot in Sketch"
   puts "  -o | --open       # open with preview"
   puts "  -R | --reveal     # Open with finder"
-elsif arg? '-p', '--photoshop'
-  system 'photoshop', most_recent_screenshot_path
+elsif arg? '-s', '--sketch'
+  system 'open', '-a', 'Sketch.app',  most_recent_screenshot_path
 elsif arg? '-o', '--open'
   system 'open', most_recent_screenshot_path
 elsif arg? '-R', '--reveal'
