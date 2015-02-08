@@ -1,9 +1,49 @@
-"" Wiring
-set nocompatible                " don't try to be compatible with legacy vi
-set encoding=utf-8
-call pathogen#infect()          " Pathogen, vim path manager (https://github.com/tpope/vim-pathogen#readme)
+"" Vundle (needs to be before everything else)
+" see :h vundle for more details or wiki for FAQ
+" :PluginList       - lists configured plugins
+" :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
+" :PluginSearch foo - searches for foo; append `!` to refresh local cache
+" :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
 
-"" Plugins powerline, nerdtree, vim-textobj-rubyblock
+set nocompatible                  " don't try to be compatible with legacy vi
+filetype off
+set rtp+=~/.vim/bundle/Vundle.vim " set the runtime path to include Vundle and initialize
+call vundle#begin()
+
+" Plugin 'L9' " Example of loading a plugin from http://vim-scripts.org/vim/scripts.html
+Plugin 'gmarik/Vundle.vim'
+Plugin 'https://github.com/vim-scripts/ZoomWin.git'
+Plugin 'https://github.com/scrooloose/nerdtree.git'
+Plugin 'https://github.com/ervandew/supertab.git'
+Plugin 'https://github.com/Shougo/unite.vim.git'
+Plugin 'https://github.com/kchmck/vim-coffee-script.git'
+Plugin 'https://github.com/tpope/vim-commentary.git'
+Plugin 'https://github.com/tpope/vim-cucumber.git'
+Plugin 'https://github.com/elixir-lang/vim-elixir.git'
+Plugin 'https://github.com/tpope/vim-endwise.git'
+Plugin 'https://github.com/dag/vim-fish.git'
+Plugin 'https://github.com/tpope/vim-fugitive.git'
+Plugin 'https://github.com/tpope/vim-haml.git'
+Plugin 'https://github.com/bitc/hdevtools.git'
+Plugin 'https://github.com/pangloss/vim-javascript.git'
+Plugin 'https://github.com/tpope/vim-markdown.git'
+Plugin 'https://github.com/Lokaltog/vim-powerline.git'
+Plugin 'https://github.com/tpope/vim-repeat.git'
+Plugin 'https://github.com/skwp/vim-rspec.git'
+Plugin 'https://github.com/vim-ruby/vim-ruby.git'
+Plugin 'https://github.com/tpope/vim-surround.git'
+Plugin 'https://github.com/nelstrom/vim-textobj-rubyblock.git'
+Plugin 'https://github.com/kana/vim-textobj-user.git'
+Plugin 'https://github.com/fatih/vim-go.git'
+Plugin 'https://github.com/jdonaldson/vaxe.git'
+
+call vundle#end()            " required
+filetype plugin indent on    " required
+
+
+set encoding=utf-8
+
+"" Plugins powerline, nerdtree, vim-textobj-rubyblock, selecta
 set laststatus=2                                 " Always show the statusline
 let g:Powerline_symbols = 'compatible'
 let g:Powerline_stl_path_style = 'relative'
@@ -96,30 +136,3 @@ cnoremap <C-d> <Right><C-h>
 "" filetypes
 au  BufRead,BufNewFile *.elm setfiletype haskell
 
-
-"" Pathogen plugins
-"
-" ZoomWin                     https://github.com/vim-scripts/ZoomWin.git
-" nerdtree                    https://github.com/scrooloose/nerdtree.git
-" supertab                    https://github.com/ervandew/supertab.git
-" unite.vim                   https://github.com/Shougo/unite.vim.git
-" vim-coffee-script           https://github.com/kchmck/vim-coffee-script.git
-" vim-commentary              https://github.com/tpope/vim-commentary.git
-" vim-cucumber                https://github.com/tpope/vim-cucumber.git
-" vim-elixir                  https://github.com/elixir-lang/vim-elixir.git
-" vim-endwise                 https://github.com/tpope/vim-endwise.git
-" vim-fish                    https://github.com/dag/vim-fish.git
-" vim-fugitive                https://github.com/tpope/vim-fugitive.git
-" vim-haml                    https://github.com/tpope/vim-haml.git
-" hdevtools                   https://github.com/bitc/hdevtools.git
-" vim-javascript              https://github.com/pangloss/vim-javascript.git
-" vim-markdown                https://github.com/tpope/vim-markdown.git
-" vim-powerline               https://github.com/Lokaltog/vim-powerline.git
-" vim-repeat                  https://github.com/tpope/vim-repeat.git
-" vim-rspec                   https://github.com/skwp/vim-rspec.git
-" vim-ruby                    https://github.com/vim-ruby/vim-ruby.git
-" vim-surround                https://github.com/tpope/vim-surround.git
-" vim-textobj-rubyblock       https://github.com/nelstrom/vim-textobj-rubyblock.git
-" vim-textobj-user            https://github.com/kana/vim-textobj-user.git
-" vim-go                      https://github.com/fatih/vim-go.git
-" vaxe                        https://github.com/jdonaldson/vaxe.git
