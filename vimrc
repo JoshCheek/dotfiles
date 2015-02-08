@@ -168,3 +168,13 @@ cnoremap <C-d> <Right><C-h>
 "" filetypes
 au  BufRead,BufNewFile *.elm setfiletype haskell
 
+"" Maybe worth checking out
+" Profiling plugins
+"   https://github.com/bling/minivimrc/blob/43d099cc351424c345da0224da83c73b75bce931/vimrc#L30
+" Ctrl-P
+"   https://github.com/kien/ctrlp.vim
+" Unite.vim
+"   https://github.com/Shougo/unite.vim
+" Vim airline integrations
+"   https://github.com/bling/vim-airline
+"   vim-bufferline, fugitive, unite, ctrlp, minibufexpl, gundo, undotree, nerdtree, tagbar, vim-gitgutter, vim-signify, syntastic, eclim, lawrencium, virtualenv, tmuxline.
