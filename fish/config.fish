@@ -13,9 +13,6 @@ for i in (seq 30)
   eval "function $i
           fg %$i
         end"
-  eval "function k$i
-          kill -9 %$i
-        end"
 end
 
 # Load ruby. Interface is less helpful than rbenv
