@@ -27,7 +27,7 @@ Plugin 'https://github.com/tpope/vim-haml.git'
 Plugin 'https://github.com/bitc/hdevtools.git'
 Plugin 'https://github.com/pangloss/vim-javascript.git'
 Plugin 'https://github.com/tpope/vim-markdown.git'
-Plugin 'https://github.com/Lokaltog/vim-powerline.git'
+Plugin 'https://github.com/bling/vim-airline'
 Plugin 'https://github.com/tpope/vim-repeat.git'
 Plugin 'https://github.com/skwp/vim-rspec.git'
 Plugin 'https://github.com/vim-ruby/vim-ruby.git'
@@ -43,18 +43,20 @@ filetype plugin indent on    " required
 
 set encoding=utf-8
 
-"" Plugins powerline, nerdtree, vim-textobj-rubyblock, selecta
+"" Configure Plugins
 set laststatus=2                                 " Always show the statusline
-let g:Powerline_symbols = 'compatible'
-let g:Powerline_stl_path_style = 'relative'
-call Pl#Theme#RemoveSegment('fugitive:branch')   " turn off all the extra stuff
-call Pl#Theme#RemoveSegment('syntastic:errors')  " https://github.com/Lokaltog/vim-powerline/blob/c4b72c5be57b165bb6a89d0b8a974fe62c0091d0/autoload/Powerline/Themes/default.vim
-call Pl#Theme#RemoveSegment('fileformat')
-call Pl#Theme#RemoveSegment('filetype')
-call Pl#Theme#RemoveSegment('lineinfo')
-call Pl#Theme#RemoveSegment('fileencoding')
 
-runtime macros/matchit.vim                       " vim-textobj-rubyblock
+let g:airline_enable_branch=0     " don't show git branch
+let g:airline_left_sep=''         " no fancy separator on LHS
+let g:airline_right_sep=''        " no fancy separator on RHS
+let g:airline_detect_modified=1   " marks when the file has changed
+let g:airline_detect_paste=1      " enable paste detection (set paste) ie I'm not typing, I'm pasting, dammit, vim!
+let g:airline_detect_iminsert=0   " I have no idea
+let g:airline_inactive_collapse=1 " inactive windows should have the left section collapsed to only the filename of that buffer.
+let g:airline_solarized_bg='dark' " Use Solarized Dark theme
+let g:airline_theme='solarized'   " god it took me fucking forever to figure this out. Luna is the only other one that doesn't look completely horked. Mine look nothing like their pictures :(
+
+runtime macros/matchit.vim        " vim-textobj-rubyblock
 
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif " close vim if NERDTree is the only open buffer
 
@@ -96,6 +98,7 @@ set scrolloff=4                 " adds top/bottom buffer between cursor and wind
 set number                      " line numbers
 set showcmd                     " display incomplete commands
 set autoread                    " Auto-reload buffers when file changed on disk
+set background=light            " don't use the fkn bright colours
 
 "" Whitespace
 function! <SID>StripTrailingWhitespaces()
