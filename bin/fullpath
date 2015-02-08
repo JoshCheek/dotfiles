@@ -14,6 +14,18 @@ def self.copy_to_clipboard(str)
   }
 end
 
+if ARGV.include?('-h') || ARGV.include?('--help')
+  puts "usage: fullpath *[relative-paths] [-c]"
+  puts
+  puts "  Prints the fullpath of the paths"
+  puts "  If no paths are given as args, it will read them from stdin"
+  puts
+  puts "  If there is only one path, the trailing newline is omitted"
+  puts
+  puts "  The -c flag will copy the results into your pasteboard"
+  exit
+end
+
 # arg processing
 should_copy   = ARGV.delete('-c') || ARGV.delete('--copy')
 
