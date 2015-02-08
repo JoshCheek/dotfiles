@@ -91,6 +91,17 @@ int main(int argc, char *argv[]) {
    * which has a value of 4 in our example, the index of the current NULL,
    * one index after the path to the shebanged file we want to remove.
    */
+
+  // FIXME!! This is not working :(
+  // it's leaving the filename on there...
+  // which caused "brew-formulas":
+  //   #!/usr/bin/env => /Users/josh/code/dotfiles/a.out https://github.com/mxcl/homebrew/tree/master/Library/Formula
+  //
+  // To be invoked as
+  //   open http://... /Users/josh/code/dotfiles/bin/brew-formulas
+  //
+  // Causing it to recurse until I somehow killed it,
+  // but it opened up that url about 50 times >.<
   argv[argc-1] = NULL;
 
   // And now the arguments are set up correctly, we can call the target program.
