@@ -137,7 +137,7 @@ else
     end
   end
 
-  gem 'rspec', '~> 3.0.0' # I think this should blow it up if an incompatible version is used, not totally sure
+  gem 'rspec', '~> 3.0' # I think this should blow it up if an incompatible version is used, not totally sure
 
   RSpec.describe 'alias-to-directory' do
     def call(aliases, argv)
