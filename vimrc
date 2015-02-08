@@ -58,6 +58,35 @@ runtime macros/matchit.vim                       " vim-textobj-rubyblock
 
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif " close vim if NERDTree is the only open buffer
 
+function! SelectaCommand(choice_command, selecta_args, vim_command)
+  " https://github.com/garybernhardt/selecta
+  " Run a given vim command on the results of fuzzy selecting from a given shell
+  " command. See usage below.
+  try
+    let selection = system(a:choice_command . " | selecta " . a:selecta_args)
+  catch /Vim:Interrupt/
+    " Swallow the ^C so that the redraw below happens; otherwise there will be
+    " leftovers from selecta on the screen
+    redraw!
+    return
+  endtry
+  redraw!
+  exec a:vim_command . " " . selection
+endfunction
+
+function! SelectaIdentifier()
+  " Yank the word under the cursor into the z register
+  normal "zyiw
+  " Fuzzy match files in the current directory, starting with the word under
+  " the cursor
+  call SelectaCommand("find * -type f", "-s " . @z, ":e")
+endfunction
+
+" Find all files in all non-dot directories starting in the working directory.
+" Fuzzy select one of those. Open the selected file with :e.
+nnoremap <leader>f :call SelectaCommand("find * -type f", "", ":e")<cr>
+nnoremap <c-g> :call SelectaIdentifier()<cr>
+
 "" Basic editor behaviour
 filetype plugin indent on       " load file type plugins + indentation
 set t_Co=256                    " Explicitly tell vim that the terminal supports 256 colors
