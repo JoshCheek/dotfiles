@@ -1,3 +1,34 @@
-for completion in (jcd --completions)
-  eval "complete $completion" # would be nice if I didn't have to eval to do this :/
-end
+complete -c jcd --no-files -a code         -d '~/code'
+complete -c jcd --no-files -a cln          -d 'code/cln'
+complete -c jcd --no-files -a deject       -d 'code/deject'
+complete -c jcd --no-files -a haiti        -d 'code/haiti'
+complete -c jcd --no-files -a rks          -d 'code/ruby-kickstart'
+complete -c jcd --no-files -a sib          -d 'code/seeing_is_believing'
+complete -c jcd --no-files -a blogs        -d 'code/source-blogs'
+complete -c jcd --no-files -a words        -d 'code/words'
+
+complete -c jcd --no-files -a df           -d 'dotfiles'
+complete -c jcd --no-files -a dfb          -d 'dotiles/bin'
+
+complete -c jcd --no-files -a atom         -d 'Atom source'
+complete -c jcd --no-files -a mri          -d 'Mri source'
+complete -c jcd --no-files -a rbx          -d 'Rubinius source'
+complete -c jcd --no-files -a jruby        -d 'JRuby source'
+complete -c jcd --no-files -a rails        -d 'Rails source'
+complete -c jcd --no-files -a rails-am     -d 'ActiveModel source'
+complete -c jcd --no-files -a rails-as     -d 'ActiveSupport source'
+complete -c jcd --no-files -a rails-ar     -d 'ActiveRecord source'
+complete -c jcd --no-files -a homebrew     -d 'Homebrew source'
+complete -c jcd --no-files -a fish         -d 'Fish shell source'
+
+complete -c jcd --no-files -a jsl          -d 'Jumpstart Lab / Turing'
+complete -c jcd --no-files -a apply        -d 'apply.turing.io'
+complete -c jcd --no-files -a today        -d 'today.turing.io'
+complete -c jcd --no-files -a enroll       -d 'enroll.turing.io'
+complete -c jcd --no-files -a assessments  -d 'Turing student assessments'
+
+complete -c jcd --no-files -a life         -d 'Manage life'
+complete -c jcd --no-files -a cliffnote    -d 'Cliffnote learning'
+complete -c jcd --no-files -a Dropbox      -d 'Dropbox'
+complete -c jcd --no-files -a Desktop      -d 'Desktop'
+complete -c jcd --no-files -a deleteme     -d 'deleteme'
