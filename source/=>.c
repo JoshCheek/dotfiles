@@ -21,6 +21,35 @@
  * because we can't know how much whitespace was in there.
  */
 
+/* Aaaaand yet another flaw:
+ *
+ * Given the file "be":
+ *    #!/Users/josh/code/dotfiles/bin/=> bundle exec
+ *
+ * When you call "be rake"
+ *
+ * ARGV will be:
+ *   [ "/Users/josh/code/dotfiles/bin/=>",
+ *     "bundle",
+ *     "exec",
+ *     "/Users/josh/code/dotfiles/bin/be",
+ *     "rake",
+ *     NULL
+ *   ]
+ *
+ * So it stuck the filename between the arguments to the shebang
+ * and the arguments that were passed to the program.
+ * This means that => has no idea where the filename is that it
+ * needs to remove.
+ *
+ * You'd have to tell it how many args your shebang is passing like this:
+ *   #!/Users/josh/code/dotfiles/bin/=> 2 bundle exec
+ *
+ * Or add a delimiter of some sort like this:
+ *   #!/Users/josh/code/dotfiles/bin/=> bundle exec <END-ARGS>
+ *
+ * Going to be honest, shebangs seem really fucking broken.
+ */
 
 int main(int argc, char *argv[]) {
   /* Given someprogram:
