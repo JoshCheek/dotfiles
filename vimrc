@@ -178,3 +178,15 @@ au  BufRead,BufNewFile *.elm setfiletype haskell
 " Vim airline integrations
 "   https://github.com/bling/vim-airline
 "   vim-bufferline, fugitive, unite, ctrlp, minibufexpl, gundo, undotree, nerdtree, tagbar, vim-gitgutter, vim-signify, syntastic, eclim, lawrencium, virtualenv, tmuxline.
+" marks
+"   http://vim.wikia.com/wiki/Using_marks
+" vim tree indentation
+"   http://vim.wikia.com/wiki/Using_Vim_as_an_outline_processor
+"   http://www.vim.org/scripts/script.php?script_id=1266
+"   http://vim.wikia.com/wiki/Indenting_source_code
+"   http://vim.wikia.com/wiki/Folding_for_plain_text_files_based_on_indentation
+"   http://superuser.com/questions/131950/indentation-for-plain-text-bulleted-lists-in-vim
+"   http://lucasoman.blogspot.com/2010/12/list-file-plugin-for-vim.html
+"   http://www.vim.org/scripts/script.php?script_id=3368
+"   https://github.com/vim-scripts/tree/blob/master/doc/tree.txt
+"   http://vim.wikia.com/wiki/Folding_for_plain_text_files_based_on_indentation
