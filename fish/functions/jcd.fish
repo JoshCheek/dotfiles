@@ -24,14 +24,14 @@ function jcd --description "Josh's cd"
            df           $HOME/code/dotfiles
            dfb          $HOME/code/dotfiles/bin
 
-           atom         $HOME/ref/atom
+           atom         $HOME/ref/tools/atom
            mri          $HOME/ref/ruby/mri
            rbx          $HOME/ref/ruby/rubinius
            jruby        $HOME/ref/ruby/jruby
-           rails        $HOME/ref/rails
-           rails-am     $HOME/ref/rails/activemodel
-           rails-as     $HOME/ref/rails/activesupport
-           rails-ar     $HOME/ref/rails/activerecord
+           rails        $HOME/ref/ruby/rails
+           rails-am     $HOME/ref/ruby/rails/activemodel
+           rails-as     $HOME/ref/ruby/rails/activesupport
+           rails-ar     $HOME/ref/ruby/rails/activerecord
            homebrew     $HOME/ref/tools/homebrew
            fish         $HOME/ref/tools/fish-shell
 
