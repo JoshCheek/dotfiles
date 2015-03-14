@@ -26,3 +26,7 @@ set --erase fish_greeting
 if test -e ~/.config/fish/private_config.fish
   source   ~/.config/fish/private_config.fish
 end
+
+# Have `tree` colour directories yellowish
+# this shit is so badly documented and inconsistent
+set --export LS_COLORS 'di=33'
