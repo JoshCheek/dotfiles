@@ -166,7 +166,9 @@ cnoremap <C-y> <C-r><C-o>"
 cnoremap <C-d> <Right><C-h>
 
 "" filetypes
-au  BufRead,BufNewFile *.elm setfiletype haskell
+au BufRead,BufNewFile *.elm setfiletype haskell
+au  BufRead,BufNewFile *.sublime-* setfiletype javascript " .sublime-{settings,keymap,menu,commands}
+au  BufRead,BufNewFile *.sublime-snippet setfiletype html
 
 "" Maybe worth checking out
 " Profiling plugins
