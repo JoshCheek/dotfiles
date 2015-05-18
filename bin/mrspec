@@ -5,7 +5,7 @@
 gem 'rspec',    '~> 3'
 gem 'minitest', '~> 5'
 
-require 'rspec/autorun'
+require 'rspec/core'
 require 'minitest'
 
 # Seems you have to give it as a CLI argument, otherwise it will overwrite your configuration when it processes CLI args
@@ -29,11 +29,10 @@ def RSpec.describe_minitest_class(klass)
   end
 end
 
-class RSpec::Core::Configuration
-  load_rspec_files = instance_method :load_spec_files
 
-  define_method :load_spec_files do |*args, &block|
-    load_rspec_files.bind(self).call(*args, &block).tap { import_minitest }
+class MRspecRunner < RSpec::Core::Runner
+  def setup(*)
+    super.tap { import_minitest }
   end
 
   def import_minitest
@@ -47,3 +46,5 @@ class RSpec::Core::Configuration
     end
   end
 end
+
+MRspecRunner.autorun
