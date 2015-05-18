@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# Runs minitest tests using RSpec's test runner, so that I can use the documentation formatter, fail-fast flag, etc
 
 # presumably this is loose enough to not whine all the time, but tight enough to not break
 gem 'rspec',    '~> 3'
