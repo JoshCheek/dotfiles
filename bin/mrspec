@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+
+# presumably this is loose enough to not whine all the time, but tight enough to not break
+gem 'rspec',    '~> 3'
+gem 'minitest', '~> 5'
+
+require 'rspec/autorun'
+require 'minitest'
+
+# Seems you have to give it as a CLI argument, otherwise it will overwrite your configuration when it processes CLI args
+ARGV.unshift '--pattern', '{spec,test}/**/*_{spec,test}.rb'
+
+
+RSpec.configure do |c|
+  c.filter_gems_from_backtrace 'minitest'
+end
+
+def RSpec.describe_minitest_class(klass)
+  group = RSpec.describe klass.inspect.sub(/Test$/, '')
+  klass.runnable_methods.each do |meth|
+    rspec_name = meth.to_s.sub(/^test_/, '').tr('_', ' ')
+    group.example rspec_name do
+      instance = Minitest.run_one_method klass, meth
+      next if instance.passed?
+      pending 'skipped' if instance.skipped?
+      raise instance.failure
+    end
+  end
+end
+
+class RSpec::Core::Configuration
+  load_rspec_files = instance_method :load_spec_files
+
+  define_method :load_spec_files do |*args, &block|
+    load_rspec_files.bind(self).call(*args, &block).tap { import_minitest }
+  end
+
+  def import_minitest
+    # we're not using the reporter, but some plugins, (eg minitest/pride) expect it to be there
+    Minitest.reporter = Minitest::CompositeReporter.new
+    Minitest.load_plugins
+    Minitest.init_plugins Minitest.process_args([])
+
+    Minitest::Runnable.runnables.each do |klass|
+      RSpec.describe_minitest_class(klass)
+    end
+  end
+end
