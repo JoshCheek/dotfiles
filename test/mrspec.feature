@@ -48,11 +48,11 @@ Feature: mrspec
       end
 
       def test_fails
-        assert false
+        assert_equal 1, 2
       end
 
       def test_errors
-        raise "omg"
+        raise 'omg'
       end
 
       def test_skips
@@ -60,10 +60,21 @@ Feature: mrspec
       end
     end
     """
-    When I run "mrspec some_test.rb -f json"
+    When I run "mrspec some_test.rb --no-color --format progress"
+
+    # counts correctly
     Then stdout includes "4 examples"
     And stdout includes "2 failures"
     And stdout includes "1 pending"
+
+    # displays the failed assertion, not an error
+    And stdout includes "Expected: 1"
+    And stdout includes "Actual: 2"
+
+    # displays the test's code, not the integration code
+    And stdout includes "raise 'omg'"
+    And stdout includes "assert_equal 1, 2"
+    And stdout does not include "Minitest.run_one_method"
 
   Scenario: Works with Minitest::Spec
     # Commenting out for now, b/c RSpec's describe / non-monkey patching interfere with Minitest's
@@ -167,4 +178,24 @@ Feature: mrspec
     # And stdout does not include "2 examples"
 
   Scenario: Can tag minitest tests and run the tagged ones
+    # Given the file "test/tag_test.rb":
+    # """
+    # require 'minitest'
+    # class TwoFailures < Minitest::Test
+    #   tag first: true
+    #   def test_1
+    #   end
 
+    #   tag second: true
+    #   def test_2
+    #     raise
+    #   end
+    # end
+    # """
+    # When I run 'mrspec test/tag_test.rb -t first'
+    # Then the program ran successfully
+    # Then stdout includes "1 example"
+    # And stdout includes "1 failure"
+    # When I run 'mrspec test/tag_test.rb -t second'
+    # Then stdout includes "1 example"
+    # And stdout includes "0 failures"

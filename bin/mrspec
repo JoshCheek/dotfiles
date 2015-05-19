@@ -22,13 +22,24 @@ end
 
 def RSpec.describe_minitest_class(klass)
   group = RSpec.describe klass.inspect.sub(/Test$/, '')
-  klass.runnable_methods.each do |meth|
-    rspec_name = meth.to_s.sub(/^test_/, '').tr('_', ' ')
-    group.example rspec_name do
-      instance = Minitest.run_one_method klass, meth
+  klass.runnable_methods.each do |method_name|
+
+    rspec_name = method_name.to_s.sub(/^test_/, '').tr('_', ' ')
+
+    example = group.example rspec_name do
+      instance = Minitest.run_one_method klass, method_name
       next if instance.passed?
       pending 'skipped' if instance.skipped?
       raise instance.failure
+    end
+
+    # can't think of any reason a test wouldn't have a file/line, but still figure I should check
+    file, line = klass.instance_method(method_name).source_location
+    if file && line
+      example.metadata[:file_path]          = file
+      example.metadata[:line_number]        = line
+      example.metadata[:location]           = "#{file}:#{line}"
+      example.metadata[:absolute_file_path] = File.expand_path(file)
     end
   end
 end
