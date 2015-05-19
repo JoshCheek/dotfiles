@@ -94,8 +94,23 @@ Feature: mrspec
     Then stdout does not include "minitest"
     And stdout does not include "mrspec"
 
-
   Scenario: --fail-fast flag
+    Given the file "fails_fast_test.rb":
+    """
+    require 'minitest'
+    class TwoFailures < Minitest::Test
+      i_suck_and_my_tests_are_order_dependent!
+      def test_1
+        raise
+      end
+      def test_2
+        raise
+      end
+    end
+    """
+    When I run 'mrspec fails_fast_test.rb --fail-fast'
+    Then stdout includes "1 example"
+
   Scenario: -e flag
   Scenario: --format flag
   Scenario: Can tag minitest tests and run the tagged ones
