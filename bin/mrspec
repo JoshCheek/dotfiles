@@ -5,8 +5,8 @@
 # https://gist.github.com/e2/bcd2be81b4ac28c85ea0
 
 # presumably this is loose enough to not whine all the time, but tight enough to not break
-gem 'rspec',    '~> 3'
-gem 'minitest', '~> 5'
+gem 'rspec',    '~> 3.0'
+gem 'minitest', '~> 5.0'
 
 require 'rspec/core'
 require 'minitest'
@@ -17,6 +17,7 @@ ARGV.unshift '--pattern', '{spec,test}/**/*_{spec,test}.rb'
 
 RSpec.configure do |c|
   c.filter_gems_from_backtrace 'minitest'
+  c.disable_monkey_patching!
 end
 
 def RSpec.describe_minitest_class(klass)
