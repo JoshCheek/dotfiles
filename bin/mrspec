@@ -20,46 +20,59 @@ RSpec.configure do |c|
   c.disable_monkey_patching!
 end
 
-def RSpec.describe_minitest_class(klass)
-  group = RSpec.describe klass.inspect.sub(/Test$/, '')
-  klass.runnable_methods.each do |method_name|
 
-    rspec_name = method_name.to_s.sub(/^test_/, '').tr('_', ' ')
+class MRspec
+  def self.group_name(klass)
+    klass.inspect.sub /Test$/, ''
+  end
 
-    example = group.example rspec_name do
-      instance = Minitest.run_one_method klass, method_name
-      next if instance.passed?
-      pending 'skipped' if instance.skipped?
+  def self.example_name(method_name)
+    method_name.to_s.sub(/^test_/, '').tr('_', ' ')
+  end
+
+  def self.wrap_class(klass)
+    example_group = RSpec.describe group_name(klass)
+    klass.runnable_methods.each do |method_name|
+      wrap_test example_group, klass, method_name
+    end
+  end
+
+  def self.wrap_test(example_group, klass, mname)
+    example = example_group.example example_name(mname) do
+      instance = Minitest.run_one_method klass, mname
+      instance.passed?  and next
+      instance.skipped? and pending 'skipped'
       raise instance.failure
     end
 
-    # can't think of any reason a test wouldn't have a file/line, but still figure I should check
-    file, line = klass.instance_method(method_name).source_location
-    if file && line
-      example.metadata[:file_path]          = file
-      example.metadata[:line_number]        = line
-      example.metadata[:location]           = "#{file}:#{line}"
-      example.metadata[:absolute_file_path] = File.expand_path(file)
+    fix_metadata example.metadata, klass.instance_method(mname)
+  end
+
+  def self.fix_metadata(metadata, method)
+    file, line = method.source_location
+    return unless file && line
+    metadata[:file_path]          = file
+    metadata[:line_number]        = line
+    metadata[:location]           = "#{file}:#{line}"
+    metadata[:absolute_file_path] = File.expand_path(file)
+  end
+
+  class Runner < RSpec::Core::Runner
+    def setup(*)
+      super.tap { import_minitest }
+    end
+
+    def import_minitest
+      # we're not using the reporter, but some plugins, (eg minitest/pride) expect it to be there
+      Minitest.reporter = Minitest::CompositeReporter.new
+      Minitest.load_plugins
+      Minitest.init_plugins Minitest.process_args([])
+
+      Minitest::Runnable.runnables.each do |klass|
+        MRspec.wrap_class(klass)
+      end
     end
   end
 end
 
-
-class MRspecRunner < RSpec::Core::Runner
-  def setup(*)
-    super.tap { import_minitest }
-  end
-
-  def import_minitest
-    # we're not using the reporter, but some plugins, (eg minitest/pride) expect it to be there
-    Minitest.reporter = Minitest::CompositeReporter.new
-    Minitest.load_plugins
-    Minitest.init_plugins Minitest.process_args([])
-
-    Minitest::Runnable.runnables.each do |klass|
-      RSpec.describe_minitest_class(klass)
-    end
-  end
-end
-
-MRspecRunner.autorun
+MRspec::Runner.autorun
