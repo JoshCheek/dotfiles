@@ -2,6 +2,9 @@ Feature: mrspec
   Minitest doesn't have a runner, but a runner would be really nice.
   RSpec has a nice runner... so lets join them together!
 
+  Background:
+    Given I run 'ruby -e "puts Dir[%(**/*_{spec,test}.rb)]" | xargs rm'
+
   Scenario: Finds spec/**/*_spec.rb and test/**/*_test.rb
     Given the file "spec/a_spec.rb":
     """
