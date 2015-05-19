@@ -112,6 +112,59 @@ Feature: mrspec
     Then stdout includes "1 example"
 
   Scenario: -e flag
-  Scenario: --format flag
+    Given the file "spec/first_spec.rb":
+    """
+    RSpec.describe 'a' do
+      example('b') { }
+    end
+    """
+    Given the file "test/first_test.rb":
+    """
+    require 'minitest'
+    class FirstTest < Minitest::Test
+      def test_1
+      end
+    end
+    """
+    And the file "test/second_test.rb":
+    """
+    require 'minitest'
+    class SecondTest < Minitest::Test
+      def test_2
+      end
+    end
+    """
+    When I run 'mrspec -e Second'
+    Then stdout includes "1 example"
+    And stdout does not include "2 examples"
+
+  Scenario: Passing a filename overrides the default pattern
+    # Commented out for now, b/c modifying the default pattern interferes with this
+    # Given the file "spec/first_spec.rb":
+    # """
+    # RSpec.describe 'a' do
+    #   example('b') { }
+    # end
+    # """
+    # Given the file "test/first_test.rb":
+    # """
+    # require 'minitest'
+    # class TwoFailures < Minitest::Test
+    #   def test_1
+    #   end
+    # end
+    # """
+    # And the file "test/second_test.rb":
+    # """
+    # require 'minitest'
+    # class TwoFailures < Minitest::Test
+    #   def test_1
+    #   end
+    # end
+    # """
+    # When I run 'mrspec test/second_test.rb'
+    # Then stdout includes "1 example"
+    # And stdout does not include "2 examples"
+
   Scenario: Can tag minitest tests and run the tagged ones
 
