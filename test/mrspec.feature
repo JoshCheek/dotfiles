@@ -66,7 +66,35 @@ Feature: mrspec
     And stdout includes "1 pending"
 
   Scenario: Works with Minitest::Spec
-  Scenario: Filters the runner and minitest code out of the backtrace
+    # Commenting out for now, b/c RSpec's describe / non-monkey patching interfere with Minitest's
+    # Given the file "some_spec.rb":
+    # """
+    # require 'minitest/spec'
+    # describe 'mt' do
+    #   it 'passes' do
+    #     assert true
+    #   end
+    # end
+    # """
+    # When I run "mrspec some_spec.rb -f json"
+    # Then stdout includes "1 example"
+    # And stdout includes "0 failures"
+
+  Scenario: Filters the runner and minitest code out of the backtrace do
+    Given the file "some_test.rb":
+    """
+    require 'minitest'
+    class LotaStuffsTest < Minitest::Test
+      def test_errors
+        raise "zomg"
+      end
+    end
+    """
+    When I run "mrspec some_test.rb"
+    Then stdout does not include "minitest"
+    And stdout does not include "mrspec"
+
+
   Scenario: --fail-fast flag
   Scenario: -e flag
   Scenario: --format flag
