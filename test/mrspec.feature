@@ -82,19 +82,22 @@ Feature: mrspec
 
 
   Scenario: Works with Minitest::Spec
-    # Commenting out for now, b/c RSpec's describe / non-monkey patching interfere with Minitest's
-    # Given the file "some_spec.rb":
-    # """
-    # require 'minitest/spec'
-    # describe 'mt' do
-    #   it 'passes' do
-    #     assert true
-    #   end
-    # end
-    # """
-    # When I run "mrspec some_spec.rb -f json"
-    # Then stdout includes "1 example"
-    # And stdout includes "0 failures"
+    Given the file "some_spec.rb":
+    """
+    require 'minitest/spec'
+    describe 'mt' do
+      it 'passes' do
+        assert true
+        if kind_of? Minitest::Spec
+          puts "I am defined by Minitest::Spec"
+        end
+      end
+    end
+    """
+    When I run "mrspec some_spec.rb -f json"
+    Then stdout includes "1 example"
+    And stdout includes "0 failures"
+    And stdout includes "I am defined by Minitest::Spec"
 
 
   Scenario: Filters the runner and minitest code out of the backtrace do
@@ -159,32 +162,33 @@ Feature: mrspec
 
 
   Scenario: Passing a filename overrides the default pattern
-    # Commented out for now, b/c modifying the default pattern interferes with this
-    # Given the file "spec/first_spec.rb":
-    # """
-    # RSpec.describe 'first spec' do
-    #   example('spec 1') { }
-    # end
-    # """
-    # Given the file "test/first_test.rb":
-    # """
-    # require 'minitest'
-    # class FirstTest < Minitest::Test
-    #   def test_1
-    #   end
-    # end
-    # """
-    # And the file "test/second_test.rb":
-    # """
-    # require 'minitest'
-    # class SecondTest < Minitest::Test
-    #   def test_2
-    #   end
-    # end
-    # """
-    # When I run 'mrspec test/second_test.rb'
-    # Then stdout includes "1 example"
-    # And stdout does not include "2 examples"
+    Given the file "spec/first_spec.rb":
+    """
+    RSpec.describe 'first spec' do
+      example('rspec 1') { }
+    end
+    """
+    Given the file "test/first_test.rb":
+    """
+    require 'minitest'
+    class FirstTest < Minitest::Test
+      def test_minitest_1
+      end
+    end
+    """
+    And the file "test/second_test.rb":
+    """
+    require 'minitest'
+    class SecondTest < Minitest::Test
+      def test_minitest_2
+      end
+    end
+    """
+    When I run 'mrspec -f d test/second_test.rb'
+    Then stdout includes "1 example"
+    And  stdout includes "minitest 2"
+    And  stdout does not include "rspec 1"
+    And  stdout does not include "minitest 1"
 
 
   Scenario: Can add metadata to examples, ie run only tagged tests

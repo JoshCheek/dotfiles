@@ -95,22 +95,34 @@ module MRspec
     metadata[:location]           = "#{file}:#{line}"
     metadata[:absolute_file_path] = File.expand_path(file)
   end
+end
 
-  class Configuration < RSpec::Core::Configuration
-    def load_spec_files(*)
-      super                  # will load the files
-      MRspec.import_minitest # declare them to RSpec
-    end
+
+class MRspec::Configuration < RSpec::Core::Configuration
+  def load_spec_files(*)
+    super                  # will load the files
+    MRspec.import_minitest # declare them to RSpec
   end
 end
 
-# Seems you have to give it as a CLI argument, otherwise it will overwrite your configuration when it processes CLI args
-ARGV.unshift '--pattern', '{spec,test}/**/*_{spec,test}.rb'
+
+class MRspec::Runner < RSpec::Core::Runner
+  def initialize(*)
+    super
+
+    # seems like there should be a better way, but I can't figure out what it is
+    files_and_dirs = @options.options[:files_or_directories_to_run]
+    files_and_dirs << 'spec' << 'test' if files_and_dirs.empty?
+  end
+end
+
 
 RSpec.configuration = MRspec::Configuration.new
+
 RSpec.configure do |config|
   config.disable_monkey_patching!
   config.filter_gems_from_backtrace 'minitest'
+  config.pattern = config.pattern.sub('_spec.rb', '_{spec,test}.rb') # look for files suffixed with both _spec and _test
 end
 
-RSpec::Core::Runner.autorun
+MRspec::Runner.autorun
