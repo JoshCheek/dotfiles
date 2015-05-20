@@ -27,19 +27,30 @@ RSpec.configure do |c|
 end
 
 class << Minitest::Runnable
-  def metadata
+  # adds metadata to the class
+  def classmeta(metadata)
+    class_metadata.merge! metadata
+  end
+
+  def class_metadata
+    @selfmetadata ||= {}
+  end
+
+  # adds metadata to the next test defined
+  def meta(metadata)
+    pending_metadata.merge! metadata
+  end
+
+  # the tests' metadata
+  def example_metadata
     @metadata ||= Hash.new { |metadata, mname| metadata[mname] = {} }
   end
 
   private
 
   def method_added(manme)
-    metadata[manme.intern].merge! pending_metadata
+    example_metadata[manme.intern].merge! pending_metadata
     pending_metadata.clear
-  end
-
-  def meta(metadata)
-    pending_metadata.merge! metadata
   end
 
   def pending_metadata
@@ -58,14 +69,14 @@ class MRspec
   end
 
   def self.wrap_class(klass)
-    example_group = RSpec.describe group_name(klass)
+    example_group = RSpec.describe group_name(klass), klass.class_metadata
     klass.runnable_methods.each do |method_name|
       wrap_test example_group, klass, method_name
     end
   end
 
   def self.wrap_test(example_group, klass, mname)
-    metadata = klass.metadata[mname.intern]
+    metadata = klass.example_metadata[mname.intern]
     example = example_group.example example_name(mname), metadata do
       instance = Minitest.run_one_method klass, mname
       instance.passed?  and next

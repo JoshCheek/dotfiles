@@ -154,14 +154,14 @@ Feature: mrspec
     # Commented out for now, b/c modifying the default pattern interferes with this
     # Given the file "spec/first_spec.rb":
     # """
-    # RSpec.describe 'a' do
-    #   example('b') { }
+    # RSpec.describe 'first spec' do
+    #   example('spec 1') { }
     # end
     # """
     # Given the file "test/first_test.rb":
     # """
     # require 'minitest'
-    # class TwoFailures < Minitest::Test
+    # class FirstTest < Minitest::Test
     #   def test_1
     #   end
     # end
@@ -169,8 +169,8 @@ Feature: mrspec
     # And the file "test/second_test.rb":
     # """
     # require 'minitest'
-    # class TwoFailures < Minitest::Test
-    #   def test_1
+    # class SecondTest < Minitest::Test
+    #   def test_2
     #   end
     # end
     # """
@@ -178,11 +178,11 @@ Feature: mrspec
     # Then stdout includes "1 example"
     # And stdout does not include "2 examples"
 
-  Scenario: Can add metadata, ie run only tagged tests
+  Scenario: Can add metadata to examples, ie run only tagged tests
     Given the file "test/tag_test.rb":
     """
     require 'minitest'
-    class TwoFailures < Minitest::Test
+    class TagTest < Minitest::Test
       meta first: true
       def test_1
         puts "ran test 1"
@@ -235,3 +235,47 @@ Feature: mrspec
     And stdout includes "ran test 1"
     And stdout includes "ran test 2"
     And stdout includes "ran test 3"
+
+
+  Scenario: Can add metadata to groups
+    Given the file "tag_groups.rb":
+    """
+    require 'minitest'
+
+    class Tag1Test < Minitest::Test
+      classmeta tag1: true
+
+      meta tag2: true
+      def test_tagged_with_1_and_2
+      end
+
+      def test_tagged_with_1_only
+      end
+    end
+
+    class UntaggedTest < Minitest::Test
+      def test_untagged
+      end
+    end
+    """
+
+    # tag1 runs all tests in Tag1Test (b/c the tag is on the class)
+    When I run 'mrspec -f d -t tag1 tag_groups.rb'
+    Then the program ran successfully
+    And  stdout includes "tagged with 1 and 2"
+    And  stdout includes "tagged with 1 only"
+    And  stdout does not include "untagged"
+
+    # tag2 runs only Tag1Test#tag2 (b/c the tag is on the method)
+    When I run 'mrspec -f d -t tag2 tag_groups.rb'
+    Then the program ran successfully
+    And  stdout includes "tagged with 1 and 2"
+    And  stdout does not include "tagged with 1 only"
+    And  stdout does not include "untagged"
+
+    # no tags runs all tests (ignores all tagging)
+    When I run 'mrspec -f d tag_groups.rb'
+    Then the program ran successfully
+    And  stdout includes "tagged with 1 and 2"
+    And  stdout includes "tagged with 1 only"
+    And  stdout includes "untagged"
