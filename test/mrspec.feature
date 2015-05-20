@@ -178,7 +178,7 @@ Feature: mrspec
     # Then stdout includes "1 example"
     # And stdout does not include "2 examples"
 
-  Scenario: Can tag minitest tests and run the tagged ones
+  Scenario: Can add metadata, ie run only tagged tests
     Given the file "test/tag_test.rb":
     """
     require 'minitest'
