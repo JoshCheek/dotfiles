@@ -3,6 +3,7 @@ Feature: mrspec
   RSpec has a nice runner... so lets join them together!
 
   Background:
+    # stupid hacky solution to reset proving grounds instead of working in subdirs :/
     Given I run 'ruby -e "puts Dir[%(**/*_{spec,test}.rb)]" | xargs rm'
 
   Scenario: Finds spec/**/*_spec.rb and test/**/*_test.rb
@@ -178,24 +179,59 @@ Feature: mrspec
     # And stdout does not include "2 examples"
 
   Scenario: Can tag minitest tests and run the tagged ones
-    # Given the file "test/tag_test.rb":
-    # """
-    # require 'minitest'
-    # class TwoFailures < Minitest::Test
-    #   tag first: true
-    #   def test_1
-    #   end
+    Given the file "test/tag_test.rb":
+    """
+    require 'minitest'
+    class TwoFailures < Minitest::Test
+      meta first: true
+      def test_1
+        puts "ran test 1"
+      end
 
-    #   tag second: true
-    #   def test_2
-    #     raise
-    #   end
-    # end
-    # """
-    # When I run 'mrspec test/tag_test.rb -t first'
-    # Then the program ran successfully
-    # Then stdout includes "1 example"
-    # And stdout includes "1 failure"
-    # When I run 'mrspec test/tag_test.rb -t second'
-    # Then stdout includes "1 example"
-    # And stdout includes "0 failures"
+      # multiple tags in meta, and aggregated across metas
+      meta second: true, second2: true
+      meta second3: true
+      def test_2
+        puts "ran test 2"
+      end
+
+      def test_3
+        puts "ran test 3"
+      end
+    end
+    """
+
+    # only test_1 is tagged w/ first
+    When I run 'mrspec test/tag_test.rb -t first'
+    Then the program ran successfully
+    Then stdout includes "1 example"
+    And stdout includes "ran test 1"
+    And stdout does not include "ran test 2"
+    And stdout does not include "ran test 3"
+
+    # test_2 is tagged w/ second, and second2 (multiple tags in 1 meta)
+    When I run 'mrspec test/tag_test.rb -t second'
+    Then stdout includes "1 example"
+    And stdout includes "ran test 2"
+    And stdout does not include "ran test 1"
+    And stdout does not include "ran test 3"
+
+    When I run 'mrspec test/tag_test.rb -t second2'
+    Then stdout includes "1 example"
+    And stdout includes "ran test 2"
+    And stdout does not include "ran test 1"
+    And stdout does not include "ran test 3"
+
+    # test_2 is tagged with second3 (consolidates metadata until they are used)
+    When I run 'mrspec test/tag_test.rb -t second3'
+    Then stdout includes "1 example"
+    And stdout includes "ran test 2"
+    And stdout does not include "ran test 1"
+    And stdout does not include "ran test 3"
+
+    # for sanity, show that test_3 is actually a test, just not tagged (metadata gets cleared)
+    When I run 'mrspec test/tag_test.rb'
+    Then stdout includes "3 examples"
+    And stdout includes "ran test 1"
+    And stdout includes "ran test 2"
+    And stdout includes "ran test 3"

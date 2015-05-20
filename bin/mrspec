@@ -20,6 +20,27 @@ RSpec.configure do |c|
   c.disable_monkey_patching!
 end
 
+class << Minitest::Runnable
+  def metadata
+    @metadata ||= Hash.new { |metadata, mname| metadata[mname] = {} }
+  end
+
+  private
+
+  def method_added(manme)
+    metadata[manme.intern].merge! pending_metadata
+    pending_metadata.clear
+  end
+
+  def meta(metadata)
+    pending_metadata.merge! metadata
+  end
+
+  def pending_metadata
+    @pending_metadata ||= {}
+  end
+end
+
 
 class MRspec
   def self.group_name(klass)
@@ -38,7 +59,8 @@ class MRspec
   end
 
   def self.wrap_test(example_group, klass, mname)
-    example = example_group.example example_name(mname) do
+    metadata = klass.metadata[mname.intern]
+    example = example_group.example example_name(mname), metadata do
       instance = Minitest.run_one_method klass, mname
       instance.passed?  and next
       instance.skipped? and pending 'skipped'
