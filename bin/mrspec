@@ -4,7 +4,8 @@
 # Examples:
 #   Autoloads specs and tests:  https://github.com/JoshCheek/dotfiles/blob/7495046fbe4a927394558e7da43b07219b02594f/test/mrspec.feature#L9
 #   fail fast:                  https://github.com/JoshCheek/dotfiles/blob/7495046fbe4a927394558e7da43b07219b02594f/test/mrspec.feature#L109
-#   tagging:                    https://github.com/JoshCheek/dotfiles/blob/7495046fbe4a927394558e7da43b07219b02594f/test/mrspec.feature#L181
+#   tagging tests:              https://github.com/JoshCheek/dotfiles/blob/7495046fbe4a927394558e7da43b07219b02594f/test/mrspec.feature#L181
+#   tagging classes:            https://github.com/JoshCheek/dotfiles/blob/4c5bf2948a5f1d850e9d33311d1bea139e80c7ba/test/mrspec.feature#L240
 #
 # Inspired by
 #   https://github.com/rspec/rspec-core/issues/1786
@@ -16,15 +17,6 @@ gem 'minitest', '~> 5.0'
 
 require 'rspec/core'
 require 'minitest'
-
-# Seems you have to give it as a CLI argument, otherwise it will overwrite your configuration when it processes CLI args
-ARGV.unshift '--pattern', '{spec,test}/**/*_{spec,test}.rb'
-
-
-RSpec.configure do |c|
-  c.filter_gems_from_backtrace 'minitest'
-  c.disable_monkey_patching!
-end
 
 class << Minitest::Runnable
   # adds metadata to the class
@@ -59,13 +51,21 @@ class << Minitest::Runnable
 end
 
 
-class MRspec
+module MRspec
   def self.group_name(klass)
     klass.inspect.sub /Test$/, ''
   end
 
   def self.example_name(method_name)
     method_name.to_s.sub(/^test_/, '').tr('_', ' ')
+  end
+
+  def self.import_minitest
+    Minitest.reporter = Minitest::CompositeReporter.new # we're not using the reporter, but some plugins, (eg minitest/pride) expect it to be there
+    Minitest.load_plugins
+    Minitest.init_plugins Minitest.process_args([])
+
+    Minitest::Runnable.runnables.each { |klass| wrap_class klass }
   end
 
   def self.wrap_class(klass)
@@ -89,29 +89,28 @@ class MRspec
 
   def self.fix_metadata(metadata, method)
     file, line = method.source_location
-    return unless file && line
+    return unless file && line # not sure when this wouldn't be true, so no tests on it, but hypothetically it could happen
     metadata[:file_path]          = file
     metadata[:line_number]        = line
     metadata[:location]           = "#{file}:#{line}"
     metadata[:absolute_file_path] = File.expand_path(file)
   end
 
-  class Runner < RSpec::Core::Runner
-    def setup(*)
-      super.tap { import_minitest }
-    end
-
-    def import_minitest
-      # we're not using the reporter, but some plugins, (eg minitest/pride) expect it to be there
-      Minitest.reporter = Minitest::CompositeReporter.new
-      Minitest.load_plugins
-      Minitest.init_plugins Minitest.process_args([])
-
-      Minitest::Runnable.runnables.each do |klass|
-        MRspec.wrap_class(klass)
-      end
+  class Configuration < RSpec::Core::Configuration
+    def load_spec_files(*)
+      super                  # will load the files
+      MRspec.import_minitest # declare them to RSpec
     end
   end
 end
 
-MRspec::Runner.autorun
+# Seems you have to give it as a CLI argument, otherwise it will overwrite your configuration when it processes CLI args
+ARGV.unshift '--pattern', '{spec,test}/**/*_{spec,test}.rb'
+
+RSpec.configuration = MRspec::Configuration.new
+RSpec.configure do |config|
+  config.disable_monkey_patching!
+  config.filter_gems_from_backtrace 'minitest'
+end
+
+RSpec::Core::Runner.autorun

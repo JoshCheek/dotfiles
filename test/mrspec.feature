@@ -6,6 +6,7 @@ Feature: mrspec
     # stupid hacky solution to reset proving grounds instead of working in subdirs :/
     Given I run 'ruby -e "puts Dir[%(**/*_{spec,test}.rb)]" | xargs rm'
 
+
   Scenario: Finds spec/**/*_spec.rb and test/**/*_test.rb
     Given the file "spec/a_spec.rb":
     """
@@ -40,6 +41,7 @@ Feature: mrspec
     And stdout includes "4 examples"
     And stdout includes "0 failures"
 
+
   Scenario: Registers minitest tests as RSpec tests, recording skips, passes, errors, failures
     Given the file "some_test.rb":
     """
@@ -67,6 +69,7 @@ Feature: mrspec
     Then stdout includes "4 examples"
     And stdout includes "2 failures"
     And stdout includes "1 pending"
+    And stdout does not include "No examples found"
 
     # displays the failed assertion, not an error
     And stdout includes "Expected: 1"
@@ -76,6 +79,7 @@ Feature: mrspec
     And stdout includes "raise 'omg'"
     And stdout includes "assert_equal 1, 2"
     And stdout does not include "Minitest.run_one_method"
+
 
   Scenario: Works with Minitest::Spec
     # Commenting out for now, b/c RSpec's describe / non-monkey patching interfere with Minitest's
@@ -92,6 +96,7 @@ Feature: mrspec
     # Then stdout includes "1 example"
     # And stdout includes "0 failures"
 
+
   Scenario: Filters the runner and minitest code out of the backtrace do
     Given the file "some_test.rb":
     """
@@ -105,6 +110,7 @@ Feature: mrspec
     When I run "mrspec some_test.rb"
     Then stdout does not include "minitest"
     And stdout does not include "mrspec"
+
 
   Scenario: --fail-fast flag
     Given the file "fails_fast_test.rb":
@@ -122,6 +128,7 @@ Feature: mrspec
     """
     When I run 'mrspec fails_fast_test.rb --fail-fast'
     Then stdout includes "1 example"
+
 
   Scenario: -e flag
     Given the file "spec/first_spec.rb":
@@ -150,6 +157,7 @@ Feature: mrspec
     Then stdout includes "1 example"
     And stdout does not include "2 examples"
 
+
   Scenario: Passing a filename overrides the default pattern
     # Commented out for now, b/c modifying the default pattern interferes with this
     # Given the file "spec/first_spec.rb":
@@ -177,6 +185,7 @@ Feature: mrspec
     # When I run 'mrspec test/second_test.rb'
     # Then stdout includes "1 example"
     # And stdout does not include "2 examples"
+
 
   Scenario: Can add metadata to examples, ie run only tagged tests
     Given the file "test/tag_test.rb":
@@ -266,7 +275,7 @@ Feature: mrspec
     And  stdout includes "tagged with 1 only"
     And  stdout does not include "untagged"
 
-    # tag2 runs only Tag1Test#tag2 (b/c the tag is on the method)
+    # tag2 runs only Tag1Test#test_tagged_with_1_and_2 (b/c the tag is on the method)
     When I run 'mrspec -f d -t tag2 tag_groups.rb'
     Then the program ran successfully
     And  stdout includes "tagged with 1 and 2"
