@@ -1,0 +1,30 @@
+#!/bin/sh
+
+if test -h = "$*" -o --help = "$*"
+then
+  cat <<HELPSCREEN | sed 's/^..//'
+  Usage: fin file [command]
+
+  Runs the command, with the file set to standard input.
+  If no command is given, it defaults to \`cat\`
+
+  It's nice to be able to do:
+    $ cat somefile
+    $ cat somefile | someprocess
+
+  The "correct" way is annoying, because you can't just append to your previous command:
+    $ cat somefile
+    $ someprocess < somefile
+
+  This is what fin is for:
+    $ fin somefile
+    $ fin somefile someprocess
+HELPSCREEN
+  exit 0
+fi
+
+
+filename="$1"
+shift
+test -z "$*" && set cat
+exec "$@" < "$filename"
