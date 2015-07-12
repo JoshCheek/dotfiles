@@ -18,7 +18,7 @@
   d  = diff --patience --ignore-space-change
   co = checkout
   st = status
-  br = branch
+  br = branch --all --verbose --verbose ; local and remote, verbose 1x: 1st line of log, 2x: show upstream branch
   brpb = !git rev-parse --abbrev-ref HEAD | xargs echo -n | pbcopy
   brcrnt = rev-parse --abbrev-ref HEAD
   shas = log --pretty=format:\"%H\"
@@ -29,6 +29,8 @@
   count = shortlog -sn
   authors = ! git log --format=\"%ae %an\" | sort -u | column -t
   ; authors = ! git log --format=\"%aeDELIMITER%an\" | sort -u | ruby -rpp -ne \'BEGIN { seen = {} }\; seen.[]= *$_.split("DELIMITER")\; END { col = seen.keys.max_by(&:size).size\; seen.each { |email, name| printf \"\\e[32m%\#{col}s \\e[34m%-s\", email, name } }\'
+  stpush = stash --include-untracked
+  stpop  = stash pop --index
 
   ; stolen from https://github.com/pd/dotfiles/blob/e2d2418f96c5d13b4b06e3f2dff78dfb51eeb49c/gitconfig#L47-48
   pr       = "!f() { remote=${2:-$(git remote|head -1)}; git fetch -fu $remote refs/pull/$1/head:pr/$1 && git checkout pr/$1; }; f"
