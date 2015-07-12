@@ -14,6 +14,16 @@
   added            = green
   changed          = red
   untracked        = red reverse
+[push]
+  default          = upstream
+[core]
+  excludesfile     = ~/.gitignore
+  editor           = vim
+[merge]
+  conflictstyle    = diff3
+[status]
+  submodulesummary = true
+  relativePaths    = false
 [alias]
   # Shorthand (shorter versions of common operations, sometimes with better defaults)
     d        = diff --patience --ignore-space-change
@@ -59,13 +69,3 @@
   # Git objects (for low-level exploration of git objects)
     type     = cat-file -t
     dump     = cat-file -p
-[push]
-  default          = upstream
-[core]
-  excludesfile     = ~/.gitignore
-  editor           = vim
-[merge]
-  conflictstyle    = diff3
-[status]
-  submodulesummary = true
-  relativePaths    = false
