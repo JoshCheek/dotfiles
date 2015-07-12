@@ -6,6 +6,14 @@
   ui = true
 [color "diff"]
   whitespace = red reverse
+[color "branch"]
+	current = green
+	local   = yellow
+	remote  = red
+[color "status"]
+  added     = green
+  changed   = red
+  untracked = red reverse
 [alias]
   d  = diff --patience --ignore-space-change
   co = checkout
@@ -21,6 +29,10 @@
   count = shortlog -sn
   authors = ! git log --format=\"%ae %an\" | sort -u | column -t
   ; authors = ! git log --format=\"%aeDELIMITER%an\" | sort -u | ruby -rpp -ne \'BEGIN { seen = {} }\; seen.[]= *$_.split("DELIMITER")\; END { col = seen.keys.max_by(&:size).size\; seen.each { |email, name| printf \"\\e[32m%\#{col}s \\e[34m%-s\", email, name } }\'
+
+  ; stolen from https://github.com/pd/dotfiles/blob/e2d2418f96c5d13b4b06e3f2dff78dfb51eeb49c/gitconfig#L47-48
+  pr       = "!f() { remote=${2:-$(git remote|head -1)}; git fetch -fu $remote refs/pull/$1/head:pr/$1 && git checkout pr/$1; }; f"
+  pr-clean = "!git for-each-ref refs/heads/pr/* --format='%(refname)' | while read ref ; do branch=${ref#refs/heads/} ; git branch -D $branch ; done"
 [push]
   default = upstream
 [core]
@@ -28,3 +40,6 @@
   editor = vim
 [merge]
   conflictstyle = diff3
+[status]
+  submodulesummary = true
+  relativePaths = false
