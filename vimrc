@@ -36,6 +36,7 @@ Plugin 'https://github.com/nelstrom/vim-textobj-rubyblock.git'
 Plugin 'https://github.com/kana/vim-textobj-user.git'
 Plugin 'https://github.com/fatih/vim-go.git'
 Plugin 'https://github.com/jdonaldson/vaxe.git'
+Plugin 'https://github.com/wting/rust.vim'
 
 call vundle#end()            " required
 filetype plugin indent on    " required
