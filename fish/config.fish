@@ -1,7 +1,6 @@
 # various paths
 set --export PATH $HOME/bin          \
                   /usr/local/bin     \
-                  $HOME/.rbenv/shims \
                   $PATH              \
                   $HOME/.cabal/bin
 
