@@ -34,6 +34,7 @@ function jcd --description "Josh's cd"
            rails-ar     $HOME/ref/ruby/rails/activerecord
            homebrew     $HOME/ref/tools/homebrew
            fish         $HOME/ref/tools/fish-shell
+           v8           $HOME/ref/javascript/v8
 
            jsl          $HOME/code/jsl
            apply        $HOME/code/jsl/apply
