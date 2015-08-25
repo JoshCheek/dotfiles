@@ -37,6 +37,7 @@ Plugin 'https://github.com/kana/vim-textobj-user.git'
 Plugin 'https://github.com/fatih/vim-go.git'
 Plugin 'https://github.com/jdonaldson/vaxe.git'
 Plugin 'https://github.com/wting/rust.vim'
+Plugin 'https://github.com/jneen/ragel.vim'
 
 call vundle#end()            " required
 filetype plugin indent on    " required
@@ -168,8 +169,9 @@ cnoremap <C-d> <Right><C-h>
 
 "" filetypes
 au BufRead,BufNewFile *.elm setfiletype haskell
-au  BufRead,BufNewFile *.sublime-* setfiletype javascript " .sublime-{settings,keymap,menu,commands}
-au  BufRead,BufNewFile *.sublime-snippet setfiletype html
+au BufRead,BufNewFile *.sublime-* setfiletype javascript " .sublime-{settings,keymap,menu,commands}
+au BufRead,BufNewFile *.sublime-snippet setfiletype html
+au BufRead,BufNewFile *.rl setfiletype ragel
 
 "" Maybe worth checking out
 " Profiling plugins
