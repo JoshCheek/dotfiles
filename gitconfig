@@ -23,7 +23,7 @@
   conflictstyle    = diff3
 [status]
   submodulesummary = true
-  relativePaths    = false
+  relativePaths    = true
 [alias]
   # Shorthand (shorter versions of common operations, sometimes with better defaults)
     d        = diff --patience --ignore-space-change
