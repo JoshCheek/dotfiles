@@ -8,6 +8,7 @@
 set nocompatible                  " don't try to be compatible with legacy vi
 filetype off
 set rtp+=~/.vim/bundle/Vundle.vim " set the runtime path to include Vundle and initialize
+set t_Co=256                    " Explicitly tell vim that the terminal supports 256 colors
 call vundle#begin()
 
 " Plugin 'L9' " Example of loading a plugin from http://vim-scripts.org/vim/scripts.html
@@ -26,6 +27,7 @@ Plugin 'https://github.com/tpope/vim-fugitive.git'
 Plugin 'https://github.com/tpope/vim-haml.git'
 Plugin 'https://github.com/bitc/hdevtools.git'
 Plugin 'https://github.com/pangloss/vim-javascript.git'
+Plugin 'https://github.com/mxw/vim-jsx'                            " react.js
 Plugin 'https://github.com/tpope/vim-markdown.git'
 Plugin 'https://github.com/bling/vim-airline'
 Plugin 'https://github.com/tpope/vim-repeat.git'
@@ -39,6 +41,16 @@ Plugin 'https://github.com/jdonaldson/vaxe.git'
 Plugin 'https://github.com/wting/rust.vim'
 Plugin 'https://github.com/jneen/ragel.vim'
 
+" theme options
+Plugin 'https://github.com/mkarmona/colorsbox'
+Plugin 'https://github.com/morhetz/gruvbox'
+Plugin 'https://github.com/w0ng/vim-hybrid'
+Plugin 'https://github.com/vim-scripts/darktango.vim'
+Plugin 'https://github.com/ciaranm/inkpot'
+Plugin 'https://github.com/sickill/vim-monokai'
+Plugin 'https://github.com/gosukiwi/vim-atom-dark'
+
+
 call vundle#end()            " required
 filetype plugin indent on    " required
 
@@ -46,21 +58,42 @@ filetype plugin indent on    " required
 set encoding=utf-8
 
 "" Configure Plugins
-set laststatus=2                                 " Always show the statusline
+set laststatus=2                                        " Always show the statusline
 
-let g:airline_enable_branch=0     " don't show git branch
-let g:airline_left_sep=''         " no fancy separator on LHS
-let g:airline_right_sep=''        " no fancy separator on RHS
-let g:airline_detect_modified=1   " marks when the file has changed
-let g:airline_detect_paste=1      " enable paste detection (set paste) ie I'm not typing, I'm pasting, dammit, vim!
-let g:airline_detect_iminsert=0   " I have no idea
-let g:airline_inactive_collapse=1 " inactive windows should have the left section collapsed to only the filename of that buffer.
-let g:airline_solarized_bg='dark' " Use Solarized Dark theme
-let g:airline_theme='solarized'   " god it took me fucking forever to figure this out. Luna is the only other one that doesn't look completely horked. Mine look nothing like their pictures :(
+let g:airline#extensions#disable_rtp_load = 1           " don't autoload extensions
+let g:airline_powerline_fonts             = 0           " no fancy separator charactors
+let g:airline_left_sep                    = ''          " no fancy separator on LHS
+let g:airline_right_sep                   = ''          " no fancy separator on RHS
+let g:airline_enable_branch               = 0           " don't show git branch
+let g:airline_detect_modified             = 1           " marks when the file has changed
+let g:airline_detect_paste                = 1           " enable paste detection (set paste) ie I'm not typing, I'm pasting, dammit, vim!
+let g:airline_detect_iminsert             = 1           " I have no idea
+let g:airline_inactive_collapse           = 1           " inactive windows should have the left section collapsed to only the filename of that buffer.
+let g:airline#extensions#tabline#enabled  = 1           " list open buffers at the top of the window
+let g:airline_section_y                   = ''          " turn off file encoding
+let g:airline_theme                       = 'bubblegum' " https://github.com/bling/vim-airline/wiki/Screenshots#bubblegum
+" let g:airline_solarized_bg                = 'dark'
+" let g:airline_theme                       = 'solarized'
+" let g:airline_theme                       = 'molokai'
+" let g:airline_theme                       = 'sol'
 
-runtime macros/matchit.vim        " vim-textobj-rubyblock
+
+runtime macros/matchit.vim  " vim-textobj-rubyblock
 
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif " close vim if NERDTree is the only open buffer
+
+" Now switch to this custom colorscheme (dark gray)
+colorscheme gruvbox " slightly brighter than 'hybrid' theme
+map <silent><F3> :NEXTCOLOR<cr>
+map <silent><F2> :PREVCOLOR<cr>
+
+
+"" Seeing Is Believing
+nmap <leader>r <Plug>(seeing-is-believing-run)
+xmap <leader>r <Plug>(seeing-is-believing-run)
+nmap <leader>m <Plug>(seeing-is-believing-mark)
+xmap <leader>m <Plug>(seeing-is-believing-mark)
+
 
 function! SelectaCommand(choice_command, selecta_args, vim_command)
   " https://github.com/garybernhardt/selecta
@@ -93,14 +126,13 @@ nnoremap <c-g> :call SelectaIdentifier()<cr>
 
 "" Basic editor behaviour
 filetype plugin indent on       " load file type plugins + indentation
-set t_Co=256                    " Explicitly tell vim that the terminal supports 256 colors
 syntax enable                   " highlighting and shit
 set cursorline                  " colours the line the cursor is on
 set scrolloff=4                 " adds top/bottom buffer between cursor and window
 set number                      " line numbers
 set showcmd                     " display incomplete commands
 set autoread                    " Auto-reload buffers when file changed on disk
-set background=light            " don't use the fkn bright colours
+set background=dark             " Tell vim the theme is dark (so it picks smarter colour defaults)
 
 "" Whitespace
 function! <SID>StripTrailingWhitespaces()
@@ -122,8 +154,8 @@ set expandtab                                                " use spaces, not t
 set backspace=indent,eol,start                               " backspace through everything in insert mode
 
 "" Searching
-set hlsearch                    " highlight matches
-set incsearch                   " incremental searching
+set hlsearch  " highlight matches
+set incsearch " incremental searching
 
 "" Omg, vim, Imma edit the same file multiple times, okay? fkn deal with it
 set nobackup                             " no backup files
@@ -172,6 +204,12 @@ au BufRead,BufNewFile *.elm setfiletype haskell
 au BufRead,BufNewFile *.sublime-* setfiletype javascript " .sublime-{settings,keymap,menu,commands}
 au BufRead,BufNewFile *.sublime-snippet setfiletype html
 au BufRead,BufNewFile *.rl setfiletype ragel
+
+" Profiling, taken from https://github.com/bling/minivimrc
+nnoremap <silent> <leader>DD :exe ":profile start profile.log"<cr>:exe ":profile func *"<cr>:exe ":profile file *"<cr>
+nnoremap <silent> <leader>DP :exe ":profile pause"<cr>
+nnoremap <silent> <leader>DC :exe ":profile continue"<cr>
+nnoremap <silent> <leader>DQ :exe ":profile pause"<cr>:noautocmd qall!<cr>
 
 "" Maybe worth checking out
 " Profiling plugins
