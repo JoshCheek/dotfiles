@@ -27,7 +27,7 @@ Plugin 'https://github.com/tpope/vim-fugitive.git'
 Plugin 'https://github.com/tpope/vim-haml.git'
 Plugin 'https://github.com/bitc/hdevtools.git'
 Plugin 'https://github.com/pangloss/vim-javascript.git'
-Plugin 'https://github.com/mxw/vim-jsx'                            " react.js
+Plugin 'https://github.com/mxw/vim-jsx' " react.js
 Plugin 'https://github.com/tpope/vim-markdown.git'
 Plugin 'https://github.com/bling/vim-airline'
 Plugin 'https://github.com/tpope/vim-repeat.git'
@@ -40,6 +40,7 @@ Plugin 'https://github.com/fatih/vim-go.git'
 Plugin 'https://github.com/jdonaldson/vaxe.git'
 Plugin 'https://github.com/wting/rust.vim'
 Plugin 'https://github.com/jneen/ragel.vim'
+Plugin 'https://github.com/chrisbra/csv.vim'
 
 " theme options
 Plugin 'https://github.com/mkarmona/colorsbox'
@@ -69,7 +70,6 @@ let g:airline_detect_modified             = 1           " marks when the file ha
 let g:airline_detect_paste                = 1           " enable paste detection (set paste) ie I'm not typing, I'm pasting, dammit, vim!
 let g:airline_detect_iminsert             = 1           " I have no idea
 let g:airline_inactive_collapse           = 1           " inactive windows should have the left section collapsed to only the filename of that buffer.
-let g:airline#extensions#tabline#enabled  = 1           " list open buffers at the top of the window
 let g:airline_section_y                   = ''          " turn off file encoding
 let g:airline_theme                       = 'bubblegum' " https://github.com/bling/vim-airline/wiki/Screenshots#bubblegum
 " let g:airline_solarized_bg                = 'dark'
@@ -77,6 +77,8 @@ let g:airline_theme                       = 'bubblegum' " https://github.com/bli
 " let g:airline_theme                       = 'molokai'
 " let g:airline_theme                       = 'sol'
 
+
+let g:csv_highlight_column = 'y'
 
 runtime macros/matchit.vim  " vim-textobj-rubyblock
 
@@ -87,12 +89,12 @@ colorscheme gruvbox " slightly brighter than 'hybrid' theme
 map <silent><F3> :NEXTCOLOR<cr>
 map <silent><F2> :PREVCOLOR<cr>
 
-
 "" Seeing Is Believing
-nmap <leader>r <Plug>(seeing-is-believing-run)
-xmap <leader>r <Plug>(seeing-is-believing-run)
-nmap <leader>m <Plug>(seeing-is-believing-mark)
-xmap <leader>m <Plug>(seeing-is-believing-mark)
+nmap <leader>b :%!seeing_is_believing --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk<CR>
+nmap <leader>n :%!seeing_is_believing --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk --xmpfilter-style<CR>
+nmap <leader>c :%!seeing_is_believing --clean<CR>
+nmap <leader>m A # => <Esc>
+vmap <leader>m :norm A # => <Esc>
 
 
 function! SelectaCommand(choice_command, selecta_args, vim_command)
@@ -126,7 +128,7 @@ nnoremap <c-g> :call SelectaIdentifier()<cr>
 
 "" Basic editor behaviour
 filetype plugin indent on       " load file type plugins + indentation
-syntax enable                   " highlighting and shit
+syntax on                   " highlighting and shit
 set cursorline                  " colours the line the cursor is on
 set scrolloff=4                 " adds top/bottom buffer between cursor and window
 set number                      " line numbers
@@ -162,7 +164,7 @@ set nobackup                             " no backup files
 set nowritebackup                        " don't backup file while editing
 set noswapfile                           " don't create swapfiles for new buffers
 set updatecount=0                        " Don't try to write swapfiles after some number of updates
-set backupskip=/tmp/*,/private/tmp/*"    " can edit crontab files
+set backupskip=/tmp/*,/private/tmp/*    " can edit crontab files
 
 "" Convenience
 nmap <Leader>p orequire "pry"<CR>binding.pry<ESC>;        " pry insertion
