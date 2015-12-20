@@ -1,0 +1,161 @@
+#!/usr/bin/env ruby
+require 'shellwords'
+require 'json'
+
+class BuildResult
+  class GemInfo
+    class Installation
+      attr_accessor :name, :ruby, :version
+      def initialize(name:, version:, ruby:)
+        self.name    = name
+        self.ruby    = ruby
+        self.version = version
+      end
+
+      def self.from_json(json)
+        new json
+      end
+
+      def as_json
+        {name: name, version: version, ruby: ruby}
+      end
+    end
+
+
+    attr_accessor :name, :installations
+    def initialize(name:, installations:[])
+      self.name          = name
+      self.installations = installations
+    end
+
+    def add(version:, ruby:)
+      installations << Installation.new(name: name, version: version, ruby: ruby)
+    end
+
+    def inspect
+      versions = installations.map { |i| "#{i.version}:#{i.ruby}" }.join(' ')
+      "#<GemInfo:#{name} #{versions}>"
+    end
+
+    def self.from_json(json)
+      new name:          json[:name],
+          installations: json[:installations].map { |i| Installation.from_json i }
+    end
+
+    def as_json
+      { name: name, installations: installations.map(&:as_json) }
+    end
+  end
+
+  attr_accessor :gem_infos, :rubies, :failures
+  def initialize(gem_infos:{}, rubies:[], failures:[])
+    self.gem_infos = gem_infos
+    self.rubies    = rubies
+    self.failures  = failures
+  end
+
+  def add_installation(name:, **gem_attrs)
+    gem_infos[name] ||= GemInfo.new(name: name)
+    gem_infos[name].add gem_attrs
+  end
+
+  def self.from_json(json)
+    new rubies:   json[:rubies],
+        failures: json[:failures].map { |failure| ExecResult.from_json failure },
+        gem_infos: json[:gem_infos].each_with_object({}) { |info, infos|
+          info = GemInfo.from_json info
+          infos[info.name] = info
+        }
+  end
+
+  def as_json
+    { gem_infos: gem_infos.map { |name, gem_info| gem_info.as_json },
+      rubies:    rubies,
+      failures:  failures.map(&:as_json),
+    }
+  end
+end
+
+ExecResult = Struct.new :exitstatus, :stdout, :stderr, :command, :spawn_command do
+  def failure?
+    !success?
+  end
+
+  def success?
+    exitstatus.zero?
+  end
+
+  def self.from_json(json)
+    new json[:exitstatus],
+        json[:stdout],
+        json[:stderr],
+        json[:command],
+        json[:spawn_command]
+  end
+
+  def as_json
+    { exitstatus: exitstatus, stdout: stdout, stderr: stderr, command: command, spawn_command: spawn_command }
+  end
+end
+
+def self.execute(*command)
+  spawn_command = [
+    'bash',
+    '-c',
+    "source /usr/local/share/chruby/chruby.sh; #{command.shelljoin}"
+  ]
+  read_stdout, write_stdout = IO.pipe
+  read_stderr, write_stderr = IO.pipe
+  pid = spawn *spawn_command, in: :close, out: write_stdout, err: write_stderr
+  write_stdout.close
+  write_stderr.close
+  ExecResult.new Process.detach(pid).join.value.exitstatus,
+                 read_stdout.read,
+                 read_stderr.read,
+                 command,
+                 spawn_command
+ensure
+  read_stdout.close unless read_stdout.closed?
+  read_stderr.close unless read_stderr.closed?
+end
+
+case ARGV.first
+when 'build'
+  build = BuildResult.new
+
+  # find rubies
+  chruby = execute 'chruby'
+  raise "Chruby failed: #{chruby.inspect}" if chruby.failure?
+  build.rubies = chruby.stdout.gsub(/^[ *]*/, "").lines.map(&:chomp)
+
+  # find gems
+  build.rubies.each do |ruby|
+    gem_list = execute 'chruby-exec', ruby, '--', 'ruby', '-S', 'gem', 'list'
+    next build.failures << gem_list if gem_list.failure?
+    gem_list.stdout.lines.each(&:chomp!).each do |gem_with_version|
+      formatted_versions = gem_with_version.scan(/\(.*?\)/).last
+      gem_name           = gem_with_version.chomp(formatted_versions).strip
+      versions           = formatted_versions[1...-1].split(', ')
+      versions.each do |version|
+        build.add_installation name: gem_name, version: version, ruby: ruby
+      end
+    end
+  end
+
+  # save results
+  File.open DATA, 'r+' do |file|
+    file.seek DATA.pos
+    file.puts build.as_json.to_json
+  end
+else
+  # chruby-exec ruby-2.1.2 -- ruby -e 'p Gem::Specification.first.name'
+  # ruby -r pp -e 'p Gem::Specification.all.first.cache_file'
+  # ruby -r pp -e 'p Gem::Specification.all.first.version.version'
+  #
+  # list all gems for each ruby
+  #   can we get this in a consumable way?
+  #   can we get it to tell us where the gem is cached?
+  #
+  # ruby -r json -e 'puts File.read("out").lines.map { |line| JSON.load line.chomp }.inject([], :+).group_by { |h| h["name"] }.first'
+end
+__END__

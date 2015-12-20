@@ -1,0 +1,181 @@
+#!/usr/bin/env ruby
+
+class GemsAcrossRuby
+  module Cli
+  end
+
+  class Gem
+    attr_accessor :name, :dotgems
+    def initialize(name:, dotgems:)
+      self.name, self.dotgems = name, dotgems
+    end
+
+    def versions
+      dotgems.map &:version
+    end
+  end
+
+  class DotGem
+    def self.from_path(path)
+      name_and_ver = File.basename(path).chomp('.gem')
+      version      = name_and_ver.split('-').last
+      name         = name_and_ver.chomp("-#{version}")
+      new path: path, name: name, version: version
+    end
+
+    attr_accessor :path, :name, :version
+    def initialize(path:, name:, version:)
+      self.path, self.name, self.version = path, name, version
+    end
+  end
+
+  def self.from_dirs(dirs)
+    new dirs.flat_map { |dir|           find_gems_in dir }
+            .map      { |path|          DotGem.from_path path }
+            .group_by { |dotgem|        dotgem.name }
+            .map      { |name, dotgems| Gem.new name: name, dotgems: dotgems }
+  end
+
+  def self.find_gems_in(path)
+    `find '#{path}' -name '*.gem'`.split("\n") # <-- iffy
+  end
+
+  def initialize(all_gems=[])
+    self.all_gems = all_gems
+  end
+
+  def names
+    map(&:name)
+  end
+
+  include Enumerable
+  def each(&block)
+    all_gems.each(&block)
+  end
+
+  private
+
+  attr_accessor :all_gems
+end
+
+
+if $0 !~ /rspec/
+  # chruby-exec ruby-2.1.2 -- ruby -e 'p Gem::Specification.first.name'
+  # ruby -r pp -e 'p Gem::Specification.all.first.cache_file'
+  # ruby -r pp -e 'p Gem::Specification.all.first.version.version'
+  default_search_dirs = [
+    # .gems .rubies
+    # could also look through the PATH for any `gem` executables
+    # read the shebangs out of them, then put those into the path, ie:
+    # $ whereis gem | xargs cat | head -1 | sed 's/^#! *//' | xargs dirname | xargs dirname
+  ]
+  GemsAcrossRuby::Cli.call env:         ENV,
+                           argv:        ARGV,
+                           stdin:       $stdin,
+                           stdout:      $stdout,
+                           stderr:      $stderr,
+                           search_dirs: default_search_dirs
+else
+  module SpecHelpers
+    extend self
+
+    def pg_dir(subdir='.')
+      root   = File.expand_path '../../test/proving_grounds/gems-across-rubies', __FILE__
+      subdir = File.join root, subdir
+      File.expand_path subdir
+    end
+
+    def ensure_dir(dir)
+      return if Dir.exist? dir
+      ensure_dir File.dirname(dir)
+      Dir.mkdir dir
+    end
+
+    def chdir(dir, &block)
+      ensure_dir dir
+      Dir.chdir dir, &block
+    end
+
+    require 'rubygems/package'
+    def add_gem(name:, dir:, ver:'1.0.0')
+      chdir dir do
+        # make the spec for this gem
+        spec = Gem::Specification.new do |s|
+          s.name        = name
+          s.version     = ver
+          s.authors     = ["Josh Cheek"]
+          s.email       = ["josh.cheek@gmail.com"]
+          s.homepage    = "https://github.com/JoshCheek"
+          s.summary     = %q{summary}
+          s.description = %q{description}
+          s.license     = "WTFPL"
+          s.files         = []
+        end
+
+        # taken from Gem::Package.build
+        package      = Gem::Package.new spec.file_name
+        package.spec = spec
+        package.ui   = Gem::StreamUI.new instream=StringIO.new, outstream=StringIO.new, errstream=StringIO.new, usetty=false
+        package.build skip_validation=true
+      end
+    end
+  end
+
+  SpecHelpers.instance_eval { ensure_dir pg_dir }
+
+  RSpec.configure do |config|
+    config.disable_monkey_patching!
+    config.include SpecHelpers
+    config.fail_fast = true
+  end
+
+  # other thoughts:
+  # * Maybe omit any that are already installed?
+  # * There is a platform, should we allow filtering by platform?
+  # * Store these in a cache?
+
+  RSpec.describe GemsAcrossRuby do
+    def all_gems(search_dirs:)
+      described_class.from_dirs(search_dirs)
+    end
+
+    it 'locates all the .gem files in subdirectories of the provided locations' do
+      add_gem name: 'find_at_toplevel', dir: pg_dir('in_subdirs/dir_to_find')
+      add_gem name: 'find_in_subdir',   dir: pg_dir('in_subdirs/dir_to_find/subdir')
+      add_gem name: 'wont_find',        dir: pg_dir('in_subdirs/omitted_dir')
+      gems = all_gems search_dirs: [pg_dir('in_subdirs/dir_to_find')]
+      expect(gems.count).to eq 2
+      expect(gems.names.sort).to eq ['find_at_toplevel', 'find_in_subdir']
+    end
+
+    it 'associates the versions to their gem' do
+      add_gem name: 'thegem', ver: '1.1', dir: pg_dir('associating_versions')
+      add_gem name: 'thegem', ver: '1.2', dir: pg_dir('associating_versions/subdir')
+      gems = all_gems search_dirs: [pg_dir('associating_versions')]
+      expect(gems.count).to eq 1
+      expect(gems.first.versions.sort).to eq ['1.1', '1.2']
+    end
+
+    it 'each version tracks the path to the .gem' do
+      add_gem name: 'thegem', ver: '1.1', dir: pg_dir('tracking_paths')
+      add_gem name: 'thegem', ver: '1.2', dir: pg_dir('tracking_paths/subdir')
+      gems = all_gems search_dirs: [pg_dir('tracking_paths')]
+      expect(gems.count).to eq 1
+      expect(gems.first.dotgems.map(&:path).sort).to eq [
+        pg_dir('tracking_paths/subdir/thegem-1.2.gem'),
+        pg_dir('tracking_paths/thegem-1.1.gem'),
+      ]
+    end
+
+    it 'can install the gem for the current ruby' do
+      raise 'figure out what this means!'
+    end
+  end
+
+  RSpec.describe GemsAcrossRuby::Cli do
+    # default: help
+    # commands:
+    #   print [pattern]        # prints all gems matching the pattern
+    #   install name [version] # installs the version of the gem. if version is not supplied, installs the most recent version
+  end
+end
