@@ -82,7 +82,12 @@ let g:csv_highlight_column = 'y'
 
 runtime macros/matchit.vim  " vim-textobj-rubyblock
 
-autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif " close vim if NERDTree is the only open buffer
+" open a NERDTree automatically when vim starts up if no files were specified
+autocmd StdinReadPre * let s:std_in=1
+autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
+
+" close vim if NERDTree is the only open buffer
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 
 " Now switch to this custom colorscheme (dark gray)
 colorscheme gruvbox " slightly brighter than 'hybrid' theme
