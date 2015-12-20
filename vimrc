@@ -101,6 +101,10 @@ nmap <leader>c :%!seeing_is_believing --clean<CR>
 nmap <leader>m A # => <Esc>
 vmap <leader>m :norm A # => <Esc>
 
+"" Use "." to repeat the macro in "q" (uses repeat.vim)
+nmap <Plug>RunRegq @q<CR>
+nmap <Leader>q :call repeat#set("\<Plug>RunRegq")<CR>
+
 
 function! SelectaCommand(choice_command, selecta_args, vim_command)
   " https://github.com/garybernhardt/selecta
