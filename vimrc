@@ -12,42 +12,42 @@ set rtp+=~/.vim/bundle/Vundle.vim " Set the runtime path to include Vundle
 call vundle#begin()               " Initialize Vundle
 
 " Useful
-Plugin 'gmarik/Vundle.vim'
-Plugin 'https://github.com/vim-scripts/ZoomWin.git'            " Best plugin, lets you zoom in and out of windows, but it's mostly broken now :(
-Plugin 'https://github.com/scrooloose/nerdtree.git'            " Tree Display for the file system
-Plugin 'https://github.com/ervandew/supertab.git'              " Mediocre tab completion, still haven't seen anything approach TextMate1
-Plugin 'https://github.com/Shougo/vimproc.vim'                 " Runs tasks Asynchronously, it's a dependency of Unite.vim
-Plugin 'https://github.com/Shougo/unite.vim.git'               " Searches through lists of things (files, buffers, etc)
-Plugin 'https://github.com/tpope/vim-commentary.git'           " Easily comment/uncomment code
-Plugin 'https://github.com/tpope/vim-endwise.git'              " Automatically inserts `end` for you. Convenient, works well, stays out of the way otherwise
-Plugin 'https://github.com/tpope/vim-fugitive.git'             " Git integration... I should learn this better
-Plugin 'https://github.com/bling/vim-airline'                  " Status bar at the bottom of the screen
-Plugin 'https://github.com/tpope/vim-repeat.git'               " Uhm, a dep of something, it lets you repeat non-atomic instructions with the dot. Unfortunately, too minimal, so not easy for me to use (I wish it would take over vim's shitty macro system)
-Plugin 'https://github.com/tpope/vim-surround.git'             " Better support for working with things that 'surround' text such as quotes and parens
-Plugin 'https://github.com/kana/vim-textobj-user.git'          " A dependency of ruby-textobj, helps users make their own text objects
-Plugin 'https://github.com/rking/ag.vim'                       " Searches through your project
+Plugin 'https://github.com/gmarik/Vundle.vim'              " Let Vundle manage itself
+Plugin 'https://github.com/vim-scripts/ZoomWin'            " Best plugin, lets you zoom in and out of windows, but it's mostly broken now :(
+Plugin 'https://github.com/scrooloose/nerdtree'            " Tree Display for the file system
+Plugin 'https://github.com/ervandew/supertab'              " Mediocre tab completion, still haven't seen anything approach TextMate1
+Plugin 'https://github.com/Shougo/vimproc.vim'             " Runs tasks Asynchronously, it's a dependency of Unite.vim
+Plugin 'https://github.com/Shougo/unite.vim'               " Searches through lists of things (files, buffers, etc)
+Plugin 'https://github.com/tpope/vim-commentary'           " Easily comment/uncomment code
+Plugin 'https://github.com/tpope/vim-endwise'              " Automatically inserts `end` for you. Convenient, works well, stays out of the way otherwise
+Plugin 'https://github.com/tpope/vim-fugitive'             " Git integration... I should learn this better
+Plugin 'https://github.com/bling/vim-airline'              " Status bar at the bottom of the screen
+Plugin 'https://github.com/tpope/vim-repeat'               " Uhm, a dep of something, it lets you repeat non-atomic instructions with the dot. Unfortunately, too minimal, so not easy for me to use (I wish it would take over vim's shitty macro system)
+Plugin 'https://github.com/tpope/vim-surround'             " Better support for working with things that 'surround' text such as quotes and parens
+Plugin 'https://github.com/kana/vim-textobj-user'          " A dependency of ruby-textobj, helps users make their own text objects
+Plugin 'https://github.com/rking/ag.vim'                   " Searches through your project
 
 " Language Support
-Plugin 'https://github.com/vim-ruby/vim-ruby.git'              " Ruby    - Pretty fkn legit (eg it's generally $LOAD_PATH aware, it's got some really awesome text objects)
-Plugin 'https://github.com/nelstrom/vim-textobj-rubyblock.git' " Ruby    - Adds block knowledge, it's kinda flaky, though
-Plugin 'https://github.com/skwp/vim-rspec.git'                 " RSpec   - Uhm, for running specs from within your editor, which I never do
-Plugin 'https://github.com/tpope/vim-cucumber.git'             " Gherkin - Cucumber's DSL (Given / When / Then)
+Plugin 'https://github.com/vim-ruby/vim-ruby'              " Ruby    - Pretty fkn legit (eg it's generally $LOAD_PATH aware, it's got some really awesome text objects)
+Plugin 'https://github.com/nelstrom/vim-textobj-rubyblock' " Ruby    - Adds block knowledge, it's kinda flaky, though
+Plugin 'https://github.com/skwp/vim-rspec'                 " RSpec   - Uhm, for running specs from within your editor, which I never do
+Plugin 'https://github.com/tpope/vim-cucumber'             " Gherkin - Cucumber's DSL (Given / When / Then)
 
-Plugin 'https://github.com/pangloss/vim-javascript.git'        " JavaScript     - The humans have turned this language into something to respect
-Plugin 'https://github.com/kchmck/vim-coffee-script.git'       " CoffeeScript   - Syntactically, this is the language I always want to write, improved a lot of things from JavaScript, which they've largely incorporated in ES6
-Plugin 'https://github.com/mxw/vim-jsx'                        " JSX (React.js) - Lets you write 'html' within your JavaScript
+Plugin 'https://github.com/pangloss/vim-javascript'        " JavaScript     - The humans have turned this language into something to respect
+Plugin 'https://github.com/kchmck/vim-coffee-script'       " CoffeeScript   - Syntactically, this is the language I always want to write, improved a lot of things from JavaScript, which they've largely incorporated in ES6
+Plugin 'https://github.com/mxw/vim-jsx'                    " JSX (React.js) - Lets you write 'html' within your JavaScript
 
-Plugin 'https://github.com/bitc/hdevtools.git'                 " Haskell - This is the language that caused me to realize that choice and time are abstractions
-Plugin 'https://github.com/elixir-lang/vim-elixir.git'         " Elixir  - My brain summarizes it as 'Erlang with Ruby syntax', but that's probably selling it short
-Plugin 'https://github.com/wting/rust.vim'                     " Rust    - Hopefully one day this will replace C
-Plugin 'https://github.com/fatih/vim-go.git'                   " Go      - Forgot why I didn't keep playing with it,
-Plugin 'https://github.com/jdonaldson/vaxe.git'                " Haxe    - Compiles to other languages, mostly used by game devs
+Plugin 'https://github.com/bitc/hdevtools'                 " Haskell - This is the language that caused me to realize that choice and time are abstractions
+Plugin 'https://github.com/elixir-lang/vim-elixir'         " Elixir  - My brain summarizes it as 'Erlang with Ruby syntax', but that's probably selling it short
+Plugin 'https://github.com/wting/rust.vim'                 " Rust    - Hopefully one day this will replace C
+Plugin 'https://github.com/fatih/vim-go'                   " Go      - Forgot why I didn't keep playing with it,
+Plugin 'https://github.com/jdonaldson/vaxe'                " Haxe    - Compiles to other languages, mostly used by game devs
 
-Plugin 'https://github.com/tpope/vim-markdown.git'             " Markdown - A plain text format for barely structured documents
-Plugin 'https://github.com/tpope/vim-haml.git'                 " Haml     - A better HTML
-Plugin 'https://github.com/jneen/ragel.vim'                    " Ragel    - State machine / parser language
-Plugin 'https://github.com/chrisbra/csv.vim'                   " CSV      - a few nice features, some obvious ones missing
-Plugin 'https://github.com/dag/vim-fish.git'                   " Fish     - alternate shell
+Plugin 'https://github.com/tpope/vim-markdown'             " Markdown - A plain text format for barely structured documents
+Plugin 'https://github.com/tpope/vim-haml'                 " Haml     - A better HTML
+Plugin 'https://github.com/jneen/ragel.vim'                " Ragel    - State machine / parser language
+Plugin 'https://github.com/chrisbra/csv.vim'               " CSV      - a few nice features, some obvious ones missing
+Plugin 'https://github.com/dag/vim-fish'                   " Fish     - alternate shell
 
 " Colorschemes (syntax highlighting, aka themes)
 Plugin 'https://github.com/morhetz/gruvbox'
