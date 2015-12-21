@@ -1,121 +1,178 @@
-"" Vundle (needs to be before everything else)
-" see :h vundle for more details or wiki for FAQ
-" :PluginList       - lists configured plugins
-" :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
-" :PluginSearch foo - searches for foo; append `!` to refresh local cache
-" :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
+" ===== Declare Dependencies To Vundle =====
+" Vundle needs to be before everything else, IDK why.
+" Plugin configuration is at the bottom of the file
+"
+" :VundleInstall        - Installs any missing pulugins
+" :VundleClean          - Remove unused plugins
+" :VundleSearch ZoomWin - searches vimscripts for ZoomWin
 
-set nocompatible                  " don't try to be compatible with legacy vi
-filetype off
-set rtp+=~/.vim/bundle/Vundle.vim " set the runtime path to include Vundle and initialize
-set t_Co=256                    " Explicitly tell vim that the terminal supports 256 colors
-call vundle#begin()
+set nocompatible                  " Behave more usefully at the expense of backwards compatibility (this line comes first b/c it alters how the others work)
+filetype off                      " Don't run filetype callbacks while Vundle does its thing
+set rtp+=~/.vim/bundle/Vundle.vim " Set the runtime path to include Vundle
+call vundle#begin()               " Initialize Vundle
 
-" Plugin 'L9' " Example of loading a plugin from http://vim-scripts.org/vim/scripts.html
+" Useful
 Plugin 'gmarik/Vundle.vim'
-Plugin 'https://github.com/vim-scripts/ZoomWin.git'
-Plugin 'https://github.com/scrooloose/nerdtree.git'
-Plugin 'https://github.com/ervandew/supertab.git'
-Plugin 'https://github.com/Shougo/unite.vim.git'
-Plugin 'https://github.com/kchmck/vim-coffee-script.git'
-Plugin 'https://github.com/tpope/vim-commentary.git'
-Plugin 'https://github.com/tpope/vim-cucumber.git'
-Plugin 'https://github.com/elixir-lang/vim-elixir.git'
-Plugin 'https://github.com/tpope/vim-endwise.git'
-Plugin 'https://github.com/dag/vim-fish.git'
-Plugin 'https://github.com/tpope/vim-fugitive.git'
-Plugin 'https://github.com/tpope/vim-haml.git'
-Plugin 'https://github.com/bitc/hdevtools.git'
-Plugin 'https://github.com/pangloss/vim-javascript.git'
-Plugin 'https://github.com/mxw/vim-jsx' " react.js
-Plugin 'https://github.com/tpope/vim-markdown.git'
-Plugin 'https://github.com/bling/vim-airline'
-Plugin 'https://github.com/tpope/vim-repeat.git'
-Plugin 'https://github.com/skwp/vim-rspec.git'
-Plugin 'https://github.com/vim-ruby/vim-ruby.git'
-Plugin 'https://github.com/tpope/vim-surround.git'
-Plugin 'https://github.com/nelstrom/vim-textobj-rubyblock.git'
-Plugin 'https://github.com/kana/vim-textobj-user.git'
-Plugin 'https://github.com/fatih/vim-go.git'
-Plugin 'https://github.com/jdonaldson/vaxe.git'
-Plugin 'https://github.com/wting/rust.vim'
-Plugin 'https://github.com/jneen/ragel.vim'
-Plugin 'https://github.com/chrisbra/csv.vim'
+Plugin 'https://github.com/vim-scripts/ZoomWin.git'            " Best plugin, lets you zoom in and out of windows, but it's mostly broken now :(
+Plugin 'https://github.com/scrooloose/nerdtree.git'            " Tree Display for the file system
+Plugin 'https://github.com/ervandew/supertab.git'              " Mediocre tab completion, still haven't seen anything approach TextMate1
+Plugin 'https://github.com/Shougo/vimproc.vim'                 " Runs tasks Asynchronously, it's a dependency of Unite.vim
+Plugin 'https://github.com/Shougo/unite.vim.git'               " Searches through lists of things (files, buffers, etc)
+Plugin 'https://github.com/tpope/vim-commentary.git'           " Easily comment/uncomment code
+Plugin 'https://github.com/tpope/vim-endwise.git'              " Automatically inserts `end` for you. Convenient, works well, stays out of the way otherwise
+Plugin 'https://github.com/tpope/vim-fugitive.git'             " Git integration... I should learn this better
+Plugin 'https://github.com/bling/vim-airline'                  " Status bar at the bottom of the screen
+Plugin 'https://github.com/tpope/vim-repeat.git'               " Uhm, a dep of something, it lets you repeat non-atomic instructions with the dot. Unfortunately, too minimal, so not easy for me to use (I wish it would take over vim's shitty macro system)
+Plugin 'https://github.com/tpope/vim-surround.git'             " Better support for working with things that 'surround' text such as quotes and parens
+Plugin 'https://github.com/kana/vim-textobj-user.git'          " A dependency of ruby-textobj, helps users make their own text objects
+Plugin 'https://github.com/rking/ag.vim'                       " Searches through your project
 
-" theme options
-Plugin 'https://github.com/mkarmona/colorsbox'
+" Language Support
+Plugin 'https://github.com/vim-ruby/vim-ruby.git'              " Ruby    - Pretty fkn legit (eg it's generally $LOAD_PATH aware, it's got some really awesome text objects)
+Plugin 'https://github.com/nelstrom/vim-textobj-rubyblock.git' " Ruby    - Adds block knowledge, it's kinda flaky, though
+Plugin 'https://github.com/skwp/vim-rspec.git'                 " RSpec   - Uhm, for running specs from within your editor, which I never do
+Plugin 'https://github.com/tpope/vim-cucumber.git'             " Gherkin - Cucumber's DSL (Given / When / Then)
+
+Plugin 'https://github.com/pangloss/vim-javascript.git'        " JavaScript     - The humans have turned this language into something to respect
+Plugin 'https://github.com/kchmck/vim-coffee-script.git'       " CoffeeScript   - Syntactically, this is the language I always want to write, improved a lot of things from JavaScript, which they've largely incorporated in ES6
+Plugin 'https://github.com/mxw/vim-jsx'                        " JSX (React.js) - Lets you write 'html' within your JavaScript
+
+Plugin 'https://github.com/bitc/hdevtools.git'                 " Haskell - This is the language that caused me to realize that choice and time are abstractions
+Plugin 'https://github.com/elixir-lang/vim-elixir.git'         " Elixir  - My brain summarizes it as 'Erlang with Ruby syntax', but that's probably selling it short
+Plugin 'https://github.com/wting/rust.vim'                     " Rust    - Hopefully one day this will replace C
+Plugin 'https://github.com/fatih/vim-go.git'                   " Go      - Forgot why I didn't keep playing with it,
+Plugin 'https://github.com/jdonaldson/vaxe.git'                " Haxe    - Compiles to other languages, mostly used by game devs
+
+Plugin 'https://github.com/tpope/vim-markdown.git'             " Markdown - A plain text format for barely structured documents
+Plugin 'https://github.com/tpope/vim-haml.git'                 " Haml     - A better HTML
+Plugin 'https://github.com/jneen/ragel.vim'                    " Ragel    - State machine / parser language
+Plugin 'https://github.com/chrisbra/csv.vim'                   " CSV      - a few nice features, some obvious ones missing
+Plugin 'https://github.com/dag/vim-fish.git'                   " Fish     - alternate shell
+
+" Colorschemes (syntax highlighting, aka themes)
 Plugin 'https://github.com/morhetz/gruvbox'
+Plugin 'https://github.com/mkarmona/colorsbox'
 Plugin 'https://github.com/w0ng/vim-hybrid'
 Plugin 'https://github.com/vim-scripts/darktango.vim'
 Plugin 'https://github.com/ciaranm/inkpot'
 Plugin 'https://github.com/sickill/vim-monokai'
 Plugin 'https://github.com/gosukiwi/vim-atom-dark'
 
-
 call vundle#end()            " required
-filetype plugin indent on    " required
 
 
-set encoding=utf-8
+" ===== Smallest Viable Configuration =====
+set nocompatible                     " Behave more usefully at the expense of backwards compatibility (this line comes first b/c it alters how the others work)
+set encoding=utf-8                   " Format of the text in our files (prob not necessary, but should prevent weird errors)
+filetype plugin on                   " Load code that configures vim to work better with whatever we're editing
+filetype indent on                   " Load code that lets vim know when to indent our cursor
+syntax on                            " Turn on syntax highlighting
+set backspace=indent,eol,start       " backspace through everything in insert mode
+set expandtab                        " When I press tab, insert spaces instead
+set shiftwidth=2                     " Specifically, insert 2 spaces
+set tabstop=2                        " When displaying tabs already in the file, display them with a width of 2 spaces
 
-"" Configure Plugins
-set laststatus=2                                        " Always show the statusline
+" ===== Instead of backing up files, just reload the buffer when it changes. =====
+" The buffer is an in-memory representation of a file, it's what you edit
+set autoread                         " Auto-reload buffers when file changed on disk
+set nobackup                         " Don't use backup files
+set nowritebackup                    " Don't backup the file while editing
+set noswapfile                       " Don't create swapfiles for new buffers
+set updatecount=0                    " Don't try to write swapfiles after some number of updates
+set backupskip=/tmp/*,/private/tmp/* " Let me edit crontab files
 
-let g:airline#extensions#disable_rtp_load = 1           " don't autoload extensions
-let g:airline_powerline_fonts             = 0           " no fancy separator charactors
-let g:airline_left_sep                    = ''          " no fancy separator on LHS
-let g:airline_right_sep                   = ''          " no fancy separator on RHS
-let g:airline#extensions#branch#enabled   = 0           " don't show git branch
-let g:airline_detect_modified             = 1           " marks when the file has changed
-let g:airline_detect_paste                = 1           " enable paste detection (set paste) ie I'm not typing, I'm pasting, dammit, vim!
-let g:airline_detect_iminsert             = 1           " I have no idea
-let g:airline_inactive_collapse           = 1           " inactive windows should have the left section collapsed to only the filename of that buffer.
-let g:airline_section_y                   = ''          " turn off file encoding
-let g:airline_theme                       = 'bubblegum' " https://github.com/bling/vim-airline/wiki/Screenshots#bubblegum
-" let g:airline_solarized_bg                = 'dark'
-" let g:airline_theme                       = 'solarized'
-" let g:airline_theme                       = 'molokai'
-" let g:airline_theme                       = 'sol'
+" ===== Aesthetics =====
+set t_Co=256                         " Explicitly tell vim that the terminal supports 256 colors (iTerm2 does, )
+set background=dark                  " Tell vim to use colours that works with a dark terminal background (opposite is 'light')
+set nowrap                           " Display long lines as truncated instead of wrapped onto the next line
+set cursorline                       " Colour the line the cursor is on
+set number                           " Show line numbers
+set hlsearch                         " Highlight all search matches that are on the screen
+set showcmd                          " Display info known about the command being edited (eg number of lines highlighted in visual mode)
 
+" ===== Basic behaviour =====
+set scrolloff=4                      " Scroll away from the cursor when I get too close to the edge of the screen
+set incsearch                        " Incremental searching
 
-let g:csv_highlight_column = 'y'
+" ===== Mappings and keybindings =====
+" Note that <Leader> is the backslash by default. You can change it, though, as seen here:
+" https://github.com/bling/minivimrc/blob/43d099cc351424c345da0224da83c73b75bce931/vimrc#L20-L21
 
-runtime macros/matchit.vim  " vim-textobj-rubyblock
+" Replace %/ with directory of current file (eg `:vs %/`)
+  cmap %/ <C-R>=expand("%:p:h")."/"<CR>
+" Replace %% with current file (eg `:vs %%`)
+  cmap %% <C-R>=expand("%")<CR>
+" In visual mode, "." will for each line, go into normal mode and execute the "."
+  vnoremap . :norm.<CR>
+" Paste without being stupid ("*p means to paste on next line (p) from the register (") that represents the clipboard (*))
+  nnoremap <Leader>v :set paste<CR>"*p<CR>:set nopaste<CR>
+" Pry insertion
+  nmap <Leader>p orequire "pry"<CR>binding.pry<ESC>
 
-" open a NERDTree automatically when vim starts up if no files were specified
-autocmd StdinReadPre * let s:std_in=1
-autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
+" ===== Seeing Is Believing =====
+" Assumes you have a Ruby with SiB available in the PATH
+" If it doesn't work, you may need to `gem install seeing_is_believing -v 3.0.0.beta.6`
+" ...yeah, current release is a beta, which won't auto-install
 
-" close vim if NERDTree is the only open buffer
-autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+" Annotate every line
+  nmap <leader>b :%!seeing_is_believing --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk<CR>
+" Annotate marked lines
+  nmap <leader>n :%!seeing_is_believing --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk --xmpfilter-style<CR>
+" Remove annotations
+  nmap <leader>c :%!seeing_is_believing --clean<CR>
+" Mark the current line for annotation
+  nmap <leader>m A # => <Esc>
+" Mark the highlighted lines for annotation
+  vmap <leader>m :norm A # => <Esc>
 
-" Now switch to this custom colorscheme (dark gray)
-colorscheme gruvbox " slightly brighter than 'hybrid' theme
-map <silent><F3> :NEXTCOLOR<cr>
-map <silent><F2> :PREVCOLOR<cr>
+" ===== Window Navigation ======
+" Move to window below me
+  nnoremap <c-j> <c-w>j
+" Move to window above me
+  nnoremap <c-k> <c-w>k
+" Move to window left of me
+  nnoremap <c-h> <c-w>h
+" Move to window right of me
+  nnoremap <c-l> <c-w>l
 
-"" Seeing Is Believing
-nmap <leader>b :%!seeing_is_believing --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk<CR>
-nmap <leader>n :%!seeing_is_believing --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk --xmpfilter-style<CR>
-nmap <leader>c :%!seeing_is_believing --clean<CR>
-nmap <leader>m A # => <Esc>
-vmap <leader>m :norm A # => <Esc>
+" ===== Emacs/Readline Keybindings For Commandline Mode =====
+" http://tiswww.case.edu/php/chet/readline/readline.html#SEC4
+" many of these taken from vimacs http://www.vim.org/scripts/script.php?script_id=300
 
-"" Use "." to repeat the macro in "q" (uses repeat.vim)
-nmap <Plug>RunRegq @q<CR>
-nmap <Leader>q :call repeat#set("\<Plug>RunRegq")<CR>
+" Navigation
+  " Beginning of line
+  cnoremap <C-a> <Home>
+  " End of line
+  cnoremap <C-e> <End>
+  " Right 1 character
+  cnoremap <C-f> <Right>
+  " Left 1 character
+  cnoremap <C-b> <Left>
+  " Left 1 word
+  cnoremap <M-b> <S-Left>
+  " Right 1 word
+  cnoremap <M-f> <S-Right>
 
-"" Basic editor behaviour
-filetype plugin indent on       " load file type plugins + indentation
-syntax on                   " highlighting and shit
-set cursorline                  " colours the line the cursor is on
-set scrolloff=4                 " adds top/bottom buffer between cursor and window
-set number                      " line numbers
-set showcmd                     " display incomplete commands
-set autoread                    " Auto-reload buffers when file changed on disk
-set background=dark             " Tell vim the theme is dark (so it picks smarter colour defaults)
+" Editing
+  " Previous command
+  cnoremap <M-p> <Up>
+  " Next command (after you've gone to previous)
+  cnoremap <M-n> <Down>
+  " Cut to end of line
+  cnoremap <C-k> <C-f>d$<C-c><End>
+  " Paste
+  cnoremap <C-y> <C-r><C-o>"
+  " Delete character to the right
+  cnoremap <C-d> <Right><C-h>
 
-"" Whitespace
+" =====  Profiling  =====
+" Taken from https://github.com/bling/minivimrc I haven't tried them yet
+nnoremap <silent> <leader>DD :exe ":profile start profile.log"<cr>:exe ":profile func *"<cr>:exe ":profile file *"<cr>
+nnoremap <silent> <leader>DP :exe ":profile pause"<cr>
+nnoremap <silent> <leader>DC :exe ":profile continue"<cr>
+nnoremap <silent> <leader>DQ :exe ":profile pause"<cr>:noautocmd qall!<cr>
+
+"" ===== Whitespace =====
 function! <SID>StripTrailingWhitespaces()
   " Preparation: save last search, and cursor position.
   let _s=@/
@@ -129,76 +186,70 @@ function! <SID>StripTrailingWhitespaces()
 endfunction
 
 autocmd BufWritePre * :call <SID>StripTrailingWhitespaces()  " strip trailing whitespace on save
-set nowrap                                                   " don't wrap lines
-set tabstop=2 shiftwidth=2                                   " a tab is two spaces (or set this to 4)
-set expandtab                                                " use spaces, not tabs (optional)
-set backspace=indent,eol,start                               " backspace through everything in insert mode
 
-"" Searching
-set hlsearch  " highlight matches
-set incsearch " incremental searching
-
-"" Omg, vim, Imma edit the same file multiple times, okay? fkn deal with it
-set nobackup                             " no backup files
-set nowritebackup                        " don't backup file while editing
-set noswapfile                           " don't create swapfiles for new buffers
-set updatecount=0                        " Don't try to write swapfiles after some number of updates
-set backupskip=/tmp/*,/private/tmp/*    " can edit crontab files
-
-"" Convenience
-nmap <Leader>p orequire "pry"<CR>binding.pry<ESC>;        " pry insertion
-vnoremap . :norm.<CR>;                                    " in visual mode, "." will for each line, go into normal mode and execute the "."
-nnoremap <Leader>w :w!<CR>;                               " Fuck you x1million, vim (http://stackoverflow.com/questions/26070153/vim-wont-write-file-without-a-sometimes-e13)
-nnoremap <Leader>v :set paste<CR>"*p<CR>:set nopaste<CR>; " paste without being stupid ("*p means to paste on next line (p) from the register (") that represents the clipboard (*))
-
-" replaces %/ with current directory, and %% with current file
-cmap %/ <C-R>=expand("%:p:h")."/"<CR>
-cmap %% <C-R>=expand("%")<CR>
-
-"" easier navigation between split windows
-nnoremap <c-j> <c-w>j
-nnoremap <c-k> <c-w>k
-nnoremap <c-h> <c-w>h
-nnoremap <c-l> <c-w>l
-
-"" Emacs/Readline keybindings for commandline mode
-"  http://tiswww.case.edu/php/chet/readline/readline.html#SEC4
-"  many of these taken from vimacs http://www.vim.org/scripts/script.php?script_id=300
-" navigation
-cnoremap <C-a> <Home>
-cnoremap <C-e> <End>
-cnoremap <C-f> <Right>
-cnoremap <C-b> <Left>
-cnoremap <Esc>b <S-Left> " commenting out b/c makes it pause
-cnoremap <Esc>f <S-Right>
-cnoremap <M-b> <S-Left>
-cnoremap <M-f> <S-Right>
-" editing
-cnoremap <M-p> <Up>
-cnoremap <M-n> <Down>
-cnoremap <C-k> <C-f>d$<C-c><End>
-cnoremap <C-y> <C-r><C-o>"
-cnoremap <C-d> <Right><C-h>
-
-"" filetypes
+" ===== Filetypes =====
 au BufRead,BufNewFile *.elm setfiletype haskell
 au BufRead,BufNewFile *.sublime-* setfiletype javascript " .sublime-{settings,keymap,menu,commands}
 au BufRead,BufNewFile *.sublime-snippet setfiletype html
 au BufRead,BufNewFile *.rl setfiletype ragel
 
-" Profiling, taken from https://github.com/bling/minivimrc
-nnoremap <silent> <leader>DD :exe ":profile start profile.log"<cr>:exe ":profile func *"<cr>:exe ":profile file *"<cr>
-nnoremap <silent> <leader>DP :exe ":profile pause"<cr>
-nnoremap <silent> <leader>DC :exe ":profile continue"<cr>
-nnoremap <silent> <leader>DQ :exe ":profile pause"<cr>:noautocmd qall!<cr>
+
+
+" ==========================================================================================================
+"                                         Configure Plugins
+" ==========================================================================================================
+
+
+" ===== Airline =====
+set laststatus=2                                        " Always show the statusline
+let g:airline#extensions#disable_rtp_load = 1           " don't autoload extensions
+let g:airline_powerline_fonts             = 0           " no fancy separator charactors
+let g:airline_left_sep                    = ''          " no fancy separator on LHS
+let g:airline_right_sep                   = ''          " no fancy separator on RHS
+let g:airline#extensions#branch#enabled   = 0           " don't show git branch
+let g:airline_detect_modified             = 1           " marks when the file has changed
+let g:airline_detect_paste                = 1           " enable paste detection (set paste) ie I'm not typing, I'm pasting, dammit, vim!
+let g:airline_detect_iminsert             = 1           " I have no idea
+let g:airline_inactive_collapse           = 1           " inactive windows should have the left section collapsed to only the filename of that buffer.
+let g:airline_section_y                   = ''          " turn off file encoding
+let g:airline_theme                       = 'bubblegum' " https://github.com/bling/vim-airline/wiki/Screenshots#bubblegum
+
+
+" ===== CSV =====
+let g:csv_highlight_column = 'y'
+
+
+" ===== vim-textobj-rubyblock =====
+" Not sure what it does
+runtime macros/matchit.vim
+
+
+" ===== NERDTree =====
+
+" Open a NERDTree automatically when vim starts up if no files were specified
+autocmd StdinReadPre * let s:std_in=1
+autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
+
+" Close vim if NERDTree is the only open buffer
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+
+
+" ===== Gruvbox for the Colorscheme =====
+" Now switch to this custom colorscheme (dark gray)
+colorscheme gruvbox " slightly brighter than 'hybrid' theme
+map <silent><F3> :NEXTCOLOR<cr>
+map <silent><F2> :PREVCOLOR<cr>
+
+" ===== Repeat.vim =====
+" Use "." to repeat the macro in "q"
+" Really, wish I could just use q to start/stop a macro, and then have the
+" last macro recorded or run be auto-loaded for repeat
+nmap <Plug>RunRegq @q<CR>:call repeat#set("\<Plug>RunRegq")<CR>
+nmap <Leader>q :call repeat#set("\<Plug>RunRegq")<CR>
 
 "" Maybe worth checking out
-" Profiling plugins
-"   https://github.com/bling/minivimrc/blob/43d099cc351424c345da0224da83c73b75bce931/vimrc#L30
 " Ctrl-P
 "   https://github.com/kien/ctrlp.vim
-" Unite.vim
-"   https://github.com/Shougo/unite.vim
 " Vim airline integrations
 "   https://github.com/bling/vim-airline
 "   vim-bufferline, fugitive, unite, ctrlp, minibufexpl, gundo, undotree, nerdtree, tagbar, vim-gitgutter, vim-signify, syntastic, eclim, lawrencium, virtualenv, tmuxline.
