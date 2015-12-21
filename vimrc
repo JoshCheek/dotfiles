@@ -13,7 +13,6 @@ call vundle#begin()               " Initialize Vundle
 
 " Useful
 Plugin 'https://github.com/gmarik/Vundle.vim'              " Let Vundle manage itself
-Plugin 'https://github.com/vim-scripts/ZoomWin'            " Best plugin, lets you zoom in and out of windows, but it's mostly broken now :(
 Plugin 'https://github.com/scrooloose/nerdtree'            " Tree Display for the file system
 Plugin 'https://github.com/ervandew/supertab'              " Mediocre tab completion, still haven't seen anything approach TextMate1
 Plugin 'https://github.com/Shougo/vimproc.vim'             " Runs tasks Asynchronously, it's a dependency of Unite.vim
@@ -24,13 +23,10 @@ Plugin 'https://github.com/tpope/vim-fugitive'             " Git integration... 
 Plugin 'https://github.com/bling/vim-airline'              " Status bar at the bottom of the screen
 Plugin 'https://github.com/tpope/vim-repeat'               " Uhm, a dep of something, it lets you repeat non-atomic instructions with the dot. Unfortunately, too minimal, so not easy for me to use (I wish it would take over vim's shitty macro system)
 Plugin 'https://github.com/tpope/vim-surround'             " Better support for working with things that 'surround' text such as quotes and parens
-Plugin 'https://github.com/kana/vim-textobj-user'          " A dependency of ruby-textobj, helps users make their own text objects
 Plugin 'https://github.com/rking/ag.vim'                   " Searches through your project
 
 " Language Support
 Plugin 'https://github.com/vim-ruby/vim-ruby'              " Ruby    - Pretty fkn legit (eg it's generally $LOAD_PATH aware, it's got some really awesome text objects)
-Plugin 'https://github.com/nelstrom/vim-textobj-rubyblock' " Ruby    - Adds block knowledge, it's kinda flaky, though
-Plugin 'https://github.com/skwp/vim-rspec'                 " RSpec   - Uhm, for running specs from within your editor, which I never do
 Plugin 'https://github.com/tpope/vim-cucumber'             " Gherkin - Cucumber's DSL (Given / When / Then)
 
 Plugin 'https://github.com/pangloss/vim-javascript'        " JavaScript     - The humans have turned this language into something to respect
