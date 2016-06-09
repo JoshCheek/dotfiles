@@ -1,8 +1,10 @@
 # various paths
-set --export PATH $HOME/bin          \
-                  /usr/local/bin     \
-                  $PATH              \
-                  $HOME/.cabal/bin
+set --export PATH $HOME/bin /usr/local/bin $PATH $HOME/.cabal/bin $HOME/anaconda3/bin
+
+# for golang
+set --export GOPATH "$HOME/golang"
+set --export PATH   $PATH "$GOPATH/bin"
+set --export PKG_CONFIG_PATH  "/usr/lib/pkgconfig"
 
 # Rails cucumber integration looks for this env var to decide how to display output
 set --export CUCUMBER_FORMAT pretty
@@ -16,7 +18,9 @@ end
 
 # Load ruby. Interface is less helpful than rbenv
 # but Brixen says it works with rbx in ways that rbenv's assumptions won't let it
-source /usr/local/share/chruby/chruby.fish
+if test -e /usr/local/share/chruby/chruby.fish
+  source   /usr/local/share/chruby/chruby.fish
+end
 
 # Don't print a greeting when I start the shell
 set --erase fish_greeting
@@ -29,3 +33,8 @@ end
 # Have `tree` colour directories yellowish
 # this shit is so badly documented and inconsistent
 set --export LS_COLORS 'di=33'
+
+
+# Provide metadata to iTerm2 so that it can provide useful features
+# http://iterm2.com/documentation-shell-integration.html
+source ~/code/dotfiles/fish/iterm2_shell_integration.fish
