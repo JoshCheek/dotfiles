@@ -1,3 +1,5 @@
+# Taken from: https://iterm2.com/misc/fish_startup.in
+
 if begin; status --is-interactive; and not functions -q -- iterm2_status; and [ "$TERM" != screen ]; end
   function iterm2_status
     printf "\033]133;D;%s\007" $argv
