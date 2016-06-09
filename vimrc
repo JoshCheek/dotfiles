@@ -12,38 +12,40 @@ set rtp+=~/.vim/bundle/Vundle.vim " Set the runtime path to include Vundle
 call vundle#begin()               " Initialize Vundle
 
 " Useful
-Plugin 'https://github.com/gmarik/Vundle.vim'              " Let Vundle manage itself
-Plugin 'https://github.com/scrooloose/nerdtree'            " Tree Display for the file system
-Plugin 'https://github.com/ervandew/supertab'              " Mediocre tab completion, still haven't seen anything approach TextMate1
-Plugin 'https://github.com/Shougo/vimproc.vim'             " Runs tasks Asynchronously, it's a dependency of Unite.vim
-Plugin 'https://github.com/Shougo/unite.vim'               " Searches through lists of things (files, buffers, etc)
-Plugin 'https://github.com/tpope/vim-commentary'           " Easily comment/uncomment code
-Plugin 'https://github.com/tpope/vim-endwise'              " Automatically inserts `end` for you. Convenient, works well, stays out of the way otherwise
-Plugin 'https://github.com/tpope/vim-fugitive'             " Git integration... I should learn this better
-Plugin 'https://github.com/bling/vim-airline'              " Status bar at the bottom of the screen
-Plugin 'https://github.com/tpope/vim-repeat'               " Uhm, a dep of something, it lets you repeat non-atomic instructions with the dot. Unfortunately, too minimal, so not easy for me to use (I wish it would take over vim's shitty macro system)
-Plugin 'https://github.com/tpope/vim-surround'             " Better support for working with things that 'surround' text such as quotes and parens
-Plugin 'https://github.com/rking/ag.vim'                   " Searches through your project
+Plugin 'https://github.com/gmarik/Vundle.vim'               " Let Vundle manage itself
+Plugin 'https://github.com/scrooloose/nerdtree'             " Tree Display for the file system
+Plugin 'https://github.com/ervandew/supertab'               " Mediocre tab completion, still haven't seen anything approach TextMate1
+Plugin 'https://github.com/Shougo/vimproc.vim'              " Runs tasks Asynchronously, it's a dependency of Unite.vim
+Plugin 'https://github.com/Shougo/unite.vim'                " Searches through lists of things (files, buffers, etc)
+Plugin 'https://github.com/tpope/vim-commentary'            " Easily comment/uncomment code
+Plugin 'https://github.com/tpope/vim-endwise'               " Automatically inserts `end` for you. Convenient, works well, stays out of the way otherwise
+Plugin 'https://github.com/tpope/vim-fugitive'              " Git integration... I should learn this better
+Plugin 'https://github.com/bling/vim-airline'               " Status bar at the bottom of the screen
+Plugin 'https://github.com/tpope/vim-repeat'                " Uhm, a dep of something, it lets you repeat non-atomic instructions with the dot. Unfortunately, too minimal, so not easy for me to use (I wish it would take over vim's shitty macro system)
+Plugin 'https://github.com/tpope/vim-surround'              " Better support for working with things that 'surround' text such as quotes and parens
+Plugin 'https://github.com/rking/ag.vim'                    " Searches through your project
+Plugin 'https://github.com/majutsushi/tagbar'               " Ctag browser
 
 " Language Support
-Plugin 'https://github.com/vim-ruby/vim-ruby'              " Ruby    - Pretty fkn legit (eg it's generally $LOAD_PATH aware, it's got some really awesome text objects)
-Plugin 'https://github.com/tpope/vim-cucumber'             " Gherkin - Cucumber's DSL (Given / When / Then)
+Plugin 'https://github.com/vim-ruby/vim-ruby'               " Ruby    - Pretty fkn legit (eg it's generally $LOAD_PATH aware, it's got some really awesome text objects)
+Plugin 'https://github.com/tpope/vim-cucumber'              " Gherkin - Cucumber's DSL (Given / When / Then)
 
-Plugin 'https://github.com/pangloss/vim-javascript'        " JavaScript     - The humans have turned this language into something to respect
-Plugin 'https://github.com/kchmck/vim-coffee-script'       " CoffeeScript   - Syntactically, this is the language I always want to write, improved a lot of things from JavaScript, which they've largely incorporated in ES6
-Plugin 'https://github.com/mxw/vim-jsx'                    " JSX (React.js) - Lets you write 'html' within your JavaScript
+Plugin 'https://github.com/pangloss/vim-javascript'         " JavaScript     - The humans have turned this language into something to respect
+Plugin 'https://github.com/kchmck/vim-coffee-script'        " CoffeeScript   - Syntactically, this is the language I always want to write, improved a lot of things from JavaScript, which they've largely incorporated in ES6
+Plugin 'https://github.com/mxw/vim-jsx'                     " JSX (React.js) - Lets you write 'html' within your JavaScript
 
-Plugin 'https://github.com/bitc/hdevtools'                 " Haskell - This is the language that caused me to realize that choice and time are abstractions
-Plugin 'https://github.com/elixir-lang/vim-elixir'         " Elixir  - My brain summarizes it as 'Erlang with Ruby syntax', but that's probably selling it short
-Plugin 'https://github.com/wting/rust.vim'                 " Rust    - Hopefully one day this will replace C
-Plugin 'https://github.com/fatih/vim-go'                   " Go      - Forgot why I didn't keep playing with it,
-Plugin 'https://github.com/jdonaldson/vaxe'                " Haxe    - Compiles to other languages, mostly used by game devs
+Plugin 'https://github.com/bitc/hdevtools'                  " Haskell - This is the language that caused me to realize that choice and time are abstractions
+Plugin 'https://github.com/lambdatoast/elm.vim'             " Elm     - Haskell in the browser (a super approachable functional language)
+Plugin 'https://github.com/elixir-lang/vim-elixir'          " Elixir  - My brain summarizes it as 'Erlang with Ruby syntax', but that's probably selling it short
+Plugin 'https://github.com/wting/rust.vim'                  " Rust    - Hopefully one day this will replace C
+Plugin 'https://github.com/fatih/vim-go'                    " Go      - Forgot why I didn't keep playing with it,
+Plugin 'https://github.com/jdonaldson/vaxe'                 " Haxe    - Compiles to other languages, mostly used by game devs
 
-Plugin 'https://github.com/tpope/vim-markdown'             " Markdown - A plain text format for barely structured documents
-Plugin 'https://github.com/tpope/vim-haml'                 " Haml     - A better HTML
-Plugin 'https://github.com/jneen/ragel.vim'                " Ragel    - State machine / parser language
-Plugin 'https://github.com/chrisbra/csv.vim'               " CSV      - a few nice features, some obvious ones missing
-Plugin 'https://github.com/dag/vim-fish'                   " Fish     - alternate shell
+Plugin 'https://github.com/tpope/vim-markdown'              " Markdown - A plain text format for barely structured documents
+Plugin 'https://github.com/tpope/vim-haml'                  " Haml     - A better HTML
+Plugin 'https://github.com/jneen/ragel.vim'                 " Ragel    - State machine / parser language
+Plugin 'https://github.com/chrisbra/csv.vim'                " CSV      - a few nice features, some obvious ones missing
+Plugin 'https://github.com/dag/vim-fish'                    " Fish     - alternate shell
 
 " Colorschemes (syntax highlighting, aka themes)
 Plugin 'https://github.com/morhetz/gruvbox'
@@ -111,11 +113,11 @@ set incsearch                        " Incremental searching
 " ...yeah, current release is a beta, which won't auto-install
 
 " Annotate every line
-  nmap <leader>b :%!seeing_is_believing --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk<CR>
+  nmap <leader>b :%!seeing_is_believing --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk<CR>;
 " Annotate marked lines
-  nmap <leader>n :%!seeing_is_believing --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk --xmpfilter-style<CR>
+  nmap <leader>n :%.!seeing_is_believing --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk --xmpfilter-style<CR>;
 " Remove annotations
-  nmap <leader>c :%!seeing_is_believing --clean<CR>
+  nmap <leader>c :%.!seeing_is_believing --clean<CR>;
 " Mark the current line for annotation
   nmap <leader>m A # => <Esc>
 " Mark the highlighted lines for annotation
@@ -130,6 +132,20 @@ set incsearch                        " Incremental searching
   nnoremap <c-h> <c-w>h
 " Move to window right of me
   nnoremap <c-l> <c-w>l
+
+" left / shift-left decreases width
+  nmap <Left>    :wincmd <<CR>
+  nmap <S-Left>  :5wincmd <<CR>
+" right / shift-left increases width
+  nmap <Right>   :wincmd ><CR>
+  nmap <S-Right> :5wincmd ><CR>
+" up / shift-left increases height
+  nmap <Up>      :wincmd +<CR>
+  nmap <S-Up>    :5wincmd +<CR>
+" down / shift-left decreases height
+  nmap <Down>    :wincmd -<CR>
+  nmap <S-Down>  :5wincmd -<CR>
+
 
 " ===== Emacs/Readline Keybindings For Commandline Mode =====
 " http://tiswww.case.edu/php/chet/readline/readline.html#SEC4
@@ -184,10 +200,11 @@ endfunction
 autocmd BufWritePre * :call <SID>StripTrailingWhitespaces()  " strip trailing whitespace on save
 
 " ===== Filetypes =====
-au BufRead,BufNewFile *.elm setfiletype haskell
 au BufRead,BufNewFile *.sublime-* setfiletype javascript " .sublime-{settings,keymap,menu,commands}
 au BufRead,BufNewFile *.sublime-snippet setfiletype html
+au BufRead,BufNewFile *.ipynb setfiletype json
 au BufRead,BufNewFile *.rl setfiletype ragel
+au BufRead,BufNewFile *.es6 setfiletype javascript.jsx
 
 
 
@@ -229,12 +246,20 @@ autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
 " Close vim if NERDTree is the only open buffer
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 
+nmap <C-N> :NERDTreeToggle<CR>
+
 
 " ===== Gruvbox for the Colorscheme =====
 " Now switch to this custom colorscheme (dark gray)
-colorscheme gruvbox " slightly brighter than 'hybrid' theme
+" 'gruvbox', 'hybrid', and 'solarized' dark theme are my favs
+" can't use solarized, though, b/c it throws students off since there's not a
+" super obvious visual transition between my shell and my editor.
+"
+" So, choosing between gruvbox and hybrid. gruvbox has less contrat, hybrid is darker
+colorscheme hybrid
 map <silent><F3> :NEXTCOLOR<cr>
 map <silent><F2> :PREVCOLOR<cr>
+
 
 " ===== Repeat.vim =====
 " Use "." to repeat the macro in "q"
@@ -242,6 +267,9 @@ map <silent><F2> :PREVCOLOR<cr>
 " last macro recorded or run be auto-loaded for repeat
 nmap <Plug>RunRegq @q<CR>:call repeat#set("\<Plug>RunRegq")<CR>
 nmap <Leader>q :call repeat#set("\<Plug>RunRegq")<CR>
+
+
+
 
 "" Maybe worth checking out
 " Ctrl-P
@@ -251,6 +279,14 @@ nmap <Leader>q :call repeat#set("\<Plug>RunRegq")<CR>
 "   vim-bufferline, fugitive, unite, ctrlp, minibufexpl, gundo, undotree, nerdtree, tagbar, vim-gitgutter, vim-signify, syntastic, eclim, lawrencium, virtualenv, tmuxline.
 " marks
 "   http://vim.wikia.com/wiki/Using_marks
+" sneak
+"   https://github.com/justinmk/vim-sneak
+" file nav
+"   https://github.com/Shougo/vimfiler.vim
+" Unite
+"   https://github.com/Shougo/unite.vim
+"   http://bling.github.io/blog/2013/06/02/unite-dot-vim-the-plugin-you-didnt-know-you-need/
+"   http://www.codeography.com/2013/06/17/replacing-all-the-things-with-unite-vim.html
 " vim tree indentation
 "   http://vim.wikia.com/wiki/Using_Vim_as_an_outline_processor
 "   http://www.vim.org/scripts/script.php?script_id=1266
