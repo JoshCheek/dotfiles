@@ -38,4 +38,4 @@ set --export LS_COLORS 'di=33'
 # Provide metadata to iTerm2 so that it can provide useful features
 # Documentation: http://iterm2.com/documentation-shell-integration.html
 # Original src:  https://iterm2.com/misc/fish_startup.in
-source ~/code/dotfiles/fish/iterm2_shell_integration.fish
+source ~/.config/fish/iterm2_shell_integration.fish
