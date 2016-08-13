@@ -30606,8 +30606,10 @@
 	<false/>
 	<key>NSColorPanelMode</key>
 	<string>7</string>
+	<key>NSFontPanelAttributes</key>
+	<string>1, 4</string>
 	<key>NSNavLastRootDirectory</key>
-	<string>~/Desktop</string>
+	<string>~</string>
 	<key>NSQuotedKeystrokeBinding</key>
 	<string></string>
 	<key>NSRepeatCountBinding</key>
@@ -30616,12 +30618,16 @@
 	<false/>
 	<key>NSWindow Frame NSColorPanel</key>
 	<string>307 274 214 309 0 0 1440 878 </string>
+	<key>NSWindow Frame NSFontPanel</key>
+	<string>713 247 445 270 0 0 1440 878 </string>
 	<key>NSWindow Frame Preferences</key>
-	<string>286 198 924 485 0 0 1440 878 </string>
+	<string>68 309 924 485 0 0 1440 878 </string>
 	<key>NSWindow Frame SUStatusFrame</key>
 	<string>530 561 384 129 0 0 1440 878 </string>
+	<key>NSWindow Frame UKCrashReporter</key>
+	<string>99 294 592 584 0 0 1440 878 </string>
 	<key>NSWindow Frame iTerm Window 0</key>
-	<string>0 0 1440 900 0 0 1440 878 </string>
+	<string>6 0 1432 877 0 0 1440 877 </string>
 	<key>NSWindow Frame iTerm Window 1</key>
 	<string>0 0 1440 878 0 0 1440 878 </string>
 	<key>NSWindow Frame iTerm Window 10</key>
@@ -30645,7 +30651,7 @@
 	<key>NSWindow Frame iTerm Window 19</key>
 	<string>0 0 1440 878 0 0 1440 878 </string>
 	<key>NSWindow Frame iTerm Window 2</key>
-	<string>0 0 1440 878 0 0 1440 878 </string>
+	<string>-5 0 1440 878 0 0 1440 878 </string>
 	<key>NSWindow Frame iTerm Window 20</key>
 	<string>4 425 585 451 0 0 1440 878 </string>
 	<key>NSWindow Frame iTerm Window 21</key>
@@ -30663,13 +30669,13 @@
 	<key>NSWindow Frame iTerm Window 4</key>
 	<string>0 0 1440 878 0 0 1440 878 </string>
 	<key>NSWindow Frame iTerm Window 5</key>
-	<string>0 0 1440 878 0 0 1440 878 </string>
+	<string>4 170 865 706 0 0 1440 878 </string>
 	<key>NSWindow Frame iTerm Window 6</key>
 	<string>0 0 1440 878 0 0 1440 878 </string>
 	<key>NSWindow Frame iTerm Window 7</key>
 	<string>0 2 1439 876 0 0 1440 878 </string>
 	<key>NSWindow Frame iTerm Window 8</key>
-	<string>4 0 1436 878 0 0 1440 878 </string>
+	<string>0 13 1920 851 0 0 1440 878 </string>
 	<key>NSWindow Frame iTerm Window 9</key>
 	<string>0 0 1440 878 0 0 1440 878 </string>
 	<key>New Bookmarks</key>
@@ -31423,10 +31429,12 @@
 			<string>/Users/josh</string>
 		</dict>
 	</array>
+	<key>NoSyncHaveShownPromoWithId_4</key>
+	<true/>
 	<key>NoSyncTimeOfLastPromo</key>
-	<real>454951756.18346202</real>
+	<real>477586856.68444902</real>
 	<key>NoSyncTimeOfLastPromoDownload</key>
-	<real>464115293.38917798</real>
+	<real>486394491.77155399</real>
 	<key>OnlyWhenMoreTabs</key>
 	<true/>
 	<key>OpenArrangementAtStartup</key>
@@ -31491,11 +31499,11 @@
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
 	<key>SUFeedURL</key>
-	<string>http://iterm2.com/appcasts/testing.xml</string>
+	<string>https://iterm2.com/appcasts/testing.xml</string>
 	<key>SUHasLaunchedBefore</key>
 	<true/>
 	<key>SULastCheckTime</key>
-	<date>2015-09-17T13:43:36Z</date>
+	<date>2016-06-01T01:39:44Z</date>
 	<key>SavePasteHistory</key>
 	<false/>
 	<key>ShowBookmarkName</key>
@@ -31520,6 +31528,8 @@
 	<integer>10</integer>
 	<key>TripleClickSelectsFullWrappedLines</key>
 	<false/>
+	<key>UKCrashReporterLastCrashReportDate</key>
+	<real>1445810304</real>
 	<key>URLHandlersByGuid</key>
 	<dict/>
 	<key>UseBorder</key>
@@ -31531,7 +31541,7 @@
 	<key>WebKitDefaultFontSize</key>
 	<integer>11</integer>
 	<key>WebKitStandardFont</key>
-	<string>.Lucida Grande UI</string>
+	<string>.AppleSystemUIFont</string>
 	<key>WindowNumber</key>
 	<false/>
 	<key>WindowStyle</key>
@@ -31543,6 +31553,6 @@
 	<key>findRegex_iTerm</key>
 	<false/>
 	<key>iTerm Version</key>
-	<string>2.1.1</string>
+	<string>2.1.4</string>
 </dict>
 </plist>
