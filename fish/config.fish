@@ -1,5 +1,5 @@
 # various paths
-set --export PATH $HOME/bin /usr/local/bin $PATH $HOME/.cabal/bin $HOME/anaconda3/bin
+set --export PATH $HOME/bin /usr/local/bin /usr/local/sbin $PATH $HOME/.cabal/bin $HOME/anaconda3/bin
 
 # for golang
 set --export GOPATH "$HOME/golang"
