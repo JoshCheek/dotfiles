@@ -1,5 +1,12 @@
 # Add multi-dimensional inspection?
 # Format output when it gets too long?
+#
+# Bugs (this isn't tested, it's fragile and probably shouldn't be refactored for the sake of the program)
+#   🐠  inspect ''
+#   ['\n']
+#
+#   🐠  function a -a x; inspect $x; end; and a
+#   ['true']
 
 function inspect -d "Human readable representation of arguments"
   # default to coloured output if stdout is a shell
