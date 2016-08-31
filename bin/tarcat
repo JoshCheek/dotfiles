@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+set -e
+set -o pipefail
+
+# Default action (idk if this is the right thing to do, maybe use default if no args are provided, and in that case, use some heuristic, like number of files, to decide whether to list or cat)
+action=catFiles
+
+# If argv == ["-h"], assume the user wants a help screen
+# otherwise -h means to print headers
+if [[ 1 == "${#@}" && "-h" == "$1" ]]; then
+  action=printHelp
+fi
+
+# Print headers: defaults to true if we are in a shell
+printHeaders=false
+if [[ -t 1 ]]; then
+  printHeaders=true
+fi
+
+# Parse the args
+nonflags=()
+for arg in "$@"; do
+  case "$arg" in
+  --help)                              action=printHelp;;
+  -l) ;& --list)                       action=listFiles;;
+  -h) ;& --headers)    ;& --header)    printHeaders=true;;
+  -H) ;& --no-headers) ;& --no-header) printHeaders=false;;
+  *)                                   nonflags+=("$arg");;
+  esac
+done
+
+# Print help
+if [[ $action == printHelp ]]; then
+  echo "usage: $0 path-to-archive [filters] [flags]"
+  echo
+  echo "  Filters:"
+  echo "    regular expressions to match against the tar contents"
+  echo
+  echo "  Flags:"
+  echo "    --help             Print this screen"
+  echo "    -l, --list         List the files that would be printed"
+  echo "    -h, --headers      Print headers (filenames) for each printed file"
+  echo "    -H, --no-headers   Do not print headers"
+  exit 0
+fi
+
+# Must have provided an archive
+if [[ 0 == "${#nonflags[@]}" ]]; then
+  echo "No archive was provided" 1>&2
+  exit 1
+fi
+
+# The first nonflag is the archive path
+archivePath="${nonflags[0]}"
+
+# The rest of the nonflags are filters
+filters=()
+filters+=("${nonflags[@]:1}")
+
+# The archive should be a a regular file
+if [[ ! -f $archivePath ]]; then
+  printf "Not a file: %q\n" "$archivePath" 2>&1
+  exit 1
+fi
+
+# Filter the archive's files
+sedArgs=(-E)
+for filter in "${filters[@]-()}"; do
+  sedArgs+=(-e "/${filter}/!d")
+done
+files=`tar -tOf "$archivePath" 2>&1 | sed "${sedArgs[@]}"`
+
+# List the files
+if [[ $action = listFiles ]]; then
+  echo "$files"
+  exit 0
+fi
+
+# Cat the files
+if [[ $action = catFiles ]]; then
+  echo "$files" | while read file; do
+    # maybe print the header
+    if [[ $printHeaders = true ]]; then
+      printf -- "-----  %q  -----\n" "$file"
+    fi
+
+    # cat the file
+    tar -f "$archivePath" -xO "$file"
+  done
+  exit 0
+fi
+
+echo "BUG: unknown action: $action" 2>&1
