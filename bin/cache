@@ -1,0 +1,133 @@
+#!/usr/bin/env ruby
+
+# Command line options
+options = {
+  help:     {flags: %w[-h --help], value: false, desc: 'This help screen'},
+  clear:    {flags: %w[--clear],   value: false, desc: 'Clear the cached results'},
+  force:    {flags: %w[--force],   value: false, desc: 'Run the command even if it has a cached result'},
+  list:     {flags: %w[--list],    value: false, desc: 'List the contents of the cache'},
+  replay:   {flags: %w[--replay],  value: false, desc: 'Replay the last run cached value'},
+  print:    {flags: %w[--print],   value: false, desc: 'Print the last run cached value'},
+  dir:      {value: "/tmp/commandline-cache"}
+}
+options[:dir][:pattern] = File.join(options[:dir][:value], '*')
+options[:help][:screen] = <<HELP_SCREEN
+Usage: cache [opts] program [program-args]
+
+Given an expensive, but deterministic program that is invoked like this:
+   $ ruby -e '3.times { |i| sleep 1; puts i }'
+
+You can run:
+   $ cache ruby -e '3.times { |i| sleep 1; puts i }'
+
+Which will run the program the first time, then reuse its results:
+
+   $ time cache ruby -e '3.times { |i| sleep 1; puts i }'
+   0
+   1
+   2
+      3.17 real         0.12 user         0.03 sys
+
+   $ time cache ruby -e '3.times { |i| sleep 1; puts i }'
+   0
+   1
+   2
+      0.12 real         0.09 user         0.02 sys
+
+Options:
+HELP_SCREEN
+options.each do |name, option|
+  next unless option[:flags]
+  line = sprintf "  %-15s %s\n", option[:flags].join(", "), option[:desc]
+  options[:help][:screen] << line
+end
+
+
+require 'json'
+def self.load_file(path)
+  return nil unless File.exist? path
+  JSON.parse File.read(path), symbolize_names: true
+end
+
+require 'open3'
+def self.run(command)
+  stdout, stderr, status = Open3.capture3 *command
+  { :command => command,
+    :time    => Time.now.to_i,
+    :stdout  => stdout,
+    :stderr  => stderr,
+    :status  => status.exitstatus,
+  }
+end
+
+def self.write_cache(path, invocation)
+  File.write path, JSON.dump(invocation)
+  invocation
+end
+
+require 'digest'
+def self.filename_for(command)
+  # We hash the command to get a string that is highly probable to be unique (good enough for git, right?)
+  # We choose #hexdigest over #digest, and #base64digest because they all generate the same data, they just represent it differently:
+  #   #digest         returns a string with binary data in it
+  #   #hexdigest      translates the binary to equivalent hex values so all chars are in the range 0-F
+  #   #base64digest   base64 encodes the binary, which is shorter, but can lead to invalid filenames (eg a filename with a slash in it)
+  Digest::SHA1.hexdigest(command.inspect)
+end
+
+
+# Take our args out of ARGV
+loop do
+  arg = ARGV.first
+  _, option = options.find do |name, option|
+    flags = option.fetch(:flags, [])
+    flags.include? arg
+  end
+  break unless option
+  option[:value] = true
+  ARGV.shift
+end
+
+# Normalize the state of the world so that we can always assume a temp dir
+require 'fileutils'
+tempdir = options.fetch(:dir).fetch(:value)
+FileUtils.mkdir_p tempdir
+
+if options.fetch(:replay).fetch(:value)
+  # But a replay implies we should use the last run command
+  stdout, * = Open3.capture3('ls', '-t', tempdir).first
+  filepath = File.join tempdir, stdout.lines.first.chomp
+  # filepath = Dir[options[:dir][:pattern]].max_by { |f| File.mtime f } # rolling w/ the ls above this b/c this feels like an n+1 query
+else
+  # Otherwise, we calculate the cache file by hashing the args that make up the command
+  filepath = File.join tempdir, filename_for(ARGV)
+end
+
+
+case
+when options.fetch(:help).fetch(:value)
+  $stdout.puts options.fetch(:help).fetch(:screen)
+
+when options.fetch(:clear).fetch(:value)
+  FileUtils.rm_r tempdir
+
+when options.fetch(:list).fetch(:value)
+  invocations = Dir[options[:dir][:pattern]].map { |path| load_file path }
+  $stdout.puts JSON.pretty_generate(invocations)
+
+else
+
+  invocation = load_file(filepath)
+
+  if !invocation || options.fetch(:force).fetch(:value)
+    command    = ARGV
+    command    = invocation.fetch :command if invocation
+    # error here if command is empty?
+    invocation = run command
+    write_cache filepath, invocation
+  end
+
+  $stderr.print invocation[:stderr]
+  $stdout.print invocation[:stdout]
+  exit          invocation[:status]
+end
