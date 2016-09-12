@@ -1,0 +1,212 @@
+#!/usr/bin/env ruby
+
+pid_to_trace = ARGV.fetch(0, Process.ppid).to_i
+
+class SimpleTime
+  attr_accessor :hours, :minutes, :ampm
+  def initialize(hours, minutes, ampm)
+    self.hours, self.minutes, self.ampm = hours, minutes, ampm
+  end
+end
+
+class SimpleDate
+  attr_accessor :day, :month, :year
+  def initialize(day, month, year)
+    self.day, self.month, self.year = day, month, year
+  end
+end
+
+class ProcessInfo < Struct.new(:pid, :ppid, :command, :priority, :start_time, :states, :user)
+  def initialize(*args)
+    self.states = []
+    args.zip(self.class.members) do |value, name|
+      public_send "#{name}=", value
+    end
+  end
+
+  def root?
+    1 == pid
+  end
+
+  def pid=(pid)
+    super pid.to_i
+  end
+
+  def priority=(priority)
+    super priority.to_i
+  end
+
+  def ppid=(ppid)
+    super ppid.to_i
+  end
+
+  def start_time=(start_time)
+    case start_time
+    when String
+      if start_time =~ /(\d+):(\d+)(AM|PM)/
+        super SimpleTime.new($1.to_i, $2.to_i, $3)
+      elsif start_time =~ /(\d+)([^\d]+)(\d+)/
+        super SimpleDate.new($1.to_i, $2, $3.to_i)
+      end
+    when SimpleTime, SimpleDate
+      super
+    end
+  end
+
+  def state_abbrs=(abbreviations)
+    self.states = states_for(abbreviations)
+  end
+
+  def states_for(abbreviations)
+    state_abbr, *additional_abbrs = abbreviations.chars
+    [ case state_abbr
+      when 'I' then :idle
+      when 'R' then :runnable
+      when 'S' then :sleeping
+      when 'T' then :stopped
+      when 'U' then :uninterruptible_wait
+      when 'Z' then :zombie
+      end,
+
+      *additional_abbrs.map do |char|
+        case char
+        when '+' then :foreground
+        when '<' then :high_scheduling_priority
+        when '>' then :exceeding_memory_limit
+        when 'A' then :asked_for_random_page_replacement
+        when 'E' then :exiting
+        when 'L' then :locked_pages
+        when 'N' then :low_scheduling_priority
+        when 'S' then :fifo_page_replacement
+        when 's' then :session_leader
+        when 'V' then :suspended_in_vfork
+        when 'W' then :swapped_out
+        when 'X' then :being_traced_or_debugged
+        end
+      end,
+    ]
+  end
+
+  def to_h
+    hash = super
+    command = hash.delete :command
+    user    = hash.delete :user
+    states  = hash.delete :states
+    {command: command, user: user, states: states, **hash}
+  end
+end
+
+# get a basic list of process information, so we can trace the parents up to the root
+pids_to_pinfos = `ps -ax -o 'pid ppid command'`.lines.map do |line|
+  pid, ppid, command = line.strip.split(/\s+/, 3)
+  proc_info = ProcessInfo.new pid.to_i, ppid.to_i, command
+  [proc_info.pid, proc_info]
+end.to_h
+
+# get the ones we'll need for the trace
+pinfo  = pids_to_pinfos[pid_to_trace]
+pinfos = [pinfo]
+pinfos << pids_to_pinfos[pinfos.last.ppid] until pinfos.last.root?
+
+# get some additional info (list of possibilities is in `man ps` "keywords" section)
+`ps -p #{pinfos.map(&:pid).join(",")} -opid= -opri= -ostart= -ostate= -ologname=`.lines.each do |line|
+    pid, priority, start_time, state_abbrs, user = line.strip.split(/\s+/)
+    pinfo             = pids_to_pinfos.fetch pid.to_i
+    pinfo.priority    = priority.to_i
+    pinfo.start_time  = start_time
+    pinfo.state_abbrs = state_abbrs
+    pinfo.user        = user
+  end
+
+# print 'em out
+if $stdout.tty?
+  string_color = "\e[33m"
+  num_color    = "\e[34m"
+  array_color  = "\e[32m"
+  hash_color   = "\e[0m"
+  sym_color    = "\e[31m"
+  time_color   = "\e[36m"
+  no_color     = "\e[0m"
+else
+  string_color = ""
+  num_color    = ""
+  array_color  = ""
+  hash_color   = ""
+  sym_color    = ""
+  time_color   = ""
+  no_color     = ""
+end
+
+define_method :print_primitive do |primitive, indentation|
+  case primitive
+  when Array
+    multiline = primitive.any? { |e| Hash === e || Array === e }
+    child_indentation = indentation+"  "
+    print array_color, "["
+    print " " if multiline
+    primitive.each.with_index(1) do |element, index|
+      last_child = (index == primitive.length)
+      print_primitive element, child_indentation
+      if multiline && last_child
+        print "\n#{indentation}"
+      elsif multiline
+        print array_color, ",\n#{child_indentation}"
+      elsif last_child
+        # noop
+      else
+        print array_color, ", "
+      end
+    end
+    print array_color, "]"
+
+  when Hash
+    multiline = primitive.any? { |k, v| Hash === v || Array === v }
+    child_indentation = indentation+"  "
+    print hash_color, "{"
+    print ' ' if multiline
+    key_length = primitive.keys.map(&:length).max
+    primitive.each.with_index(1) do |(key, value), index|
+      last_child = (index == primitive.length)
+      printf "%s%-#{key_length+2}s", sym_color, "#{key}: "
+      print_primitive value, child_indentation
+      if multiline && last_child
+        print "\n#{indentation}"
+      elsif multiline
+        print hash_color, ",\n#{child_indentation}"
+      elsif last_child
+        # noop
+      else
+        print hash_color, ", "
+      end
+    end
+    print hash_color, "}"
+
+  when String
+    print string_color, primitive.inspect
+
+  when Symbol
+    print sym_color, primitive.inspect
+
+  when Numeric
+    print num_color, primitive.inspect
+
+  when SimpleTime
+    print_primitive primitive.hours, indentation
+    print time_color, ":"
+    print_primitive primitive.minutes, indentation
+    print time_color, " ", primitive.ampm
+
+  when SimpleDate
+    print_primitive primitive.day, indentation
+    print time_color, " ", primitive.month, " "
+    print_primitive primitive.year, indentation
+
+  else
+    raise "Wat? #{primitive.inspect}"
+  end
+
+  print no_color
+end
+
+print_primitive pinfos.map(&:to_h), ''
+puts
