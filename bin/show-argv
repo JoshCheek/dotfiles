@@ -1,5 +1,9 @@
 #!/usr/bin/env dotfiles_ruby
 
-ARGV.each do |arg|
-  p arg
-end
+require 'pp'
+require 'rouge'
+code      = ARGV.pretty_inspect.chomp
+tokens    = Rouge::Lexers::Ruby.new.lex code
+theme     = Rouge::Themes::Base16 # alt: Rouge::Themes::Github
+formatter = Rouge::Formatters::Terminal256.new theme
+$stdout.puts formatter.format(tokens)
