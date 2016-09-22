@@ -1,15 +1,22 @@
 #!/usr/bin/env dotfiles_ruby
 # tests in test/fullpath.feature (https://github.com/JoshCheek/dotfiles/blob/master/test/fullpath.feature)
+require 'open3'
 
 def self.relative_dirs(argv, stdin)
   return argv if argv.any? # if we have args, they are considered relative paths
   return stdin.read.lines  # otherwise assume we're piping paths through the program
 end
 
-# pbcopy is only available on mac AFAIK
+def self.copy_program
+  return @copy_program if defined? @copy_program
+  @copy_program = %w[pbcopy xsel xclip].find do |program_name|
+    _out, _err, status = Open3.capture3('which', program_name)
+    status.success?
+  end
+end
+
 def self.copy_to_clipboard(str)
-  require 'open3'
-  Open3.popen3("pbcopy") { |stdin, stdout, stderr, wait_thr|
+  Open3.popen3(copy_program) { |stdin, stdout, stderr, wait_thr|
     stdin.write str
   }
 end
