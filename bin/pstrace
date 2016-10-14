@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/ruby
 
 pid_to_trace = ARGV.fetch(0, Process.ppid).to_i
 
@@ -97,11 +97,11 @@ class ProcessInfo < Struct.new(:pid, :ppid, :command, :priority, :start_time, :s
 end
 
 # get a basic list of process information, so we can trace the parents up to the root
-pids_to_pinfos = `ps -ax -o 'pid ppid command'`.lines.map do |line|
+pids_to_pinfos = Hash[`ps -ax -o 'pid ppid command'`.lines.map do |line|
   pid, ppid, command = line.strip.split(/\s+/, 3)
   proc_info = ProcessInfo.new pid.to_i, ppid.to_i, command
   [proc_info.pid, proc_info]
-end.to_h
+end]
 
 # get the ones we'll need for the trace
 pinfo  = pids_to_pinfos[pid_to_trace]
