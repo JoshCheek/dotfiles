@@ -1,6 +1,2 @@
 #!/bin/sh
-# /usr/local/bin/chruby-exec 2.2.2 -- ruby "$@"
-/usr/local/bin/chruby-exec 2.3.0 -- ruby "$@"
-# /usr/local/bin/chruby-exec 2.2.3 -- ruby "$@"
-# /usr/local/bin/chruby-exec 2.1.1 -- ruby "$@"
-# /usr/local/bin/chruby-exec 2.2 -- ruby "$@"
+/usr/local/bin/chruby-exec 2.3.1 -- ruby "$@"
