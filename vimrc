@@ -207,7 +207,7 @@ au BufRead,BufNewFile *.sublime-snippet setfiletype html
 au BufRead,BufNewFile *.ipynb setfiletype json
 au BufRead,BufNewFile *.rl setfiletype ragel
 au BufRead,BufNewFile *.es6 setfiletype javascript.jsx
-
+au BufRead,BufNewFile *.ik setfiletype ruby " it's wong (this is ioke) but better than totally unhighlighted
 
 
 " ==========================================================================================================
