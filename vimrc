@@ -94,6 +94,12 @@ set showcmd                          " Display info known about the command bein
 set scrolloff=4                      " Scroll away from the cursor when I get too close to the edge of the screen
 set incsearch                        " Incremental searching
 
+
+" ===== Custom Language Settings =====
+autocmd Filetype c    setlocal tabstop=8
+autocmd Filetype cpp  setlocal tabstop=8
+autocmd Filetype yacc setlocal tabstop=8
+
 " ===== Mappings and keybindings =====
 " Note that <Leader> is the backslash by default. You can change it, though, as seen here:
 " https://github.com/bling/minivimrc/blob/43d099cc351424c345da0224da83c73b75bce931/vimrc#L20-L21
