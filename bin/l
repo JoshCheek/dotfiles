@@ -1,10 +1,10 @@
 #!/bin/sh
 
-# -l  long format
-# -F  / after dirs, * after exe, @ after symlink
-# -G  colorize
+# -l long format
+# -F `/` after dirs, `*` after exe, `@` after symlink
+# -G colorize
 # -g suppress owner
 # -o suppress group
 # -h humanize sizes
 # -q print nongraphic chars as question marks
-ls -lFGgohq "$@"
+exec ls -lFGgohq "$@"
