@@ -1,7 +1,12 @@
 #!/usr/bin/env dotfiles_ruby
 
 require 'pp'
-require 'rouge'
+begin require 'rouge'
+rescue LoadError
+  pp ARGV
+  exit
+end
+
 code      = ARGV.pretty_inspect.chomp
 tokens    = Rouge::Lexers::Ruby.new.lex code
 theme     = Rouge::Themes::Base16 # alt: Rouge::Themes::Github
