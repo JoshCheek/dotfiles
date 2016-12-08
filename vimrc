@@ -46,6 +46,7 @@ Plugin 'https://github.com/tpope/vim-haml'                  " Haml     - A bette
 Plugin 'https://github.com/jneen/ragel.vim'                 " Ragel    - State machine / parser language
 Plugin 'https://github.com/chrisbra/csv.vim'                " CSV      - a few nice features, some obvious ones missing
 Plugin 'https://github.com/dag/vim-fish'                    " Fish     - alternate shell
+Plugin 'https://github.com/keith/swift.vim'                 " Swift    - Apple's replacement for Objective-C
 
 " Colorschemes (syntax highlighting, aka themes)
 Plugin 'https://github.com/morhetz/gruvbox'
