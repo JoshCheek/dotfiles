@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -eu
+set -o pipefail
+
+
+# -----  Validate  -----
+help_screen() {
+  ( echo "Provide a website and any flags for curl follow redirects"
+    echo "examples:"
+    echo "  # Print google's headers"
+    echo "  $ $0 google.com"
+    echo ""
+    echo "  # Print google's headers and follow the redirect"
+    echo "  $ $0 google.com -L"
+  ) >&2
+}
+
+if [[ "$#" -eq 0 ]]; then
+  help_screen
+  exit 1
+fi
+
+for arg in "$@"; do
+  if [ "$arg" = "-h" ] || [ "$arg" = "--help" ]; then
+    help_screen
+    exit 0
+  fi
+done
+
+
+# -----  Setup  -----
+
+# We ultimately delegate to curl
+invocation=(curl)
+
+# Don't display the progressbar
+invocation+=("--silent")
+
+# Print headers to stdout
+invocation+=("--dump-header" "-")
+
+# Don't print the body
+invocation+=("--output" "/dev/null")
+
+# User's url and options
+invocation+=("$@")
+
+
+# -----  Output  -----
+
+# Print the command
+if [[ -t 2 ]]; then
+  echo -e "\033[33m\$ ${invocation[@]}\033[0m" >&2
+fi
+
+"${invocation[@]}"
