@@ -55,6 +55,7 @@ Plugin 'https://github.com/vim-scripts/darktango.vim'
 Plugin 'https://github.com/ciaranm/inkpot'
 Plugin 'https://github.com/sickill/vim-monokai'
 Plugin 'https://github.com/gosukiwi/vim-atom-dark'
+Plugin 'https://github.com/vim-airline/vim-airline-themes'
 
 call vundle#end()            " required
 
