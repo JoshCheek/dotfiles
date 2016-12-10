@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+# IDK whether its git's fault or BASH's, but making this script was misery
+
+indent_rest() {
+  sed '2,$s/^/                  /'
+}
+
+=====() {
+  echo -e "\e[35m=====  $1  =====\e[0m"
+}
+
+# Commit dates and count
+result=($(
+  git log --date=short --pretty=format:'%Cblue%ad%Creset' \
+    | awk  '
+        NR == 1 { print }
+        END     { print }
+        END     { print "\033[34m" NR "\033[0m" }
+      '
+))
+last_commit_date="${result[0]}"
+first_commit_date="${result[1]}"
+num_commits="${result[2]}"
+
+===== Timeline
+echo    "First:            $first_commit_date"
+echo    "Last:             $last_commit_date"
+echo
+
+
+===== Commits
+echo    "Count:            $num_commits"
+echo -n "Last 5:           "
+git log --graph -5 --date=short --pretty=format:"%Cgreen%h%Creset %Cblue%ad%Creset %s%C(yellow)%d%Creset %Cblue[%an]%Creset" \
+  | indent_rest
+echo    "                  ..."
+echo -n "First 5:          "
+git log --graph --date=short --pretty=format:"%Cgreen%h%Creset %Cblue%ad%Creset %s%C(yellow)%d%Creset %Cblue[%an]%Creset" \
+  | tail -5 \
+  | indent_rest
+echo
+
+
+===== Authors
+author_data=("$(git shortlog -sn)")
+num_authors="$(echo "$author_data" | wc -l | tr -d ' ')"
+echo -e "Count:            \033[34m$num_authors\033[0m"
+
+echo -n "Most prolific:    "
+echo "$author_data" | head -5 |
+  while read -r count name; do
+    echo -e "$name \033[34m$count\033[0m"
+  done | column -t | indent_rest
+echo
+
+
+===== Files
+num_files="$(git ls-files | wc -l | tr -d ' ')"
+echo -e "Count:            \033[34m$num_files\033[0m"
+
+extension_counts=("$(git ls-files | sed -nE 's/^([^.]*\.)*//p' | sort | uniq -c | sort -rn)")
+num_file_extensions="$(echo "$extension_counts" | wc -l | tr -d ' ')"
+
+echo -e "#extensions:      \e[34m$num_file_extensions\e[0m"
+
+echo -n "Popular exts:     "
+echo "$extension_counts" | head -5 |
+  while read -r count ext; do
+    echo -e "$ext \033[34m$count\033[0m"
+  done | column -t | indent_rest
+
+echo -n "Volatile:         "
+git log --pretty=format: --name-only | sort | uniq -c | sort -rg | sed 1d | head -5 |
+  while read -r count name; do
+    echo -e "$name \033[34m$count\033[0m"
+  done | column -t | indent_rest
+echo
