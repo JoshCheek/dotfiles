@@ -2,37 +2,31 @@
 
 # Command line options
 options = {
-  help:     {flags: %w[-h --help], value: false, desc: 'This help screen'},
-  clear:    {flags: %w[--clear],   value: false, desc: 'Clear the cached results'},
-  force:    {flags: %w[--force],   value: false, desc: 'Run the command even if it has a cached result'},
-  list:     {flags: %w[--list],    value: false, desc: 'List the contents of the cache'},
-  replay:   {flags: %w[--replay],  value: false, desc: 'Replay the last run cached value'},
-  print:    {flags: %w[--print],   value: false, desc: 'Print the last run cached value'},
-  dir:      {value: "/tmp/commandline-cache"}
+  help:       {flags: %w[-h --help],    value: false, desc: 'This help screen'},
+  clear:      {flags: %w[-c --clear],   value: false, desc: 'Clear the cached results'},
+  force:      {flags: %w[-f --force],   value: false, desc: 'Run the command even if it has a cached result'},
+  list:       {flags: %w[-l --list],    value: false, desc: 'List a summary of each cached command'},
+  full_list:  {flags: %w[--full-list],  value: false, desc: 'List the entire contents of the cache'},
+  dir:        {value: "/tmp/commandline-cache"}
 }
 options[:dir][:pattern] = File.join(options[:dir][:value], '*')
 options[:help][:screen] = <<HELP_SCREEN
 Usage: cache [opts] program [program-args]
 
-Given an expensive, but deterministic program that is invoked like this:
-   $ ruby -e '3.times { |i| sleep 1; puts i }'
+Given an expensive, but deterministic program, prepend "cache" to its invocation.
+This will run the program the first time and cache the output, then use the
+cached values in subsequent invocations.  The cached values are stdout, stderr,
+and exit status.
 
-You can run:
-   $ cache ruby -e '3.times { |i| sleep 1; puts i }'
+Example:
 
-Which will run the program the first time, then reuse its results:
+    $ time cache ruby -e '10.times { |i| sleep 1; print i }; puts'
+    0123456789
+           10.30 real         0.15 user         0.05 sys
 
-   $ time cache ruby -e '3.times { |i| sleep 1; puts i }'
-   0
-   1
-   2
-      3.17 real         0.12 user         0.03 sys
-
-   $ time cache ruby -e '3.times { |i| sleep 1; puts i }'
-   0
-   1
-   2
-      0.12 real         0.09 user         0.02 sys
+    $ time cache ruby -e '10.times { |i| sleep 1; print i }; puts'
+    0123456789
+            0.19 real         0.09 user         0.03 sys
 
 Options:
 HELP_SCREEN
@@ -42,11 +36,11 @@ options.each do |name, option|
   options[:help][:screen] << line
 end
 
-
-require 'json'
-def self.load_file(path)
-  return nil unless File.exist? path
-  JSON.parse File.read(path), symbolize_names: true
+options.singleton_class.class_eval do
+  options.keys.each do |key|
+    define_method(key) { |subkey=:value| fetch(key).fetch(subkey) }
+    define_method("#{key}?") { !!fetch(key).fetch(:value) }
+  end
 end
 
 require 'open3'
@@ -60,9 +54,15 @@ def self.run(command)
   }
 end
 
+require 'json'
 def self.write_cache(path, invocation)
   File.write path, JSON.dump(invocation)
   invocation
+end
+
+def self.read_cache(path)
+  return nil unless File.exist? path
+  JSON.parse File.read(path), symbolize_names: true
 end
 
 require 'digest'
@@ -76,7 +76,7 @@ def self.filename_for(command)
 end
 
 
-# Take our args out of ARGV
+# Process flags until the first nonflag
 loop do
   arg = ARGV.first
   _, option = options.find do |name, option|
@@ -88,41 +88,42 @@ loop do
   ARGV.shift
 end
 
+# What's left in ARGV is the command to run
+command = ARGV
+
 # Normalize the state of the world so that we can always assume a temp dir
 require 'fileutils'
-tempdir = options.fetch(:dir).fetch(:value)
+tempdir = options.dir
 FileUtils.mkdir_p tempdir
 
-if options.fetch(:replay).fetch(:value)
-  # But a replay implies we should use the last run command
-  stdout, * = Open3.capture3('ls', '-t', tempdir).first
-  filepath = File.join tempdir, stdout.lines.first.chomp
-  # filepath = Dir[options[:dir][:pattern]].max_by { |f| File.mtime f } # rolling w/ the ls above this b/c this feels like an n+1 query
-else
-  # Otherwise, we calculate the cache file by hashing the args that make up the command
-  filepath = File.join tempdir, filename_for(ARGV)
-end
+# Otherwise, we calculate the cache file by hashing the args that make up the command
+filepath = File.join tempdir, filename_for(command)
 
 
 case
-when options.fetch(:help).fetch(:value)
-  $stdout.puts options.fetch(:help).fetch(:screen)
-
-when options.fetch(:clear).fetch(:value)
+when options.help?
+  $stdout.puts options.help(:screen)
+when options.clear?
   FileUtils.rm_r tempdir
-
-when options.fetch(:list).fetch(:value)
-  invocations = Dir[options[:dir][:pattern]].map { |path| load_file path }
-  $stdout.puts JSON.pretty_generate(invocations)
-
+when options.list?
+  invocations = Dir[options.dir :pattern].map { |path| read_cache path }
+  invocations.each do |invocation|
+    summary = {
+      stdout_length: invocation[:stdout].length,
+      stderr_length: invocation[:stderr].length,
+      exitstatus:    invocation[:status],
+      command:       invocation[:command],
+    }
+    $stdout.puts JSON.dump(summary)
+  end
+when options.full_list?
+  invocations = Dir[options.dir :pattern].map { |path| read_cache path }
+  $stdout.puts JSON.pretty_generate invocations
 else
+  invocation = read_cache(filepath)
 
-  invocation = load_file(filepath)
-
-  if !invocation || options.fetch(:force).fetch(:value)
-    command    = ARGV
+  if options.force? || !invocation
     command    = invocation.fetch :command if invocation
-    # error here if command is empty?
     invocation = run command
     write_cache filepath, invocation
   end
