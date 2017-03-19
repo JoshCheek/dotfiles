@@ -19,6 +19,7 @@
 [core]
   excludesfile     = ~/.gitignore
   editor           = vim
+  pager            = diff-so-fancy | less --tabs=4 -RFX
 [merge]
   conflictstyle    = diff3
 [status]
