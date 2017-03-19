@@ -67,12 +67,16 @@ end
 
 require 'digest'
 def self.filename_for(command)
-  # We hash the command to get a string that is highly probable to be unique (good enough for git, right?)
-  # We choose #hexdigest over #digest, and #base64digest because they all generate the same data, they just represent it differently:
+  # We hash the command to get a string that is highly probable to be unique,
+  # this way we have a key we can use to store / look up the cache, based on
+  # the command that is being run. We choose #hexdigest over #digest,
+  # and #base64digest because they all generate the same data,
+  # they just represent it differently:
   #   #digest         returns a string with binary data in it
-  #   #hexdigest      translates the binary to equivalent hex values so all chars are in the range 0-F
-  #   #base64digest   base64 encodes the binary, which is shorter, but can lead to invalid filenames (eg a filename with a slash in it)
-  Digest::SHA1.hexdigest(command.inspect)
+  #   #hexdigest      translates binary to hex values so all chars are 0-F
+  #   #base64digest   base64 encodes digest, which is shorter than hexdigest,
+  #                   but can lead to invalid filenames (eg a could have a slash in it)
+  Digest::MD5.hexdigest(command.inspect)
 end
 
 
