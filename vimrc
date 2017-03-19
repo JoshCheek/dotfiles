@@ -25,6 +25,7 @@ Plugin 'https://github.com/tpope/vim-repeat'                " Uhm, a dep of some
 Plugin 'https://github.com/tpope/vim-surround'              " Better support for working with things that 'surround' text such as quotes and parens
 Plugin 'https://github.com/rking/ag.vim'                    " Searches through your project
 Plugin 'https://github.com/majutsushi/tagbar'               " Ctag browser
+Plugin 'https://github.com/hwartig/vim-seeing-is-believing' " Seeing is Believing integration (https://github.com/JoshCheek/seeing_is_believing)
 
 " Language Support
 Plugin 'https://github.com/vim-ruby/vim-ruby'               " Ruby    - Pretty fkn legit (eg it's generally $LOAD_PATH aware, it's got some really awesome text objects)
@@ -35,7 +36,7 @@ Plugin 'https://github.com/kchmck/vim-coffee-script'        " CoffeeScript   - S
 Plugin 'https://github.com/mxw/vim-jsx'                     " JSX (React.js) - Lets you write 'html' within your JavaScript
 
 Plugin 'https://github.com/bitc/hdevtools'                  " Haskell - This is the language that caused me to realize that choice and time are abstractions
-Plugin 'https://github.com/lambdatoast/elm.vim'             " Elm     - Haskell in the browser (a super approachable functional language)
+Plugin 'https://github.com/ElmCast/elm-vim'                 " Elm     - Haskell in the browser (a super approachable functional language)
 Plugin 'https://github.com/elixir-lang/vim-elixir'          " Elixir  - My brain summarizes it as 'Erlang with Ruby syntax', but that's probably selling it short
 Plugin 'https://github.com/wting/rust.vim'                  " Rust    - Hopefully one day this will replace C
 Plugin 'https://github.com/fatih/vim-go'                    " Go      - Forgot why I didn't keep playing with it,
@@ -214,6 +215,7 @@ au BufRead,BufNewFile *.ipynb setfiletype json
 au BufRead,BufNewFile *.rl setfiletype ragel
 au BufRead,BufNewFile *.es6 setfiletype javascript.jsx
 au BufRead,BufNewFile *.ik setfiletype ruby " it's wong (this is ioke) but better than totally unhighlighted
+au BufRead,BufNewFile *.dart setfiletype java " close enough
 
 
 " ==========================================================================================================
@@ -277,6 +279,7 @@ nmap <Plug>RunRegq @q<CR>:call repeat#set("\<Plug>RunRegq")<CR>
 nmap <Leader>q :call repeat#set("\<Plug>RunRegq")<CR>
 
 
+set colorcolumn=80
 
 
 "" Maybe worth checking out
