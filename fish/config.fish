@@ -1,10 +1,16 @@
 # various paths
-set --export PATH $HOME/bin /usr/local/bin /usr/local/sbin $PATH $HOME/.cabal/bin $HOME/anaconda3/bin
+set --export PATH $HOME/bin /usr/local/bin /usr/local/sbin $PATH
+
+if test -d $HOME/code/dotfiles/bin
+  set --export PATH $HOME/code/dotfiles/bin $PATH
+end
 
 # for golang
-set --export GOPATH "$HOME/golang"
-set --export PATH   $PATH "$GOPATH/bin"
-set --export PKG_CONFIG_PATH  "/usr/lib/pkgconfig"
+if test -d "$HOME/golang"
+  set --export GOPATH "$HOME/golang"
+  set --export PATH   $PATH "$GOPATH/bin"
+  set --export PKG_CONFIG_PATH  "/usr/lib/pkgconfig"
+end
 
 # Rails cucumber integration looks for this env var to decide how to display output
 set --export CUCUMBER_FORMAT pretty
