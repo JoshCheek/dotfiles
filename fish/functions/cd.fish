@@ -21,7 +21,7 @@ function cd --description 'Change directory'
         else
             prevd
         end
-        after_cd
+        l # list the contents of the new dir
         return $status
     end
 
@@ -36,6 +36,6 @@ function cd --description 'Change directory'
         set -g __fish_cd_direction prev
     end
 
-    after_cd
+    l # list the contents of the new dir
     return $cd_status
 end

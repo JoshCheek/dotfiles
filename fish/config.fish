@@ -22,6 +22,9 @@ for i in (seq 30)
         end"
 end
 
+# Tell homebrew not to auto update if I've already done it this week
+set --export HOMEBREW_AUTO_UPDATE_SECS (echo '60 * 60 * 24 * 7' | bc)
+
 # Load ruby. Interface is less helpful than rbenv
 # but Brixen says it works with rbx in ways that rbenv's assumptions won't let it
 if test -e /usr/local/share/chruby/chruby.fish
@@ -44,4 +47,7 @@ set --export LS_COLORS 'di=33'
 # Provide metadata to iTerm2 so that it can provide useful features
 # Documentation: http://iterm2.com/documentation-shell-integration.html
 # Original src:  https://iterm2.com/misc/fish_startup.in
-source ~/.config/fish/iterm2_shell_integration.fish
+#
+# Commented out b/c it seemed to cause fish to get really fkn slow with the last update (fish v2.5.0)
+#
+# source ~/.config/fish/iterm2_shell_integration.fish
