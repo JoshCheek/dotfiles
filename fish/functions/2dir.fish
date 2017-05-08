@@ -1,3 +1,4 @@
 function 2dir
-  cd (eval $history[1] | sed 's/\/[^\/]*$//')
+  # call popd to return later
+  pushd (eval $history[1] | sed 's/\/[^\/]*$//')
 end
