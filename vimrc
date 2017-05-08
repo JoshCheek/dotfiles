@@ -258,6 +258,9 @@ autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isT
 
 nmap <C-N> :NERDTreeToggle<CR>
 
+" find the current file
+nmap <silent> <C-s> :NERDTreeFind<CR>
+
 
 " ===== Gruvbox for the Colorscheme =====
 " Now switch to this custom colorscheme (dark gray)
@@ -277,6 +280,10 @@ map <silent><F2> :PREVCOLOR<cr>
 " last macro recorded or run be auto-loaded for repeat
 nmap <Plug>RunRegq @q<CR>:call repeat#set("\<Plug>RunRegq")<CR>
 nmap <Leader>q :call repeat#set("\<Plug>RunRegq")<CR>
+
+
+" ===== Elm-vim =====
+let g:elm_format_autosave = 1
 
 
 set colorcolumn=80
