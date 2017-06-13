@@ -1,14 +1,15 @@
 #!/bin/sh
 
-macvim="/Applications/MacVim.app/Contents/MacOS/Vim" # get it with `brew install macvim && brew linkapps`
+macvim_app="/Applications/MacVim.app/Contents/MacOS/Vim" # get it with `brew install macvim && brew linkapps`
+macvim_homebrew="$(echo "/usr/local/Cellar/macvim/"*"/MacVim.app/Contents/bin/vim" | head -1)"
 systemvim="/usr/bin/vim"
 selectedvim=""
 
-if test -e "$macvim"
-then
-  selectedvim="$macvim"
-elif test -e "$systemvim"
-then
+if test -e "$macvim_app"; then
+  selectedvim="$macvim_app"
+elif test -e "$macvim_homebrew"; then
+  selectedvim="$macvim_homebrew"
+elif test -e "$systemvim"; then
   selectedvim="$systemvim"
 else
   selectedvim="$(whereis vim)"
