@@ -92,13 +92,10 @@ fi
   }
 
   function build_mah_prompt {
+    last_status="$?"
+
     # time
     ps1="$(prompt_segment " \@ ")"
-
-    # cwd with coloured current directory
-    # path="$(dirname `pwd`)"
-    # dir="$(basename `pwd`)"
-    # ps1="${ps1} $(prompt_segment " ${path}/")$(prompt_segment "$dir " 34)"
 
     # cwd
     ps1="${ps1} $(prompt_segment " \w ")"
@@ -108,7 +105,17 @@ fi
     if [[ ! -z "$git_branch" ]]; then ps1="${ps1} $(prompt_segment " $git_branch " 32)"; fi
 
     # next line
-    ps1="${ps1}\n\$ "
+    ps1="${ps1}\n"
+
+    # prompt char
+    if [[ "$last_status" = "0" ]]; then
+      ps1="${ps1}\[\033[92m\]\$\[\033[39m\]"
+    else
+      ps1="${ps1}\[\033[91m\]\$\[\033[39m\]"
+    fi
+
+    # padding
+    ps1="${ps1} "
 
     # output
     PS1="$ps1"
