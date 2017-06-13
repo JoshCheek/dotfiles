@@ -19,7 +19,14 @@ fi
     # note that this won't work with rvm b/c it overrides cd.
     cd() {
       builtin cd "$@"
-      l
+      # -l long format
+      # -F `/` after dirs, `*` after exe, `@` after symlink
+      # -G colorize
+      # -g suppress owner
+      # -o suppress group
+      # -h humanize sizes
+      # -q print nongraphic chars as question marks
+      exec ls -lFGgohq "$@"
     }
 
   # meta-p and meta-n: "starts with" history searching
