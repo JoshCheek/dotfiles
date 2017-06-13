@@ -1,3 +1,8 @@
+if [[ -e "$HOME/.bashrc" ]]; then
+  source "$HOME/.bashrc"
+fi
+
+
 # Environment Variables
   export EDITOR='vim'
   export PATH="$HOME/bin:$PATH"
