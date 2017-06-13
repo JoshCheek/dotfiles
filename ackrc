@@ -12,3 +12,4 @@
 --type-add=haxe:ext:hx
 --ignore-dir=coverage
 --ignore-dir=tmp
+--ignore-dir=node_modules
