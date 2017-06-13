@@ -37,38 +37,17 @@ fi
   # suspended processes
     alias j=jobs
 
-    for i in $(seq 30)
-    do
+    for i in $(seq 30); do
+      # Type the number to foreground that job
       alias "$i=fg %$i"
+
+      # kn to kill that job
       alias "k$i=kill -9 %$i"
     done
 
-    # kill jobs by job number, or range of job numbers
-    # example: k 1 2 5
-    # example: k 1..5
-    # example: k 1..5 7 10..15
-    k () {
-      for arg in $@;
-      do
-        if [[ "$arg" =~ ^[0-9]+$ ]]
-        then
-          kill -9 %$arg
-        else
-          start=$(echo "$arg" | sed 's/[^0-9].*$//')
-          end=$(echo "$arg" | sed 's/^[0-9]*[^0-9]*//')
-
-          for (( n=start; n<=end; n++ ))
-          do
-            kill -9 %$n
-          done
-        fi
-      done
-    }
-
     # kill all jobs
     ka () {
-      for job_num in $(jobs | ruby -ne 'puts $_[/\d+/]')
-      do
+      for job_num in $(jobs | ruby -ne 'puts $_[/\d+/]'); do
         kill -9 "%$job_num"
       done
     }
@@ -93,11 +72,6 @@ fi
       done
       echo "$name"
       cd "$name"
-    }
-
-  # take you to the dir of a file in a gem. e.g. `2gem rspec`
-    2gem () {
-      cd "$(dirname $(gem which $1))"
     }
 
 
