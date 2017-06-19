@@ -31,6 +31,11 @@ if test -e /usr/local/share/chruby/chruby.fish
   source   /usr/local/share/chruby/chruby.fish
 end
 
+# IIRC, using https://github.com/brigand/fast-nvm-fish
+if type -q nvm
+  nvm use v7.10.0
+end
+
 # Don't print a greeting when I start the shell
 set --erase fish_greeting
 
