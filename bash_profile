@@ -1,3 +1,8 @@
+if [[ -e "$HOME/.bashrc" ]]; then
+  source "$HOME/.bashrc"
+fi
+
+
 # Environment Variables
   export EDITOR='vim'
   export PATH="$HOME/bin:$PATH"
@@ -14,7 +19,14 @@
     # note that this won't work with rvm b/c it overrides cd.
     cd() {
       builtin cd "$@"
-      l
+      # -l long format
+      # -F `/` after dirs, `*` after exe, `@` after symlink
+      # -G colorize
+      # -g suppress owner
+      # -o suppress group
+      # -h humanize sizes
+      # -q print nongraphic chars as question marks
+      exec ls -lFGgohq "$@"
     }
 
   # meta-p and meta-n: "starts with" history searching
@@ -25,38 +37,17 @@
   # suspended processes
     alias j=jobs
 
-    for i in $(seq 30)
-    do
+    for i in $(seq 30); do
+      # Type the number to foreground that job
       alias "$i=fg %$i"
+
+      # kn to kill that job
       alias "k$i=kill -9 %$i"
     done
 
-    # kill jobs by job number, or range of job numbers
-    # example: k 1 2 5
-    # example: k 1..5
-    # example: k 1..5 7 10..15
-    k () {
-      for arg in $@;
-      do
-        if [[ "$arg" =~ ^[0-9]+$ ]]
-        then
-          kill -9 %$arg
-        else
-          start=$(echo "$arg" | sed 's/[^0-9].*$//')
-          end=$(echo "$arg" | sed 's/^[0-9]*[^0-9]*//')
-
-          for (( n=start; n<=end; n++ ))
-          do
-            kill -9 %$n
-          done
-        fi
-      done
-    }
-
     # kill all jobs
     ka () {
-      for job_num in $(jobs | ruby -ne 'puts $_[/\d+/]')
-      do
+      for job_num in $(jobs | ruby -ne 'puts $_[/\d+/]'); do
         kill -9 "%$job_num"
       done
     }
@@ -83,11 +74,6 @@
       cd "$name"
     }
 
-  # take you to the dir of a file in a gem. e.g. `2gem rspec`
-    2gem () {
-      cd "$(dirname $(gem which $1))"
-    }
-
 
 # PROMPT
   function parse_git_branch {
@@ -106,13 +92,10 @@
   }
 
   function build_mah_prompt {
+    last_status="$?"
+
     # time
     ps1="$(prompt_segment " \@ ")"
-
-    # cwd with coloured current directory
-    # path="$(dirname `pwd`)"
-    # dir="$(basename `pwd`)"
-    # ps1="${ps1} $(prompt_segment " ${path}/")$(prompt_segment "$dir " 34)"
 
     # cwd
     ps1="${ps1} $(prompt_segment " \w ")"
@@ -122,7 +105,17 @@
     if [[ ! -z "$git_branch" ]]; then ps1="${ps1} $(prompt_segment " $git_branch " 32)"; fi
 
     # next line
-    ps1="${ps1}\n\$ "
+    ps1="${ps1}\n"
+
+    # prompt char
+    if [[ "$last_status" = "0" ]]; then
+      ps1="${ps1}\[\033[92m\]\$\[\033[39m\]"
+    else
+      ps1="${ps1}\[\033[91m\]\$\[\033[39m\]"
+    fi
+
+    # padding
+    ps1="${ps1} "
 
     # output
     PS1="$ps1"

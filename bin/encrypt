@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -e
+
+command="$1"
+file="$2"
+program_name="$(basename "$0")"
+
+echo_err() {
+  echo "$@" >&2
+}
+
+validate_file() {
+  if [[ -s "$file" ]]; then
+    return
+  fi
+  echo_err "The second argument is expected to be an existing file"
+  exit 1
+}
+
+list_options() {
+  echo "  -e encrypt"
+  echo "  -d decrypt"
+  echo "  -h help"
+}
+
+prompt_password() {
+  echo_err -n "Enter password: "
+  read -s password
+  echo_err
+  echo "$password"
+}
+
+if [[ "-h" == "$command" ]]; then #help
+  echo "$program_name: Encrypt / decrypt a file"
+  echo
+  list_options
+  echo
+  echo "EXAMPLES"
+  echo "  $ $program_name -e unencrypted.txt > encrypted.enc"
+  echo "  $ $program_name -d encrypted.enc   > decrypted.txt"
+  exit 0
+elif [[ "-e" == "$command" ]]; then # encrypt
+  validate_file
+  openssl enc -in "$file" -aes-256-cbc -pass pass:"$(prompt_password)"
+elif [[ "-d" == "$command" ]]; then # decrypt
+  validate_file
+  openssl enc -in "$file" -d -aes-256-cbc -pass pass:"$(prompt_password)"
+else
+  echo_err "The first argument is expected to be one of:"
+  echo_err "$(list_options)"
+  exit 1
+fi
