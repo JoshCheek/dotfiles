@@ -26,7 +26,7 @@ fi
       # -o suppress group
       # -h humanize sizes
       # -q print nongraphic chars as question marks
-      exec ls -lFGgohq "$@"
+      ls -lFGgohq
     }
 
   # meta-p and meta-n: "starts with" history searching
