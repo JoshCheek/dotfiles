@@ -1,11 +1,21 @@
-# various paths
+# Ruby environment, load it first b/c I choose the ruby in the private config
+if test -e /usr/local/share/chruby/chruby.fish
+  source   /usr/local/share/chruby/chruby.fish
+end
+
+# Private and custom configuration
+if test -e ~/.config/fish/private_config.fish
+  source   ~/.config/fish/private_config.fish
+end
+
+# Various paths
 set --export PATH $HOME/bin /usr/local/bin /usr/local/sbin $PATH
 
 if test -d $HOME/code/dotfiles/bin
   set --export PATH $HOME/code/dotfiles/bin $PATH
 end
 
-# for golang
+# For golang
 if test -d "$HOME/golang"
   set --export GOPATH "$HOME/golang"
   set --export PATH   $PATH "$GOPATH/bin"
@@ -25,24 +35,13 @@ end
 # Tell homebrew not to auto update if I've already done it this week
 set --export HOMEBREW_AUTO_UPDATE_SECS (echo '60 * 60 * 24 * 7' | bc)
 
-# Load ruby. Interface is less helpful than rbenv
-# but Brixen says it works with rbx in ways that rbenv's assumptions won't let it
-if test -e /usr/local/share/chruby/chruby.fish
-  source   /usr/local/share/chruby/chruby.fish
-end
-
 # IIRC, using https://github.com/brigand/fast-nvm-fish
 if type -q nvm
-  nvm use v7.10.0
+  nvm use 7.10.0
 end
 
 # Don't print a greeting when I start the shell
 set --erase fish_greeting
-
-# For configs that I don't want in my public git (ie work stuff and stuff that changes across computers)
-if test -e ~/.config/fish/private_config.fish
-  source   ~/.config/fish/private_config.fish
-end
 
 # Have `tree` colour directories yellowish
 # this shit is so badly documented and inconsistent
