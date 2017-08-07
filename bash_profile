@@ -2,6 +2,15 @@ if [[ -e "$HOME/.bashrc" ]]; then
   source "$HOME/.bashrc"
 fi
 
+# nvm is so exensive to load that it makes every bash initialization slow
+# a lot of things run bash commands, which need to initialize bash, so
+# nvm winds up making *everything* slow. This defines nvm in a way that lazily
+# loads the real one the first time it gets used.
+nvm_load() {
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+}
 
 # Environment Variables
   export EDITOR='vim'
