@@ -26,7 +26,7 @@ Plugin 'https://github.com/tpope/vim-surround'              " Better support for
 Plugin 'https://github.com/rking/ag.vim'                    " Searches through your project
 Plugin 'https://github.com/majutsushi/tagbar'               " Ctag browser
 Plugin 'https://github.com/hwartig/vim-seeing-is-believing' " Seeing is Believing integration (https://github.com/JoshCheek/seeing_is_believing)
-Plugin 'https://github.com/tpope/vim-fireplace'             " Clojure integraiton
+Plugin 'https://github.com/tpope/vim-fireplace'             " Clojure integration
 
 " Language Support
 Plugin 'https://github.com/vim-ruby/vim-ruby'               " Ruby    - Pretty fkn legit (eg it's generally $LOAD_PATH aware, it's got some really awesome text objects)
@@ -91,6 +91,7 @@ set cursorline                       " Colour the line the cursor is on
 set number                           " Show line numbers
 set hlsearch                         " Highlight all search matches that are on the screen
 set showcmd                          " Display info known about the command being edited (eg number of lines highlighted in visual mode)
+set colorcolumn=80                   " Add a column at the 80 char mark, for visual reference
 
 " ===== Basic behaviour =====
 set scrolloff=4                      " Scroll away from the cursor when I get too close to the edge of the screen
@@ -259,8 +260,16 @@ autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isT
 
 nmap <C-N> :NERDTreeToggle<CR>
 
-" find the current file
-nmap <silent> <C-s> :NERDTreeFind<CR>
+" Find the current file (I have no idea what the SID thing is, I'm just cargo
+" culting syntax from the StripTrailingWhitespaces function)
+function! <SID>JoshNerdTreeToggle()
+  if expand('%:t') != "NERD_tree_1"
+    :NERDTreeFind   " First press opens NERDTree and focuses us on that file
+  else
+    :NERDTreeToggle " Second press hides NERDTree
+  end
+endfunction
+nmap <silent> <C-s> :call <SID>JoshNerdTreeToggle()<CR>
 
 
 " ===== Gruvbox for the Colorscheme =====
@@ -286,8 +295,8 @@ nmap <Leader>q :call repeat#set("\<Plug>RunRegq")<CR>
 " ===== Elm-vim =====
 let g:elm_format_autosave = 1
 
-
-set colorcolumn=80
+" ===== vim-jsx =====
+let g:jsx_ext_required = 0 " Allow JSX in normal JS files
 
 
 "" Maybe worth checking out
