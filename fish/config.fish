@@ -35,11 +35,6 @@ end
 # Tell homebrew not to auto update if I've already done it this week
 set --export HOMEBREW_AUTO_UPDATE_SECS (echo '60 * 60 * 24 * 7' | bc)
 
-# IIRC, using https://github.com/brigand/fast-nvm-fish
-if type -q nvm
-  nvm use 7.10.0
-end
-
 # Don't print a greeting when I start the shell
 set --erase fish_greeting
 
@@ -55,3 +50,23 @@ set --export LS_COLORS 'di=33'
 # Commented out b/c it seemed to cause fish to get really fkn slow with the last update (fish v2.5.0)
 #
 # source ~/.config/fish/iterm2_shell_integration.fish
+
+
+# nodenv is rbenv, but for node js. It's dramatically better than nvm in terms
+# of load time (nvm in my bash profile ground my system to a halt), working
+# outside bash fish, and not constantly needing my attention
+set -gx PATH '/Users/xjxc322/.nodenv/shims' $PATH
+set -gx NODENV_SHELL fish
+source '/usr/local/Cellar/nodenv/1.1.2/completions/nodenv.fish'
+command nodenv rehash 2>/dev/null
+function nodenv
+  set command $argv[1]
+  set -e argv[1]
+
+  switch "$command"
+  case rehash shell
+    source (nodenv "sh-$command" $argv|psub)
+  case '*'
+    command nodenv "$command" $argv
+  end
+end
