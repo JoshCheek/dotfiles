@@ -36,10 +36,11 @@ end
 set --export HOMEBREW_AUTO_UPDATE_SECS (echo '60 * 60 * 24 * 7' | bc)
 
 # Don't print a greeting when I start the shell
-set --erase fish_greeting
+set fish_greeting
 
 # Have `tree` colour directories yellowish
-# this shit is so badly documented and inconsistent
+# this shit is so badly documented and inconsistent,
+# `ls` doesn't even use it, despite talking about it in its man page
 set --export LS_COLORS 'di=33'
 
 
