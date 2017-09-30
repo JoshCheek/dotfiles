@@ -27,6 +27,8 @@ Plugin 'https://github.com/rking/ag.vim'                    " Searches through y
 Plugin 'https://github.com/majutsushi/tagbar'               " Ctag browser
 Plugin 'https://github.com/hwartig/vim-seeing-is-believing' " Seeing is Believing integration (https://github.com/JoshCheek/seeing_is_believing)
 Plugin 'https://github.com/tpope/vim-fireplace'             " Clojure integration
+Plugin 'https://github.com/ctrlpvim/ctrlp.vim'              " Fuzzy Finder
+Plugin 'https://github.com/ConradIrwin/vim-bracketed-paste' " Lets vim know the difference between typing and pasting http://cirw.in/blog/bracketed-paste
 
 " Language Support
 Plugin 'https://github.com/vim-ruby/vim-ruby'               " Ruby    - Pretty fkn legit (eg it's generally $LOAD_PATH aware, it's got some really awesome text objects)
@@ -243,6 +245,14 @@ let g:airline_theme                       = 'bubblegum' " https://github.com/bli
 " ===== CSV =====
 let g:csv_highlight_column = 'y'
 
+" ===== Ctrl-p =====
+if executable('ag')
+  " Use Ag over Grep
+  set grepprg=ag\ --nogroup\ --nocolor
+
+  " Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
+  let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
+endif
 
 " ===== vim-textobj-rubyblock =====
 " Not sure what it does
