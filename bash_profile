@@ -30,8 +30,8 @@ fi
 
   # meta-p and meta-n: "starts with" history searching
   # taken from http://blog.veez.us/the-unix-canon-n-p
-  bind '"\ep": history-search-backward'
-  bind '"\en": history-search-forward'
+  # bind '"\ep": history-search-backward'
+  # bind '"\en": history-search-forward'
 
   # suspended processes
     alias j=jobs
