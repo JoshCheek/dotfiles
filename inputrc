@@ -1,0 +1,37 @@
+set enable-bracketed-paste    on
+set blink-matching-paren      on
+set colored-completion-prefix on
+set colored-stats             on
+set keyseq-timeout            250
+set show-all-if-ambiguous     on
+set visible-stats             on
+
+# Docs:
+#   https://cnswww.cns.cwru.edu/php/chet/readline/rluserman.html#SEC9
+#
+# Keybindings:
+#   C-] <char>   search forward for the char
+#   M-C-] <char> search backward for the char
+#   C-@          set mark
+#   C-x C-x      exchange point and mark (point is where the cursor is)
+#   M-*          complete with all expansions inline
+#   M-{          same as M-*, but uses brace expansion
+#   M-$          complete variable
+#
+# Ruby:
+#   Ruby programs that use readline come in as "ruby"
+#   Not super useful :/ I assume it's because of this line
+#   https://github.com/ruby/ruby/blob/917bc68772e447c9fe7f86ee1588e13771b992b6/ext/readline/readline.c#L1893
+#   Might not be hard to add a method which changes that variable
+#
+#   ```
+#   $if Ruby
+#     set visible-stats on
+#   $endif
+#   ```
+#
+# Introspection in Bash:
+#   Primary interface seems to be the `bind` function
+#   bind -v   # list variables, like what we set above
+#   bind -p   # print existing keybindings
+#   bind -l   # list functions you can bind keys to
