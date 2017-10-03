@@ -90,6 +90,7 @@ set t_Co=256                         " Explicitly tell vim that the terminal sup
 set background=dark                  " Tell vim to use colours that works with a dark terminal background (opposite is 'light')
 set nowrap                           " Display long lines as truncated instead of wrapped onto the next line
 set cursorline                       " Colour the line the cursor is on
+set re=1                             " Use an older regex library that is much much quicker, otherwise it lags when I press "jkjkjkjkjkjk"...
 set number                           " Show line numbers
 set hlsearch                         " Highlight all search matches that are on the screen
 set showcmd                          " Display info known about the command being edited (eg number of lines highlighted in visual mode)
