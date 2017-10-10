@@ -117,6 +117,8 @@ autocmd Filetype yacc setlocal tabstop=8
 " In visual mode, "." will for each line, go into normal mode and execute the "."
   vnoremap . :norm.<CR>
 " Paste without being stupid ("*p means to paste on next line (p) from the register (") that represents the clipboard (*))
+  " note that vim8 has builtin support for bracketed paste mode (https://twitter.com/josh_cheek/status/914245535065890816)
+  " but it doesn't " always do the right thing, so keeping this anyway.
   nnoremap <Leader>v :set paste<CR>"*p<CR>:set nopaste<CR>
 " Pry insertion
   nmap <Leader>p orequire "pry"<CR>binding.pry<ESC>
