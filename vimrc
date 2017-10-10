@@ -148,17 +148,17 @@ autocmd Filetype yacc setlocal tabstop=8
   nnoremap <c-l> <c-w>l
 
 " left / shift-left decreases width
-  nmap <Left>    :wincmd <<CR>
-  nmap <S-Left>  :5wincmd <<CR>
+  nmap <Left>    :5wincmd <<CR>
+  nmap <S-Left>  :wincmd  <<CR>
 " right / shift-left increases width
-  nmap <Right>   :wincmd ><CR>
-  nmap <S-Right> :5wincmd ><CR>
+  nmap <Right>   :5wincmd ><CR>
+  nmap <S-Right> :wincmd  ><CR>
 " up / shift-left increases height
-  nmap <Up>      :wincmd +<CR>
-  nmap <S-Up>    :5wincmd +<CR>
+  nmap <Up>      :5wincmd +<CR>
+  nmap <S-Up>    :wincmd  +<CR>
 " down / shift-left decreases height
-  nmap <Down>    :wincmd -<CR>
-  nmap <S-Down>  :5wincmd -<CR>
+  nmap <Down>    :5wincmd -<CR>
+  nmap <S-Down>  :wincmd  -<CR>
 
 
 " ===== Emacs/Readline Keybindings For Commandline Mode =====
