@@ -25,7 +25,6 @@ Plugin 'https://github.com/tpope/vim-repeat'                " Uhm, a dep of some
 Plugin 'https://github.com/tpope/vim-surround'              " Better support for working with things that 'surround' text such as quotes and parens
 Plugin 'https://github.com/rking/ag.vim'                    " Searches through your project
 Plugin 'https://github.com/majutsushi/tagbar'               " Ctag browser
-Plugin 'https://github.com/hwartig/vim-seeing-is-believing' " Seeing is Believing integration (https://github.com/JoshCheek/seeing_is_believing)
 Plugin 'https://github.com/tpope/vim-fireplace'             " Clojure integration
 Plugin 'https://github.com/ctrlpvim/ctrlp.vim'              " Fuzzy Finder
 Plugin 'https://github.com/ConradIrwin/vim-bracketed-paste' " Lets vim know the difference between typing and pasting http://cirw.in/blog/bracketed-paste
@@ -119,7 +118,7 @@ autocmd Filetype yacc setlocal tabstop=8
 " Paste without being stupid ("*p means to paste on next line (p) from the register (") that represents the clipboard (*))
   " note that vim8 has builtin support for bracketed paste mode (https://twitter.com/josh_cheek/status/914245535065890816)
   " but it doesn't " always do the right thing, so keeping this anyway.
-  nnoremap <Leader>v :set paste<CR>"*p<CR>:set nopaste<CR>
+  nnoremap <Leader>y :set paste<CR>"*p<CR>:set nopaste<CR>
 " Pry insertion
   nmap <Leader>p orequire "pry"<CR>binding.pry<ESC>
 " C-c acts like <Esc> (it kind of does by default, but not thoroughly enough)
@@ -129,19 +128,60 @@ autocmd Filetype yacc setlocal tabstop=8
 
 " ===== Seeing Is Believing =====
 " Assumes you have a Ruby with SiB available in the PATH
-" If it doesn't work, you may need to `gem install seeing_is_believing -v 3.0.0.beta.6`
-" ...yeah, current release is a beta, which won't auto-install
+" If it doesn't work, you may need to `gem install seeing_is_believing`
 
-" Annotate every line
-  nmap <leader>b :%!seeing_is_believing --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk<CR>;
-" Annotate marked lines
-  nmap <leader>n :%.!seeing_is_believing --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk --xmpfilter-style<CR>;
-" Remove annotations
-  nmap <leader>c :%.!seeing_is_believing --clean<CR>;
-" Mark the current line for annotation
-  nmap <leader>m A # => <Esc>
-" Mark the highlighted lines for annotation
-  vmap <leader>m :norm A # => <Esc>
+function! WithoutChangingCursor(fn)
+  let cursor_pos     = getpos('.')
+  let wintop_pos     = getpos('w0')
+  let old_lazyredraw = &lazyredraw
+  let old_scrolloff  = &scrolloff
+  set lazyredraw
+
+  call a:fn()
+
+  call setpos('.', wintop_pos)
+  call setpos('.', cursor_pos)
+  redraw
+  let &lazyredraw = old_lazyredraw
+  let scrolloff   = old_scrolloff
+endfun
+
+function! SibAnnotateAll()
+  call WithoutChangingCursor(function('execute', ["%!seeing_is_believing --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk"]))
+endfun
+
+function! SibAnnotateMarked()
+  call WithoutChangingCursor(function('execute', ["%!seeing_is_believing --xmpfilter-style --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk"]))
+endfun
+
+function! SibCleanAnnotations()
+  call WithoutChangingCursor(function('execute', ["%!seeing_is_believing --clean"]))
+endfun
+
+function! SibToggleMark()
+  let pos  = getpos('.')
+  let line = getline(".")
+  if line =~ '^\s*$'
+    let line = '# => '
+  elseif line =~ '# =>'
+    let line = substitute(line, ' *# =>.*', '', '')
+  else
+    let line .= '  # => '
+  end
+  call setline('.', line)
+  call setpos('.', pos)
+endfun
+
+" Enable seeing-is-believing mappings only for Ruby
+augroup seeingIsBelievingSettings
+  " clear the settings if they already exist (so we don't run them twice)
+  autocmd!
+  autocmd FileType ruby nmap <buffer> <Leader>b :call SibAnnotateAll()<CR>;
+  autocmd FileType ruby nmap <buffer> <Leader>n :call SibAnnotateMarked()<CR>;
+  autocmd FileType ruby nmap <buffer> <Leader>v :call SibCleanAnnotations()<CR>;
+  autocmd FileType ruby nmap <buffer> <Enter>   :call SibToggleMark()<CR>;
+  autocmd FileType ruby vmap <buffer> <Enter>   :call SibToggleMark()<CR>;
+augroup END
 
 " ===== Window Navigation ======
 " Move to window below me
