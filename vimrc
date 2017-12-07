@@ -122,6 +122,10 @@ autocmd Filetype yacc setlocal tabstop=8
   nnoremap <Leader>v :set paste<CR>"*p<CR>:set nopaste<CR>
 " Pry insertion
   nmap <Leader>p orequire "pry"<CR>binding.pry<ESC>
+" C-c acts like <Esc> (it kind of does by default, but not thoroughly enough)
+  " This is really just b/c Apple took away my escape key,
+  " which has been ruining my life t.t
+  imap <C-C> <Esc>
 
 " ===== Seeing Is Believing =====
 " Assumes you have a Ruby with SiB available in the PATH
