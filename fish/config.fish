@@ -8,6 +8,7 @@ if test -e ~/.config/fish/private_config.fish
   source   ~/.config/fish/private_config.fish
 end
 
+
 # Various paths
 set --export PATH $HOME/bin /usr/local/bin /usr/local/sbin $PATH
 
@@ -62,3 +63,20 @@ function nodenv
     command nodenv "$command" $argv
   end
 end
+
+
+# pyenv is rbenv,but for Python. It's way better than virtualenv, eg it was able
+# to install Keras and Jupyter, where virtualenv was not. Plus, it doesn't expect
+# to be running inside of a bash shell, and you can see that setting it up only
+# requires setting a few env vars, so it's cheap to load
+set --export PYENV_ROOT            "$HOME/.pyenv"
+set --export PYTHON_CONFIGURE_OPTS --enable-framework
+set --export PATH                  $PYENV_ROOT/bin $PYENV_ROOT/shims $PATH
+
+
+# Make Cmus music player detachable (https://github.com/cmus/cmus/wiki/detachable-cmus)
+alias cmus='screen -q -r -D cmus; or screen -S cmus (which cmus)'
+
+
+# Remove duplicate entries from the path (Ruby's uniq won't change the order)
+set -x PATH (ruby -e 'puts ENV["PATH"].split(":").uniq')
