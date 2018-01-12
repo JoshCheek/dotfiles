@@ -34,6 +34,15 @@ hs.hotkey.bind(mash, "1", windowAdjuster(0, 0, 1, 1))
 hs.hotkey.bind(mash, "2", windowAdjuster(1, 0, 1, 1))
 hs.hotkey.bind(mash, "3", windowAdjuster(1, 1, 1, 1))
 hs.hotkey.bind(mash, "4", windowAdjuster(0, 1, 1, 1))
+hs.hotkey.bind(mash, "5", windowAdjuster(0.5, 0.5, 1, 1))
+
+
+function moveWindowToNextScreen()
+  local window = hs.window.frontmostWindow()
+  local screen = window:screen():next()
+  window:moveToScreen(screen)
+end
+hs.hotkey.bind(mash, "S", moveWindowToNextScreen)
 
 
 -- ----- Hello world -----
