@@ -48,9 +48,9 @@ set --export LS_COLORS 'di=33'
 # nodenv is rbenv, but for node js. It's dramatically better than nvm in terms
 # of load time (nvm in my bash profile ground my system to a halt), working
 # outside bash fish, and not constantly needing my attention
-set -gx PATH "$HOME/.nodenv/shims" $PATH
+set -gx PATH "$HOME/.nodenv/shims" "$HOME/.nodenv/bin" $PATH
 set -gx NODENV_SHELL fish
-source '/usr/local/Cellar/nodenv/1.1.2/completions/nodenv.fish'
+source $HOME/.nodenv/completions/nodenv.fish
 command nodenv rehash 2>/dev/null
 function nodenv
   set command $argv[1]
