@@ -53,7 +53,7 @@
     count    = shortlog -sn
 
     # list people who have committed
-    authors  = ! git log --format=\"%ae %an\" | sort -u | column -t
+    authors  = ! git log --format=\"%ae%x01%an\" | sort -u | column -ts 
 
   # Stash (slightly better stash commands... sadly, --keep-index doesn't work well enough to be useful, works for the stash, but not the pop)
     # stash untracked files, too
