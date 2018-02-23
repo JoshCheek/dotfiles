@@ -28,6 +28,7 @@ Plugin 'https://github.com/majutsushi/tagbar'               " Ctag browser
 Plugin 'https://github.com/tpope/vim-fireplace'             " Clojure integration
 Plugin 'https://github.com/ctrlpvim/ctrlp.vim'              " Fuzzy Finder
 Plugin 'https://github.com/ConradIrwin/vim-bracketed-paste' " Lets vim know the difference between typing and pasting http://cirw.in/blog/bracketed-paste
+Plugin 'https://github.com/tomlion/vim-solidity'            " Etherium's language (it's some cryptocurrency)
 
 " Language Support
 Plugin 'https://github.com/vim-ruby/vim-ruby'               " Ruby    - Pretty fkn legit (eg it's generally $LOAD_PATH aware, it's got some really awesome text objects)
@@ -50,6 +51,7 @@ Plugin 'https://github.com/jneen/ragel.vim'                 " Ragel    - State m
 Plugin 'https://github.com/chrisbra/csv.vim'                " CSV      - a few nice features, some obvious ones missing
 Plugin 'https://github.com/dag/vim-fish'                    " Fish     - alternate shell
 Plugin 'https://github.com/keith/swift.vim'                 " Swift    - Apple's replacement for Objective-C
+Plugin 'https://github.com/wavded/vim-stylus'               " Stylus   - it's like Sass, Wes Bos's code uses this
 
 " Colorschemes (syntax highlighting, aka themes)
 Plugin 'https://github.com/morhetz/gruvbox'
