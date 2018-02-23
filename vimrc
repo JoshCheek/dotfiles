@@ -122,7 +122,7 @@ autocmd Filetype yacc setlocal tabstop=8
   " but it doesn't " always do the right thing, so keeping this anyway.
   nnoremap <Leader>y :set paste<CR>"*p<CR>:set nopaste<CR>
 " Pry insertion
-  nmap <Leader>p orequire "pry"<CR>binding.pry<ESC>
+  nmap <Leader>p orequire "pry"<CR>binding().pry<ESC>
 " C-c acts like <Esc> (it kind of does by default, but not thoroughly enough)
   " This is really just b/c Apple took away my escape key,
   " which has been ruining my life t.t
