@@ -15,7 +15,7 @@ while true; do
   if [[ -d "$nm" ]]; then
     search_dirs+=("$nm")
     exe="$nm/.bin/$program"
-    if [[ -f "$exe" ]]; then
+    if [[ -x "$exe" ]]; then
       exec "$exe" "$@"
     fi
   fi
