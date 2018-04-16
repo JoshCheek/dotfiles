@@ -1,5 +1,5 @@
 # various paths
-set --export PATH $HOME/bin /usr/local/bin /usr/local/sbin $PATH
+set --export PATH $HOME/bin $HOME/.nodenv/bin $HOME/.nodenv/shims /usr/local/bin /usr/local/sbin $PATH
 
 if test -d $HOME/code/dotfiles/bin
   set --export PATH $HOME/code/dotfiles/bin $PATH
@@ -29,11 +29,6 @@ set --export HOMEBREW_AUTO_UPDATE_SECS (echo '60 * 60 * 24 * 7' | bc)
 # but Brixen says it works with rbx in ways that rbenv's assumptions won't let it
 if test -e /usr/local/share/chruby/chruby.fish
   source   /usr/local/share/chruby/chruby.fish
-end
-
-# IIRC, using https://github.com/brigand/fast-nvm-fish
-if type -q nvm
-  nvm use v7.10.0
 end
 
 # Don't print a greeting when I start the shell
