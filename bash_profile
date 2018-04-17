@@ -7,6 +7,11 @@ fi
   export EDITOR='vim'
   export PATH="$HOME/bin:$PATH"
 
+# tab completion
+# if [ -f /usr/local/share/bash-completion/bash_completion ]; then
+#   . /usr/local/share/bash-completion/bash_completion
+# fi
+
 # ALIASES
   # path
     alias     ..="cd .."
