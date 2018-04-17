@@ -1,26 +1,72 @@
+# Helpers
+function maybe_source
+  if test -e $argv[1]
+    source $argv[1]
+  end
+end
+
+function maybe_prepend_path
+  set -l to_add
+  for dir in $argv
+    if test -d $dir
+      set to_add $to_add $dir
+    end
+  end
+  set --export PATH $to_add $PATH
+end
+
 # Ruby environment, load it first b/c I choose the ruby in the private config
-if test -e /usr/local/share/chruby/chruby.fish
-  source   /usr/local/share/chruby/chruby.fish
+maybe_source /usr/local/share/chruby/chruby.fish
+
+# Homebrew
+maybe_prepend_path /usr/local/bin /usr/local/sbin
+
+# pyenv is rbenv, but for Python. It's way better than virtualenv, eg it was able
+# to install Keras and Jupyter, where virtualenv was not. Plus, it doesn't expect
+# to be running inside of a bash shell, and you can see that setting it up only
+# requires setting a few env vars, so it's cheap to load
+if test -d "$HOME/.pyenv"
+  set --export PYENV_ROOT            "$HOME/.pyenv"
+  set --export PYTHON_CONFIGURE_OPTS --enable-framework
+  set --export PATH                  $PYENV_ROOT/bin $PYENV_ROOT/shims $PATH
 end
 
-# Private / machine dependent configuration
-if test -e ~/.config/fish/private_config.fish
-  source   ~/.config/fish/private_config.fish
+# nodenv is rbenv, but for node js. It's dramatically better than nvm in terms
+# of load time (nvm in my bash profile ground my system to a halt), working
+# outside bash fish, and not constantly needing my attention
+if test -d $HOME/.nodenv
+  # https://github.com/nodenv/nodenv/blob/18489d7bf319fde4edc942cce7f3b1caf1b12214/libexec/nodenv-sh-shell#L33
+  set -x NODENV_SHELL fish
+
+  maybe_prepend_path $HOME/.nodenv/bin $HOME/.nodenv/shims
+  maybe_source $HOME/.nodenv/completions/nodenv.fish
+
+  # # rehash every time, just to reduce weird errors (doesn't seem to be expensive)
+  # command nodenv rehash 2>/dev/null
+
+  function nodenv
+    set command $argv[1]
+    set -e argv[1]
+
+    switch "$command"
+    case rehash shell
+      source (nodenv "sh-$command" $argv|psub)
+    case '*'
+      command nodenv "$command" $argv
+    end
+  end
 end
 
-# various paths
-set --export PATH $HOME/bin $HOME/.nodenv/bin $HOME/.nodenv/shims /usr/local/bin /usr/local/sbin $PATH
-
-if test -d $HOME/code/dotfiles/bin
-  set --export PATH $HOME/code/dotfiles/bin $PATH
-end
-
-# for golang
+# For golang
 if test -d "$HOME/golang"
-  set --export GOPATH "$HOME/golang"
-  set --export PATH   $PATH "$GOPATH/bin"
+  set --export GOPATH           "$HOME/golang"
+  set --export PATH             $PATH "$GOPATH/bin"
   set --export PKG_CONFIG_PATH  "/usr/lib/pkgconfig"
 end
+
+# My custom executables
+maybe_prepend_path $HOME/code/dotfiles/bin  # executables in dotfiles
+maybe_prepend_path $HOME/bin                # overrides from this machine
 
 # Rails cucumber integration looks for this env var to decide how to display output
 set --export CUCUMBER_FORMAT pretty
@@ -43,38 +89,11 @@ set --erase fish_greeting
 # `ls` doesn't even use it, despite talking about it in its man page
 set --export LS_COLORS 'di=33'
 
-# nodenv is rbenv, but for node js. It's dramatically better than nvm in terms
-# of load time (nvm in my bash profile ground my system to a halt), working
-# outside bash fish, and not constantly needing my attention
-set -gx PATH "$HOME/.nodenv/shims" "$HOME/.nodenv/bin" $PATH
-set -gx NODENV_SHELL fish
-source $HOME/.nodenv/completions/nodenv.fish
-command nodenv rehash 2>/dev/null
-function nodenv
-  set command $argv[1]
-  set -e argv[1]
-
-  switch "$command"
-  case rehash shell
-    source (nodenv "sh-$command" $argv|psub)
-  case '*'
-    command nodenv "$command" $argv
-  end
-end
-
-# pyenv is rbenv,but for Python. It's way better than virtualenv, eg it was able
-# to install Keras and Jupyter, where virtualenv was not. Plus, it doesn't expect
-# to be running inside of a bash shell, and you can see that setting it up only
-# requires setting a few env vars, so it's cheap to load
-set --export PYENV_ROOT            "$HOME/.pyenv"
-set --export PYTHON_CONFIGURE_OPTS --enable-framework
-set --export PATH                  $PYENV_ROOT/bin $PYENV_ROOT/shims $PATH
-
 # Make Cmus music player detachable (https://github.com/cmus/cmus/wiki/detachable-cmus)
 # NOTE: To get `cmus` to background itself when you press "q",
 #       you need to run this from within it: `:bind -f common q shell screen -d cmus`
 #       only need to do this once, it remembers configuration.
 alias cmus='screen -q -r -D cmus; or screen -S cmus (which cmus)'
 
-# Remove duplicate entries from the path (Ruby's uniq won't change the order)
-set -x PATH (ruby -e 'puts ENV["PATH"].split(":").uniq')
+# Private / machine dependent configuration
+maybe_source $HOME/.config/fish/private_config.fish
