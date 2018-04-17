@@ -71,6 +71,9 @@ set --export PYTHON_CONFIGURE_OPTS --enable-framework
 set --export PATH                  $PYENV_ROOT/bin $PYENV_ROOT/shims $PATH
 
 # Make Cmus music player detachable (https://github.com/cmus/cmus/wiki/detachable-cmus)
+# NOTE: To get `cmus` to background itself when you press "q",
+#       you need to run this from within it: `:bind -f common q shell screen -d cmus`
+#       only need to do this once, it remembers configuration.
 alias cmus='screen -q -r -D cmus; or screen -S cmus (which cmus)'
 
 # Remove duplicate entries from the path (Ruby's uniq won't change the order)
