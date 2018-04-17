@@ -1,14 +1,25 @@
 #!/bin/sh
 
-macvim_app="/Applications/MacVim.app/Contents/MacOS/Vim" # get it with `brew install macvim && brew linkapps`
-macvim_homebrew="$(ls "/usr/local/Cellar/macvim/"*"/MacVim.app/Contents/bin/vim" | tail -1)"
+# get it with `brew install macvim && brew linkapps`
+macvim_app="/Applications/MacVim.app/Contents/MacOS/Vim"
+brew_vim="/usr/local/bin/vim" # could be anything, really
+nvim="/usr/local/bin/nvim"
 systemvim="/usr/bin/vim"
 selectedvim=""
 
-if test -e "$macvim_app"; then
+if test -n "$VIM_PATH"; then
+  if test -e "$VIM_PATH"; then
+    selectedvim="$VIM_PATH"
+  else
+    echo "\$VIM_PATH is set to $VIM_PATH, but could not find that executable" >&2
+    exit 1
+  fi
+elif test -e "$macvim_app"; then
   selectedvim="$macvim_app"
-elif test -e "$macvim_homebrew"; then
-  selectedvim="$macvim_homebrew"
+elif test -e "$brew_vim"; then
+  selectedvim="$brew_vim"
+elif test -e "$nvim"; then
+  selectedvim="$nvim"
 elif test -e "$systemvim"; then
   selectedvim="$systemvim"
 else
