@@ -25,8 +25,10 @@ Plugin 'https://github.com/tpope/vim-repeat'                " Uhm, a dep of some
 Plugin 'https://github.com/tpope/vim-surround'              " Better support for working with things that 'surround' text such as quotes and parens
 Plugin 'https://github.com/rking/ag.vim'                    " Searches through your project
 Plugin 'https://github.com/majutsushi/tagbar'               " Ctag browser
-Plugin 'https://github.com/hwartig/vim-seeing-is-believing' " Seeing is Believing integration (https://github.com/JoshCheek/seeing_is_believing)
-Plugin 'https://github.com/tpope/vim-fireplace'             " Clojure integraiton
+Plugin 'https://github.com/tpope/vim-fireplace'             " Clojure integration
+Plugin 'https://github.com/ctrlpvim/ctrlp.vim'              " Fuzzy Finder
+Plugin 'https://github.com/ConradIrwin/vim-bracketed-paste' " Lets vim know the difference between typing and pasting http://cirw.in/blog/bracketed-paste
+Plugin 'https://github.com/tomlion/vim-solidity'            " Etherium's language (it's some cryptocurrency)
 
 " Language Support
 Plugin 'https://github.com/vim-ruby/vim-ruby'               " Ruby    - Pretty fkn legit (eg it's generally $LOAD_PATH aware, it's got some really awesome text objects)
@@ -49,6 +51,7 @@ Plugin 'https://github.com/jneen/ragel.vim'                 " Ragel    - State m
 Plugin 'https://github.com/chrisbra/csv.vim'                " CSV      - a few nice features, some obvious ones missing
 Plugin 'https://github.com/dag/vim-fish'                    " Fish     - alternate shell
 Plugin 'https://github.com/keith/swift.vim'                 " Swift    - Apple's replacement for Objective-C
+Plugin 'https://github.com/wavded/vim-stylus'               " Stylus   - it's like Sass, Wes Bos's code uses this
 
 " Colorschemes (syntax highlighting, aka themes)
 Plugin 'https://github.com/morhetz/gruvbox'
@@ -88,9 +91,11 @@ set t_Co=256                         " Explicitly tell vim that the terminal sup
 set background=dark                  " Tell vim to use colours that works with a dark terminal background (opposite is 'light')
 set nowrap                           " Display long lines as truncated instead of wrapped onto the next line
 set cursorline                       " Colour the line the cursor is on
+set re=1                             " Use an older regex library that is much much quicker, otherwise it lags when I press "jkjkjkjkjkjk"...
 set number                           " Show line numbers
 set hlsearch                         " Highlight all search matches that are on the screen
 set showcmd                          " Display info known about the command being edited (eg number of lines highlighted in visual mode)
+set colorcolumn=80                   " Add a column at the 80 char mark, for visual reference
 
 " ===== Basic behaviour =====
 set scrolloff=4                      " Scroll away from the cursor when I get too close to the edge of the screen
@@ -113,25 +118,72 @@ autocmd Filetype yacc setlocal tabstop=8
 " In visual mode, "." will for each line, go into normal mode and execute the "."
   vnoremap . :norm.<CR>
 " Paste without being stupid ("*p means to paste on next line (p) from the register (") that represents the clipboard (*))
-  nnoremap <Leader>v :set paste<CR>"*p<CR>:set nopaste<CR>
+  " note that vim8 has builtin support for bracketed paste mode (https://twitter.com/josh_cheek/status/914245535065890816)
+  " but it doesn't " always do the right thing, so keeping this anyway.
+  nnoremap <Leader>y :set paste<CR>"*p<CR>:set nopaste<CR>
 " Pry insertion
-  nmap <Leader>p orequire "pry"<CR>binding.pry<ESC>
+  nmap <Leader>p orequire "pry"<CR>binding().pry<ESC>
+" C-c acts like <Esc> (it kind of does by default, but not thoroughly enough)
+  " This is really just b/c Apple took away my escape key,
+  " which has been ruining my life t.t
+  imap <C-C> <Esc>
 
 " ===== Seeing Is Believing =====
 " Assumes you have a Ruby with SiB available in the PATH
-" If it doesn't work, you may need to `gem install seeing_is_believing -v 3.0.0.beta.6`
-" ...yeah, current release is a beta, which won't auto-install
+" If it doesn't work, you may need to `gem install seeing_is_believing`
 
-" Annotate every line
-  nmap <leader>b :%!seeing_is_believing --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk<CR>;
-" Annotate marked lines
-  nmap <leader>n :%.!seeing_is_believing --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk --xmpfilter-style<CR>;
-" Remove annotations
-  nmap <leader>c :%.!seeing_is_believing --clean<CR>;
-" Mark the current line for annotation
-  nmap <leader>m A # => <Esc>
-" Mark the highlighted lines for annotation
-  vmap <leader>m :norm A # => <Esc>
+function! WithoutChangingCursor(fn)
+  let cursor_pos     = getpos('.')
+  let wintop_pos     = getpos('w0')
+  let old_lazyredraw = &lazyredraw
+  let old_scrolloff  = &scrolloff
+  set lazyredraw
+
+  call a:fn()
+
+  call setpos('.', wintop_pos)
+  call setpos('.', cursor_pos)
+  redraw
+  let &lazyredraw = old_lazyredraw
+  let scrolloff   = old_scrolloff
+endfun
+
+function! SibAnnotateAll()
+  call WithoutChangingCursor(function('execute', ["%!seeing_is_believing --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk"]))
+endfun
+
+function! SibAnnotateMarked()
+  call WithoutChangingCursor(function('execute', ["%!seeing_is_believing --xmpfilter-style --timeout 12 --line-length 500 --number-of-captures 300 --alignment-strategy chunk"]))
+endfun
+
+function! SibCleanAnnotations()
+  call WithoutChangingCursor(function('execute', ["%!seeing_is_believing --clean"]))
+endfun
+
+function! SibToggleMark()
+  let pos  = getpos('.')
+  let line = getline(".")
+  if line =~ '^\s*$'
+    let line = '# => '
+  elseif line =~ '# =>'
+    let line = substitute(line, ' *# =>.*', '', '')
+  else
+    let line .= '  # => '
+  end
+  call setline('.', line)
+  call setpos('.', pos)
+endfun
+
+" Enable seeing-is-believing mappings only for Ruby
+augroup seeingIsBelievingSettings
+  " clear the settings if they already exist (so we don't run them twice)
+  autocmd!
+  autocmd FileType ruby nmap <buffer> <Leader>b :call SibAnnotateAll()<CR>;
+  autocmd FileType ruby nmap <buffer> <Leader>n :call SibAnnotateMarked()<CR>;
+  autocmd FileType ruby nmap <buffer> <Leader>v :call SibCleanAnnotations()<CR>;
+  autocmd FileType ruby nmap <buffer> <Enter>   :call SibToggleMark()<CR>;
+  autocmd FileType ruby vmap <buffer> <Enter>   :call SibToggleMark()<CR>;
+augroup END
 
 " ===== Window Navigation ======
 " Move to window below me
@@ -144,17 +196,17 @@ autocmd Filetype yacc setlocal tabstop=8
   nnoremap <c-l> <c-w>l
 
 " left / shift-left decreases width
-  nmap <Left>    :wincmd <<CR>
-  nmap <S-Left>  :5wincmd <<CR>
+  nmap <Left>    :5wincmd <<CR>
+  nmap <S-Left>  :wincmd  <<CR>
 " right / shift-left increases width
-  nmap <Right>   :wincmd ><CR>
-  nmap <S-Right> :5wincmd ><CR>
+  nmap <Right>   :5wincmd ><CR>
+  nmap <S-Right> :wincmd  ><CR>
 " up / shift-left increases height
-  nmap <Up>      :wincmd +<CR>
-  nmap <S-Up>    :5wincmd +<CR>
+  nmap <Up>      :5wincmd +<CR>
+  nmap <S-Up>    :wincmd  +<CR>
 " down / shift-left decreases height
-  nmap <Down>    :wincmd -<CR>
-  nmap <S-Down>  :5wincmd -<CR>
+  nmap <Down>    :5wincmd -<CR>
+  nmap <S-Down>  :wincmd  -<CR>
 
 
 " ===== Emacs/Readline Keybindings For Commandline Mode =====
@@ -242,6 +294,14 @@ let g:airline_theme                       = 'bubblegum' " https://github.com/bli
 " ===== CSV =====
 let g:csv_highlight_column = 'y'
 
+" ===== Ctrl-p =====
+if executable('ag')
+  " Use Ag over Grep
+  set grepprg=ag\ --nogroup\ --nocolor
+
+  " Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
+  let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
+endif
 
 " ===== vim-textobj-rubyblock =====
 " Not sure what it does
@@ -259,8 +319,16 @@ autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isT
 
 nmap <C-N> :NERDTreeToggle<CR>
 
-" find the current file
-nmap <silent> <C-s> :NERDTreeFind<CR>
+" Find the current file (I have no idea what the SID thing is, I'm just cargo
+" culting syntax from the StripTrailingWhitespaces function)
+function! <SID>JoshNerdTreeToggle()
+  if expand('%:t') != "NERD_tree_1"
+    :NERDTreeFind   " First press opens NERDTree and focuses us on that file
+  else
+    :NERDTreeToggle " Second press hides NERDTree
+  end
+endfunction
+nmap <silent> <C-s> :call <SID>JoshNerdTreeToggle()<CR>
 
 
 " ===== Gruvbox for the Colorscheme =====
@@ -286,8 +354,8 @@ nmap <Leader>q :call repeat#set("\<Plug>RunRegq")<CR>
 " ===== Elm-vim =====
 let g:elm_format_autosave = 1
 
-
-set colorcolumn=80
+" ===== vim-jsx =====
+let g:jsx_ext_required = 0 " Allow JSX in normal JS files
 
 
 "" Maybe worth checking out

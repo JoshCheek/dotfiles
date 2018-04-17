@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+if [[ "$#" == 0 ]]; then
+  echo "First arg should be an executable from node_modules/.bin" >&2
+  exit 64 # incorrect usage, see man 3 sysexitss
+fi
+
+dir="$(pwd)"
+search_dirs=()
+program="$1"
+shift
+
+while true; do
+  nm="$dir"/node_modules
+  if [[ -d "$nm" ]]; then
+    search_dirs+=("$nm")
+    exe="$nm/.bin/$program"
+    if [[ -x "$exe" ]]; then
+      exec "$exe" "$@"
+    fi
+  fi
+  [[ "$dir" == "/" ]] && break
+  dir="$(cd "$dir"/.. && pwd)"
+done
+
+echo "Could not find $program, searched in:" >&2
+for dir in "${search_dirs[@]}"; do
+  echo "  $dir"
+done
+exit 127 # my status, after trying to run a program that DNE

@@ -1,3 +1,13 @@
+# Ruby environment, load it first b/c I choose the ruby in the private config
+if test -e /usr/local/share/chruby/chruby.fish
+  source   /usr/local/share/chruby/chruby.fish
+end
+
+# Private / machine dependent configuration
+if test -e ~/.config/fish/private_config.fish
+  source   ~/.config/fish/private_config.fish
+end
+
 # various paths
 set --export PATH $HOME/bin $HOME/.nodenv/bin $HOME/.nodenv/shims /usr/local/bin /usr/local/sbin $PATH
 
@@ -25,29 +35,43 @@ end
 # Tell homebrew not to auto update if I've already done it this week
 set --export HOMEBREW_AUTO_UPDATE_SECS (echo '60 * 60 * 24 * 7' | bc)
 
-# Load ruby. Interface is less helpful than rbenv
-# but Brixen says it works with rbx in ways that rbenv's assumptions won't let it
-if test -e /usr/local/share/chruby/chruby.fish
-  source   /usr/local/share/chruby/chruby.fish
-end
-
 # Don't print a greeting when I start the shell
 set --erase fish_greeting
 
-# For configs that I don't want in my public git (ie work stuff and stuff that changes across computers)
-if test -e ~/.config/fish/private_config.fish
-  source   ~/.config/fish/private_config.fish
-end
-
 # Have `tree` colour directories yellowish
-# this shit is so badly documented and inconsistent
+# this shit is so badly documented and inconsistent,
+# `ls` doesn't even use it, despite talking about it in its man page
 set --export LS_COLORS 'di=33'
 
+# nodenv is rbenv, but for node js. It's dramatically better than nvm in terms
+# of load time (nvm in my bash profile ground my system to a halt), working
+# outside bash fish, and not constantly needing my attention
+set -gx PATH "$HOME/.nodenv/shims" "$HOME/.nodenv/bin" $PATH
+set -gx NODENV_SHELL fish
+source $HOME/.nodenv/completions/nodenv.fish
+command nodenv rehash 2>/dev/null
+function nodenv
+  set command $argv[1]
+  set -e argv[1]
 
-# Provide metadata to iTerm2 so that it can provide useful features
-# Documentation: http://iterm2.com/documentation-shell-integration.html
-# Original src:  https://iterm2.com/misc/fish_startup.in
-#
-# Commented out b/c it seemed to cause fish to get really fkn slow with the last update (fish v2.5.0)
-#
-# source ~/.config/fish/iterm2_shell_integration.fish
+  switch "$command"
+  case rehash shell
+    source (nodenv "sh-$command" $argv|psub)
+  case '*'
+    command nodenv "$command" $argv
+  end
+end
+
+# pyenv is rbenv,but for Python. It's way better than virtualenv, eg it was able
+# to install Keras and Jupyter, where virtualenv was not. Plus, it doesn't expect
+# to be running inside of a bash shell, and you can see that setting it up only
+# requires setting a few env vars, so it's cheap to load
+set --export PYENV_ROOT            "$HOME/.pyenv"
+set --export PYTHON_CONFIGURE_OPTS --enable-framework
+set --export PATH                  $PYENV_ROOT/bin $PYENV_ROOT/shims $PATH
+
+# Make Cmus music player detachable (https://github.com/cmus/cmus/wiki/detachable-cmus)
+alias cmus='screen -q -r -D cmus; or screen -S cmus (which cmus)'
+
+# Remove duplicate entries from the path (Ruby's uniq won't change the order)
+set -x PATH (ruby -e 'puts ENV["PATH"].split(":").uniq')
