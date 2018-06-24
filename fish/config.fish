@@ -87,7 +87,7 @@ end
 set --export HOMEBREW_AUTO_UPDATE_SECS (echo '60 * 60 * 24 * 7' | bc)
 
 # Don't print a greeting when I start the shell
-set --erase fish_greeting
+set fish_greeting
 
 # Have `tree` colour directories yellowish
 # this shit is so badly documented and inconsistent,
