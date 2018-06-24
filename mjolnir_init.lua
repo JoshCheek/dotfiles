@@ -14,7 +14,7 @@
 --    print(whatever)
 --
 -- console:
---   muast assign all vars as globals or they don't show
+--   must assign all vars as globals or they don't show
 --
 -- frame has:
 --   x (distance from left side of screen)
