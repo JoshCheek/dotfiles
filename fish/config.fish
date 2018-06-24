@@ -38,8 +38,7 @@ if test -d "$HOME/.pyenv"
 end
 
 # nodenv is rbenv, but for node js. It's dramatically better than nvm in terms
-# of load time (nvm in my bash profile ground my system to a halt), working
-# outside bash fish, and not constantly needing my attention
+# of load time, working outside bash fish, and not constantly needing my attention
 if test -d $HOME/.nodenv
   # https://github.com/nodenv/nodenv/blob/18489d7bf319fde4edc942cce7f3b1caf1b12214/libexec/nodenv-sh-shell#L33
   set -x NODENV_SHELL fish
