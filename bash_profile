@@ -4,7 +4,7 @@ fi
 
 # Environment Variables
   export EDITOR='vim'
-  export PATH="$HOME/bin:$PATH"
+  export PATH="$HOME/bin:$HOME/code/dotfiles/bin:$PATH"
 
 # tab completion
 # if [ -f /usr/local/share/bash-completion/bash_completion ]; then
