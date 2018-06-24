@@ -1,4 +1,10 @@
 # Helpers
+
+# NOTE: If you export any variables from the sourced file,
+# they need to be set with global. EG:
+#
+#     set -gx PATH some/private/path PATH
+#
 function maybe_source
   if test -e $argv[1]
     source $argv[1]
@@ -12,7 +18,7 @@ function maybe_prepend_path
       set to_add $to_add $dir
     end
   end
-  set --export PATH $to_add $PATH
+  set --global --export PATH $to_add $PATH
 end
 
 # Ruby environment, load it first b/c I choose the ruby in the private config
