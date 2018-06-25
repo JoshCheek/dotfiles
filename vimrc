@@ -87,7 +87,7 @@ set updatecount=0                    " Don't try to write swapfiles after some n
 set backupskip=/tmp/*,/private/tmp/* " Let me edit crontab files
 
 " ===== Aesthetics =====
-set t_Co=256                         " Explicitly tell vim that the terminal supports 256 colors (iTerm2 does, )
+set t_Co=256                         " Explicitly tell vim that the terminal supports 256 colors (iTerm2 does)
 set background=dark                  " Tell vim to use colours that works with a dark terminal background (opposite is 'light')
 set nowrap                           " Display long lines as truncated instead of wrapped onto the next line
 set cursorline                       " Colour the line the cursor is on
@@ -115,11 +115,11 @@ autocmd Filetype yacc setlocal tabstop=8
   cmap %/ <C-R>=expand("%:p:h")."/"<CR>
 " Replace %% with current file (eg `:vs %%`)
   cmap %% <C-R>=expand("%")<CR>
-" In visual mode, "." will for each line, go into normal mode and execute the "."
+" In visual mode, "." will, for each line, go into normal mode and execute the "."
   vnoremap . :norm.<CR>
 " Paste without being stupid ("*p means to paste on next line (p) from the register (") that represents the clipboard (*))
   " note that vim8 has builtin support for bracketed paste mode (https://twitter.com/josh_cheek/status/914245535065890816)
-  " but it doesn't " always do the right thing, so keeping this anyway.
+  " but it doesn't always do the right thing, so keeping this anyway.
   nnoremap <Leader>y :set paste<CR>"*p<CR>:set nopaste<CR>
 " Pry insertion
   nmap <Leader>p orequire "pry"<CR>binding().pry<ESC>
@@ -310,7 +310,7 @@ runtime macros/matchit.vim
 
 " ===== NERDTree =====
 
-" Open a NERDTree automatically when vim starts up if no files were specified
+" Open a NERDTree automatically when vim starts up, if no files were specified
 autocmd StdinReadPre * let s:std_in=1
 autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
 
@@ -331,13 +331,13 @@ endfunction
 nmap <silent> <C-s> :call <SID>JoshNerdTreeToggle()<CR>
 
 
-" ===== Gruvbox for the Colorscheme =====
+" ===== Hybrid for the Colorscheme =====
 " Now switch to this custom colorscheme (dark gray)
 " 'gruvbox', 'hybrid', and 'solarized' dark theme are my favs
 " can't use solarized, though, b/c it throws students off since there's not a
 " super obvious visual transition between my shell and my editor.
 "
-" So, choosing between gruvbox and hybrid. gruvbox has less contrat, hybrid is darker
+" So, choosing between gruvbox and hybrid. gruvbox has less contrast, hybrid is darker
 colorscheme hybrid
 map <silent><F3> :NEXTCOLOR<cr>
 map <silent><F2> :PREVCOLOR<cr>
