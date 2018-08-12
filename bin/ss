@@ -1,28 +1,36 @@
 #!/usr/bin/env dotfiles_ruby
 # tests in test/ss.feature (https://github.com/JoshCheek/dotfiles/blob/master/test/ss.feature)
 
+require 'time'
+
+SCREENSHOT_DIR = File.expand_path ENV.fetch('SCREENSHOT_DIR', "~/Desktop")
+GLOB           = File.join SCREENSHOT_DIR, '*.png'
+LONG_LONG_AGO  = Time.parse('1900-01-01') # a "null" time value
+
+formats = [
+  "Screen Shot %Y-%m-%d at %H.%M.%S %p.png",
+  "Screenshot %Y-%m-%d %H.%M.%S.png",
+]
+
+most_recent_screenshot_path =
+  Dir[GLOB]
+    .grep(/screen.*shot \d\d\d\d-\d\d-\d\d .*\.png$/i)
+    .max_by { |filepath|
+      filename = File.basename(filepath)
+      time     = LONG_LONG_AGO
+      formats.each do |format|
+        begin
+          time = Time.strptime filename, format
+          break
+        rescue ArgumentError
+        end
+      end
+      [time, filepath]
+    }
+
 def arg?(*potential_args)
   potential_args.any?  { |arg| ARGV.include? arg }
 end
-
-require 'time'
-
-screenshot_dir = File.expand_path \
-  ENV.fetch('SCREENSHOT_DIR', "~/Dropbox/Screenshots/")
-
-long_long_ago = Time.parse('1900-01-01') # a "null" time value
-
-most_recent_screenshot_path =
-  Dir[File.join screenshot_dir, '*.png']
-    .grep(/Screenshot \d\d\d\d-\d\d-\d\d \d\d\.\d\d\.\d\d\.png$/)
-    .max_by { |filepath|
-      begin
-        filename = File.basename(filepath)
-        Time.strptime filename, "Screenshot %Y-%m-%d %H.%M.%S.png"
-      rescue ArgumentError
-        long_long_ago
-      end
-    }
 
 if arg? '-h', '--help', 'help'
   puts "ss [-p] [location]"
@@ -34,17 +42,44 @@ if arg? '-h', '--help', 'help'
   puts
   puts "  no args           # prints out the name"
   puts "  location          # copy the screenshot to this location"
-  puts "  -s | --sketch     # open the screenshot in Sketch"
+  puts "  -c | --cat        # cat the image to the console (assumes iTerm2)"
+  puts "  -d | --delete     # delete the screenshot"
+  puts "  -h | --help       # this help screen"
   puts "  -o | --open       # open with preview"
   puts "  -R | --reveal     # Open with finder"
+  puts "  -s | --sketch     # open the screenshot in Sketch"
+
+elsif arg? '-c', '--cat'
+  # https://www.iterm2.com/documentation-images.html
+  # https://www.iterm2.com/utilities/imgcat
+  require 'base64'
+  image = File.read most_recent_screenshot_path
+  $stdout << "\e]1337;"
+  $stdout << "File=" # Yeah, I know it seems weird, but it's what imgcat does and it matches the docs
+  $stdout << "name=#{Base64.encode64 most_recent_screenshot_path};"
+  $stdout << "size=#{image.bytesize};"
+  $stdout << "preserveAspectRatio=1;"
+  $stdout << "inline=1;" # Display rather than download
+  $stdout << ":"
+  $stdout << Base64.encode64(image)
+  $stdout << "\a"
+
+elsif arg? '-d', '--delete'
+  File.delete most_recent_screenshot_path
 elsif arg? '-s', '--sketch'
   system 'open', '-a', 'Sketch.app',  most_recent_screenshot_path
 elsif arg? '-o', '--open'
   system 'open', most_recent_screenshot_path
 elsif arg? '-R', '--reveal'
   system 'open', '--reveal', most_recent_screenshot_path
+elsif arg? '-r'
+  $stderr.puts "Use -R instead of -r. Obviously I could make this work, but it'll mess you up when you go to use `open -R` and mess up the flag"
+  exit 1
 elsif ARGV.any?
   system 'cp', most_recent_screenshot_path, ARGV.first
-else
+elsif most_recent_screenshot_path
   puts most_recent_screenshot_path
+else
+  $stderr.puts "Couldn't find a screenshot"
+  exit 1
 end
