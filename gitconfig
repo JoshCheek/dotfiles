@@ -1,7 +1,8 @@
 [user]
-  name             = Josh Cheek
-  email            = josh.cheek@gmail.com
   username         = JoshCheek
+	name             = Josh Cheek
+	email            = josh.cheek@gmail.com
+  signingkey       = A434B9B967222899
 [color]
   ui               = true
 [color "diff"]
@@ -24,6 +25,13 @@
 [status]
   submodulesummary = true
   relativePaths    = true
+[commit]
+  gpgsign          = true
+[filter "lfs"]
+  clean            = git-lfs clean -- %f
+  smudge           = git-lfs smudge -- %f
+  process          = git-lfs filter-process
+  required         = true
 [alias]
   # Shorthand (shorter versions of common operations, sometimes with better defaults)
     d        = diff --patience --ignore-space-change
