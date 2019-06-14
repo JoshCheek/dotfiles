@@ -332,6 +332,9 @@ endif
 " Not sure what it does
 runtime macros/matchit.vim
 
+" ===== SQL =====
+let g:ftplugin_sql_omni_key = '<C-s>'
+
 
 " ===== NERDTree =====
 
