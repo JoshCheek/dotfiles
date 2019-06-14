@@ -216,13 +216,13 @@ augroup END
 " left / shift-left decreases width
   nmap <Left>    :5wincmd <<CR>
   nmap <S-Left>  :wincmd  <<CR>
-" right / shift-left increases width
+" right / shift-right increases width
   nmap <Right>   :5wincmd ><CR>
   nmap <S-Right> :wincmd  ><CR>
-" up / shift-left increases height
+" up / shift-up increases height
   nmap <Up>      :5wincmd +<CR>
   nmap <S-Up>    :wincmd  +<CR>
-" down / shift-left decreases height
+" down / shift-down decreases height
   nmap <Down>    :5wincmd -<CR>
   nmap <S-Down>  :wincmd  -<CR>
 
