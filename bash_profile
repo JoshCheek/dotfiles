@@ -4,7 +4,7 @@ fi
 
 # Environment Variables
   export EDITOR='vim'
-  export PATH="$HOME/bin:$HOME/code/dotfiles/bin:$PATH"
+  export PATH="$HOME/bin:$HOME/code/dotfiles/bin:$HOME/miniconda2/bin:$HOME/.cargo/bin:$PATH"
   export BAT_THEME=TwoDark # https://github.com/sharkdp/bat
 
 # tab completion

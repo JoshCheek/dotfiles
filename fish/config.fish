@@ -21,21 +21,27 @@ function maybe_prepend_path
   set --global --export PATH $to_add $PATH
 end
 
+
 # Ruby environment, load it first b/c I choose the ruby in the private config
 maybe_source /usr/local/share/chruby/chruby.fish
 
-# Homebrew
-maybe_prepend_path /usr/local/bin /usr/local/sbin
+# Homebrew / Miniconda (https://conda.io/miniconda.html)
+maybe_prepend_path \
+  /Users/josh/miniconda2/bin \
+  /usr/local/bin /usr/local/sbin
 
 # pyenv is rbenv, but for Python. It's way better than virtualenv, eg it was able
 # to install Keras and Jupyter, where virtualenv was not. Plus, it doesn't expect
 # to be running inside of a bash shell, and you can see that setting it up only
 # requires setting a few env vars, so it's cheap to load
-if test -d "$HOME/.pyenv"
-  set --export PYENV_ROOT            "$HOME/.pyenv"
+if test -d $HOME/.pyenv
+  set --export PYENV_ROOT            $HOME/.pyenv
   set --export PYTHON_CONFIGURE_OPTS --enable-framework
   set --export PATH                  $PYENV_ROOT/bin $PYENV_ROOT/shims $PATH
 end
+
+# rust lang
+maybe_prepend_path $HOME/.cargo/bin
 
 # nodenv is rbenv, but for node js. It's dramatically better than nvm in terms
 # of load time, working outside bash fish, and not constantly needing my attention
