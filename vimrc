@@ -270,6 +270,10 @@ endfunction
 autocmd BufWritePre * :call <SID>StripTrailingWhitespaces()  " strip trailing whitespace on save
 
 " ===== Filetypes =====
+" forth comments begin with a leading backslash
+au FileType forth setlocal commentstring=\\\ %s
+au FileType factor setlocal commentstring=!\ %s
+
 au BufRead,BufNewFile *.sublime-* setfiletype javascript " .sublime-{settings,keymap,menu,commands}
 au BufRead,BufNewFile *.sublime-snippet setfiletype html
 au BufRead,BufNewFile *.ipynb setfiletype json
@@ -277,6 +281,9 @@ au BufRead,BufNewFile *.rl setfiletype ragel
 au BufRead,BufNewFile *.es6 setfiletype javascript.jsx
 au BufRead,BufNewFile *.ik setfiletype ruby " it's wong (this is ioke) but better than totally unhighlighted
 au BufRead,BufNewFile *.dart setfiletype java " close enough
+au BufRead,BufNewFile *.dats setfiletype javascript " prob will need to change, but I just want it kinda reasonably highlighted for now
+au BufRead,BufNewFile *.gyp setfiletype yaml
+
 
 
 " ==========================================================================================================
