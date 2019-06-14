@@ -7,7 +7,7 @@ set show-all-if-ambiguous     on
 set visible-stats             on
 
 # Docs:
-#   https://cnswww.cns.cwru.edu/php/chet/readline/rluserman.html#SEC9
+#   Bindable Readline Commands: https://tiswww.case.edu/php/chet/readline/readline.html#SEC13
 #
 # Keybindings:
 #   C-] <char>   search forward for the char
@@ -17,6 +17,13 @@ set visible-stats             on
 #   M-*          complete with all expansions inline
 #   M-{          same as M-*, but uses brace expansion
 #   M-$          complete variable
+#
+#   custom:
+#   ```
+#   "\ex": "echo hello"
+#   "\C-x": "echo hello"
+#   "\C-x": "echo hello"
+#   ```
 #
 # Ruby:
 #   Ruby programs that use readline come in as "ruby"
