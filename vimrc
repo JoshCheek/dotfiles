@@ -24,19 +24,29 @@ Plugin 'https://github.com/bling/vim-airline'               " Status bar at the 
 Plugin 'https://github.com/tpope/vim-repeat'                " Uhm, a dep of something, it lets you repeat non-atomic instructions with the dot. Unfortunately, too minimal, so not easy for me to use (I wish it would take over vim's shitty macro system)
 Plugin 'https://github.com/tpope/vim-surround'              " Better support for working with things that 'surround' text such as quotes and parens
 Plugin 'https://github.com/rking/ag.vim'                    " Searches through your project
-Plugin 'https://github.com/majutsushi/tagbar'               " Ctag browser
+" Plugin 'https://github.com/majutsushi/tagbar'               " Ctag browser
 Plugin 'https://github.com/tpope/vim-fireplace'             " Clojure integration
 Plugin 'https://github.com/ctrlpvim/ctrlp.vim'              " Fuzzy Finder
 Plugin 'https://github.com/ConradIrwin/vim-bracketed-paste' " Lets vim know the difference between typing and pasting http://cirw.in/blog/bracketed-paste
 Plugin 'https://github.com/tomlion/vim-solidity'            " Etherium's language (it's some cryptocurrency)
+Plugin 'https://github.com/tpope/vim-ragtag'                " HTML(and ERB and so on) helpers https://github.com/tpope/vim-ragtag/blob/master/doc/ragtag.txt
 
 " Language Support
-Plugin 'https://github.com/vim-ruby/vim-ruby'               " Ruby    - Pretty fkn legit (eg it's generally $LOAD_PATH aware, it's got some really awesome text objects)
-Plugin 'https://github.com/tpope/vim-cucumber'              " Gherkin - Cucumber's DSL (Given / When / Then)
+Plugin 'https://github.com/vim-ruby/vim-ruby'               " Ruby       - Pretty fkn legit (eg it's generally $LOAD_PATH aware, it's got some really awesome text objects)
+Plugin 'https://github.com/joker1007/vim-ruby-heredoc-syntax'
+Plugin 'https://github.com/tpope/vim-cucumber'              " Gherkin    - Cucumber's DSL (Given / When / Then)
+Plugin 'https://github.com/rhysd/vim-crystal'               " Crystal    - Basically Ruby, but compiles down to code competitive with C
+Plugin 'https://github.com/leafgarland/typescript-vim'      " Typescript - compiles to JavaScript
+Plugin 'https://github.com/liuchengxu/graphviz.vim'         " Graphviz   - 'dot' syntax for drawing graphs / diagrams that are rendered by graphviz https://www.graphviz.org
+Plugin 'https://github.com/jparise/vim-graphql'             " GraphQL    - Like SQL, but for APIs.  https://graphql.org
+Plugin 'https://github.com/lifepillar/pgsql.vim'            " PostgreSQL - Postgres flavoured SQL
 
 Plugin 'https://github.com/pangloss/vim-javascript'         " JavaScript     - The humans have turned this language into something to respect
 Plugin 'https://github.com/kchmck/vim-coffee-script'        " CoffeeScript   - Syntactically, this is the language I always want to write, improved a lot of things from JavaScript, which they've largely incorporated in ES6
 Plugin 'https://github.com/mxw/vim-jsx'                     " JSX (React.js) - Lets you write 'html' within your JavaScript
+" Plugin 'https://github.com/MaxMEllon/vim-jsx-pretty'
+" Plugin 'https://github.com/neoclide/vim-jsx-improve'
+
 
 Plugin 'https://github.com/bitc/hdevtools'                  " Haskell - This is the language that caused me to realize that choice and time are abstractions
 Plugin 'https://github.com/ElmCast/elm-vim'                 " Elm     - Haskell in the browser (a super approachable functional language)
@@ -372,6 +382,19 @@ let g:elm_format_autosave = 1
 " ===== vim-jsx =====
 let g:jsx_ext_required = 0 " Allow JSX in normal JS files
 
+" ===== vim-ragtag =====
+" in normal mode, <C-X>/ will complete the preceding open tag
+nmap <C-X>/ i</<Plug>ragtagHtmlComplete<ESC>l
+
+" ===== vim-ruby-heredoc-syntax =====
+let g:ruby_heredoc_syntax_filetypes = {
+  \ "graphql" : {
+  \   "start" : "GRAPHQL",
+  \},
+  \ "pgsql" : {
+  \ "start" : "GRAPHQL",
+  \}
+\}
 
 "" Maybe worth checking out
 " Ctrl-P
