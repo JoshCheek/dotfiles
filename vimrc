@@ -101,6 +101,10 @@ set colorcolumn=80                   " Add a column at the 80 char mark, for vis
 set scrolloff=4                      " Scroll away from the cursor when I get too close to the edge of the screen
 set incsearch                        " Incremental searching
 
+" j and k operate on logical lines when wrapped
+noremap <expr> j (v:count == 0 ? 'gj' : 'j')
+noremap <expr> k (v:count == 0 ? 'gk' : 'k')
+
 
 " ===== Custom Language Settings =====
 autocmd Filetype c    setlocal tabstop=8
