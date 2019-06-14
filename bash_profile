@@ -5,6 +5,7 @@ fi
 # Environment Variables
   export EDITOR='vim'
   export PATH="$HOME/bin:$HOME/code/dotfiles/bin:$PATH"
+  export BAT_THEME=TwoDark # https://github.com/sharkdp/bat
 
 # tab completion
 # if [ -f /usr/local/share/bash-completion/bash_completion ]; then

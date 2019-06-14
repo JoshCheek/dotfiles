@@ -102,3 +102,6 @@ alias cmus='screen -q -r -D cmus; or screen -S cmus (which cmus)'
 
 # Private / machine dependent configuration
 maybe_source $HOME/.config/fish/private_config.fish
+
+# Bat (a better cat) https://github.com/sharkdp/bat
+set -x BAT_THEME TwoDark
