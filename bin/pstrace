@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby --disable-gems --disable-rubyopt
 
 pid_to_trace = ARGV.fetch(0, Process.ppid).to_i
 
