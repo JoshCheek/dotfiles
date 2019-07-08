@@ -293,6 +293,7 @@ au BufRead,BufNewFile *.ik setfiletype ruby " it's wong (this is ioke) but bette
 au BufRead,BufNewFile *.dart setfiletype java " close enough
 au BufRead,BufNewFile *.dats setfiletype javascript " prob will need to change, but I just want it kinda reasonably highlighted for now
 au BufRead,BufNewFile *.gyp setfiletype yaml
+au BufRead,BufNewFile .eslintrc setfiletype javascript
 
 
 
