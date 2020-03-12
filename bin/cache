@@ -55,14 +55,22 @@ def self.run(command)
 end
 
 require 'json'
+require 'base64'
 def self.write_cache(path, invocation)
-  File.write path, JSON.dump(invocation)
+  File.write path, JSON.dump(
+    **invocation,
+    stdout: Base64.encode64(invocation[:stdout]),
+    stderr: Base64.encode64(invocation[:stderr]),
+  )
   invocation
 end
 
 def self.read_cache(path)
   return nil unless File.exist? path
-  JSON.parse File.read(path), symbolize_names: true
+  invocation = JSON.parse File.read(path), symbolize_names: true
+  invocation[:stdout] = Base64.decode64 invocation[:stdout]
+  invocation[:stderr] = Base64.decode64 invocation[:stderr]
+  invocation
 end
 
 require 'digest'
