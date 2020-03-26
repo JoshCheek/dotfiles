@@ -14,9 +14,9 @@ function fish_prompt
   echo -n ' '
 
   # the git shell
-  if git branch ^&- >&-
+  if git branch 2>&- >&-
     set_color green --background magenta
-    echo -n (git branch --no-color ^ /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ \1 /')
+    echo -n (git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ \1 /')
     set_color --background normal
   end
 
