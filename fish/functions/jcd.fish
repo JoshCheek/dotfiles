@@ -98,7 +98,7 @@ function jcd --description "Josh's cd"
     vim (status -f)
 
   else if test -n "$diraliases"
-    set directory (echo $definitions | alias-to-directory $diraliases ^/dev/null)
+    set directory (echo $definitions | alias-to-directory $diraliases 2>/dev/null)
     and echo cd $directory
     and cd $directory
   end
