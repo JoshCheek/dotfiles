@@ -12,13 +12,18 @@ function maybe_source
 end
 
 function maybe_prepend_path
-  set -l to_add
+  set -l dirs
   for dir in $argv
     if test -d $dir
-      set to_add $to_add $dir
+      set dirs $dirs $dir
     end
   end
-  set --global --export PATH $to_add $PATH
+  for dir in $PATH
+    if test -d $dir && not contains $dir $dirs
+      set dirs $dirs $dir
+    end
+  end
+  set --global --export PATH $dirs
 end
 
 
@@ -78,6 +83,7 @@ end
 # My custom executables
 maybe_prepend_path $HOME/code/dotfiles/bin  # executables in dotfiles
 maybe_prepend_path $HOME/bin                # overrides from this machine
+
 
 # Rails cucumber integration looks for this env var to decide how to display output
 set --export CUCUMBER_FORMAT pretty
