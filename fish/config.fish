@@ -32,8 +32,10 @@ maybe_source /usr/local/share/chruby/chruby.fish
 
 # Homebrew / Miniconda (https://conda.io/miniconda.html)
 maybe_prepend_path \
-  /Users/josh/miniconda2/bin \
-  /usr/local/bin /usr/local/sbin
+  $HOME/miniconda2/bin \
+  /usr/local/bin \
+  /usr/local/sbin \
+  /private/etc/paths.d
 
 # pyenv is rbenv, but for Python. It's way better than virtualenv, eg it was able
 # to install Keras and Jupyter, where virtualenv was not. Plus, it doesn't expect
@@ -57,7 +59,7 @@ if test -d $HOME/.nodenv
   maybe_prepend_path $HOME/.nodenv/bin $HOME/.nodenv/shims
   maybe_source $HOME/.nodenv/completions/nodenv.fish
 
-  # # rehash every time, just to reduce weird errors (doesn't seem to be expensive)
+  # rehash every time, just to reduce weird errors (doesn't seem to be expensive)
   # command nodenv rehash 2>/dev/null
 
   function nodenv
