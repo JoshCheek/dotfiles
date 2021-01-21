@@ -1,4 +1,4 @@
-#!/usr/bin/env dotfiles_ruby
+#!/usr/bin/env ruby --disable-gems --disable-rubyopt
 
 # lol, I was about to write pretty much this exact code: https://gist.github.com/EmmanuelOga/322025
 #

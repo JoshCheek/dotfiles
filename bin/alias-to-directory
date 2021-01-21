@@ -1,4 +1,4 @@
-#!/usr/bin/env dotfiles_ruby
+#!/usr/bin/env ruby --disable-gems --disable-rubyopt
 
 class AliasToDirectory
   Definition = Struct.new :alias, :directory

@@ -1,4 +1,4 @@
-#!/usr/bin/env dotfiles_ruby
+#!/usr/bin/env ruby --disable-gems --disable-rubyopt
 
 help_screen = <<HELP
 usage: #$0 [options] STRINGS

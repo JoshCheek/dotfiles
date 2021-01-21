@@ -1,4 +1,4 @@
-#!/usr/bin/env dotfiles_ruby
+#!/usr/bin/env ruby --disable-gems --disable-rubyopt
 # tests in test/ss.feature (https://github.com/JoshCheek/dotfiles/blob/master/test/ss.feature)
 
 require 'time'

@@ -1,4 +1,4 @@
-#!/usr/bin/env dotfiles_ruby
+#!/usr/bin/env ruby --disable-gems --disable-rubyopt
 
 if ARGV.delete('-h') || ARGV.delete('--help') || ARGV.delete('help')
   puts "Shows step defs for Cucumber"

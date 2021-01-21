@@ -1,4 +1,4 @@
-#!/usr/bin/env dotfiles_ruby
+#!/usr/bin/env ruby --disable-gems --disable-rubyopt
 # Use like this:
 #   $ scan_notes < file
 # it will print the top-level of lines
