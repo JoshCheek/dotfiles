@@ -1,9 +1,8 @@
-set all_completions (ff --help | ruby -r shellwords -ne '
-  (/^\s*--(?<flagname>\S+)\s*?(?<arg>\w+)?\s*?# (?<desc>.*)$/ =~ $_) && (
-    arg = (arg ? " --require-parameter" : "--no-files")
-    puts("--command ff --long #{flagname}#{" -r" if arg} --description #{desc.shellescape}")
-  )
-')
-for completion_argstring in $all_completions
-  eval "complete $completion_argstring" # Again having to use eval, why is it so hard to work with strings? this is frustrating :(
-end
+complete --command ff --long help     -r --description 'this help screen'
+complete --command ff --long in       -r --description 'only search in dir, defaults to CWD'
+complete --command ff --long dir      -r --description 'only find directories'
+complete --command ff --long file     -r --description 'only find files'
+complete --command ff --long absolute -r --description 'print full path of each result'
+complete --command ff --long verbose  -r --description 'print command to stderr before running it'
+complete --command ff --long dry-run  -r --description 'verbose and don\'t run command'
+complete --command ff --long edit     -r --description 'edit this script'
