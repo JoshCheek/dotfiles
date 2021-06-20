@@ -1,20 +1,24 @@
 [user]
   username         = JoshCheek
-	name             = Josh Cheek
-	email            = josh.cheek@gmail.com
-  signingkey       = A434B9B967222899
+  name             = Josh Cheek
+  email            = josh.cheek@gmail.com
+  signingkey       = 835EDF23A78DDC9A
 [color]
   ui               = true
 [color "diff"]
   whitespace       = red reverse
 [color "branch"]
-	current          = green
-	local            = yellow
-	remote           = red
+  current          = green
+  local            = yellow
+  remote           = red
 [color "status"]
   added            = green
   changed          = red
   untracked        = red reverse
+[init]
+  defaultBranch    = main
+[pull]
+  rebase           = false
 [push]
   default          = upstream
 [core]
