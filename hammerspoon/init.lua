@@ -9,7 +9,7 @@ hs.alert.show("Hammerspoon Config loaded")
 function windowAdjuster(x, y, w, h)
   return function()
     local duration    = 0 -- don't animate
-    local window      = hs.window.frontmostWindow()
+    local window      = hs.window.focusedWindow() -- NOTE: if this comes back `nil`, you need to enable HammerSpoon to control the computer
     local screen      = window:screen()
     local frameUsable = screen:frame()     -- no dock / menu
     local frameFull   = screen:fullFrame() -- b/c the above calculates width wrong
