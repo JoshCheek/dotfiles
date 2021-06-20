@@ -21,7 +21,7 @@ until ARGV.empty?
   arg = ARGV.shift
   case arg
   when '--help'               then show_help = true; run_command = false
-  when '--in'                 then find_dir  = ARGV.shift || raise("Must provide an argument with #{arg}")
+  when '--in'                 then find_dir  = ARGV.shift&.chomp("/") || raise("Must provide an argument with #{arg}")
   when '--dir', '--directory' then find_args << " -type d"
   when '--file'               then find_args << " -type f"
   when '--absolute'           then absolute  = true
