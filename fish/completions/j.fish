@@ -1,1 +1,1 @@
-make_completion j jobs
+complete --command 'j' --wraps 'jobs'

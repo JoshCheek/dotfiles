@@ -1,1 +1,1 @@
-make_completion gs "git status"
+complete --command 'gs' --wraps 'git status'

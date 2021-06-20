@@ -1,1 +1,1 @@
-make_completion gb "git branch"
+complete --command 'ga' --wraps 'git branch'

@@ -1,1 +1,1 @@
-make_completion gh "git log"
+complete --command 'gh' --wraps 'git log'

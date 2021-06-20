@@ -1,1 +1,1 @@
-make_completion ga "git add"
+complete --command 'ga' --wraps 'git add'

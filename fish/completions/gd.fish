@@ -1,1 +1,1 @@
-make_completion gd "git diff"
+complete --command 'gd' --wraps 'git diff'

@@ -1,1 +1,1 @@
-make_completion gc "git checkout"
+complete --command 'gc' --wraps 'git checkout'

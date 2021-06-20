@@ -1,1 +1,1 @@
-make_completion be "bundle exec"
+complete --command 'be' --wraps 'bundle exec'

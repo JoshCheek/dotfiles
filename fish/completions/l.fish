@@ -1,1 +1,1 @@
-make_completion l ls
+complete --command 'l' --wraps 'ls'
