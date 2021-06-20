@@ -23,17 +23,18 @@ function maybe_prepend_path
       set dirs $dirs $dir
     end
   end
-  set --global --export PATH $dirs
+  set -gx PATH $dirs
 end
 
 # Homebrew
 eval (/opt/homebrew/bin/brew shellenv)
 
-# vim
-set -x VIM_PATH $HOMEBREW_PREFIX/bin/vim
+# Vim
+set -gx VIM_PATH $HOMEBREW_PREFIX/bin/vim
+set -gx EDITOR vim
 
 # Ruby environment, load it first b/c I choose the ruby in the private config
-set -x CHRUBY_ROOT $HOMEBREW_PREFIX
+set -gx CHRUBY_ROOT $HOMEBREW_PREFIX
 source $HOMEBREW_PREFIX/share/chruby/chruby.fish
 
 maybe_prepend_path \
@@ -47,9 +48,9 @@ maybe_prepend_path \
 # to be running inside of a bash shell, and you can see that setting it up only
 # requires setting a few env vars, so it's cheap to load
 if test -d $HOME/.pyenv
-  set --export PYENV_ROOT            $HOME/.pyenv
-  set --export PYTHON_CONFIGURE_OPTS --enable-framework
-  set --export PATH                  $PYENV_ROOT/bin $PYENV_ROOT/shims $PATH
+  set -gx PYENV_ROOT            $HOME/.pyenv
+  set -gx PYTHON_CONFIGURE_OPTS --enable-framework
+  set -gx PATH                  $PYENV_ROOT/bin $PYENV_ROOT/shims $PATH
 end
 
 # rust lang
@@ -82,9 +83,9 @@ end
 
 # For golang
 if test -d "$HOME/golang"
-  set --export GOPATH           "$HOME/golang"
-  set --export PATH             $PATH "$GOPATH/bin"
-  set --export PKG_CONFIG_PATH  "/usr/lib/pkgconfig"
+  set -gx GOPATH           "$HOME/golang"
+  set -gx PATH             $PATH "$GOPATH/bin"
+  set -gx PKG_CONFIG_PATH  "/usr/lib/pkgconfig"
 end
 
 # My custom executables
@@ -103,7 +104,7 @@ for i in (seq 30)
 end
 
 # Tell homebrew not to auto update if I've already done it this week
-set --export HOMEBREW_AUTO_UPDATE_SECS (echo '60 * 60 * 24 * 7' | bc)
+set -gx HOMEBREW_AUTO_UPDATE_SECS (echo '60 * 60 * 24 * 7' | bc)
 
 # Don't print a greeting when I start the shell
 set fish_greeting
@@ -111,7 +112,7 @@ set fish_greeting
 # Have `tree` colour directories yellowish
 # this shit is so badly documented and inconsistent,
 # `ls` doesn't even use it, despite talking about it in its man page
-set --export LS_COLORS 'di=33'
+set -gx LS_COLORS 'di=33'
 
 # Make Cmus music player detachable (https://github.com/cmus/cmus/wiki/detachable-cmus)
 # NOTE: To get `cmus` to background itself when you press "q",
@@ -123,6 +124,4 @@ alias cmus='screen -q -r -D cmus; or screen -S cmus (which cmus)'
 maybe_source $HOME/.config/fish/private_config.fish
 
 # Bat (a better cat) https://github.com/sharkdp/bat
-set -x BAT_THEME TwoDark
-
-set -x EDITOR vim
+set -gx BAT_THEME TwoDark
