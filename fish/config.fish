@@ -26,11 +26,16 @@ function maybe_prepend_path
   set --global --export PATH $dirs
 end
 
+# Homebrew
+eval (/opt/homebrew/bin/brew shellenv)
+
+# vim
+set -x VIM_PATH $HOMEBREW_PREFIX/bin/vim
 
 # Ruby environment, load it first b/c I choose the ruby in the private config
-maybe_source /usr/local/share/chruby/chruby.fish
+set -x CHRUBY_ROOT $HOMEBREW_PREFIX
+source $HOMEBREW_PREFIX/share/chruby/chruby.fish
 
-# Homebrew / Miniconda (https://conda.io/miniconda.html)
 maybe_prepend_path \
   $HOME/miniconda2/bin \
   /usr/local/bin \
@@ -119,3 +124,5 @@ maybe_source $HOME/.config/fish/private_config.fish
 
 # Bat (a better cat) https://github.com/sharkdp/bat
 set -x BAT_THEME TwoDark
+
+set -x EDITOR vim
