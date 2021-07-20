@@ -16,7 +16,7 @@ attrs = [
   [:sha,       "%(objectname:short)"],
   [:local,     "%(refname)"],
   [:remote,    "%(upstream)"],
-  [:tracking,  "%(upstream:track)"],
+  [:status,    "%(upstream:track)"],
   [:author,    "%(authorname)"],
   [:committed, "%(committerdate:#{date_format})"],
   [:accessed,  "..."], # this will be replaced later b/c I don't know how to ask the log to give me this
@@ -60,8 +60,8 @@ branches.each do |b|
   remote(b).sub! %r(^refs/(remotes|heads)/), ""
 end
 
-# Remove brackets from around the tracking info
-branches.each { |b| tracking(b).gsub! /(?:\A\[|\]\z)/, "" }
+# Remove brackets from around the tracking status
+branches.each { |b| status(b).gsub! /(?:\A\[|\]\z)/, "" }
 
 # Use the reflog to order branches by which branches we've recently visited
 visits = Open3.popen3 "git", "reflog", "--grep-reflog", "checkout: moving from", "--date", date_format do |_, out|
@@ -120,10 +120,10 @@ if $stdout.tty?
       remote(formatted).sub! remote(branch), "#{prefix}\e[33m#{bname}\e[39m"
     end
 
-    if tracking(branch) == 'gone'
-      tracking(formatted).sub! /\bgone\b/, "\e[31mgone\e[39m"
+    if status(branch) == 'gone'
+      status(formatted).sub! /\bgone\b/, "\e[31mgone\e[39m"
     else
-      tracking(formatted).gsub! /\w+/, "\e[33m\\&\e[39m"
+      status(formatted).gsub! /\w+/, "\e[33m\\&\e[39m"
     end
 
     author(formatted).sub! me, "\e[92m#{me}\e[0m" if author(branch) == me
