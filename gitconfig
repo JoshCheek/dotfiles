@@ -48,8 +48,8 @@
     hist     = log --pretty=format:\"%Cgreen%h%Creset %Cblue%ad%Creset %s%C(yellow)%d%Creset %Cblue[%an]%Creset\" --graph --date=short
 
   # Branches
-    # --all gives local and remote, --verbose 1x shows 1st line of log, 2x: show upstream branch
-    br       = branch --all --verbose --verbose
+    # --verbose 1x shows 1st line of log, 2x: show upstream branch
+    br       = branch --verbose --verbose --sort=-committerdate
 
     # list current branch
     brcrnt   = rev-parse --abbrev-ref HEAD
