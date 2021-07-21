@@ -1,14 +1,14 @@
 #!/usr/bin/env ruby
 
-# NOTE: I wrote this script last night. Haven't had to live with it for any
-# amount of time so it's possible it has unhandled edge cases / will change / etc.
-# So if you like it, then probably check back periodically to see if I've updated it.
+# NOTE: This script is still volatile and hasn't been put through the ringer yet,
+# if you try it and find edge cases, LMK
 
 # These ship with Ruby, in the stdlib
 require 'open3'
 require 'io/console'
 
-date_format = "relative" # "human" is also pretty good
+date_format = "human" # "human" and "relative" are both pretty good
+up_to_date_msg = ''   # ehh, not sure what I want it to say when they're pointing @ the same commit. I guess empty string is good enough for now
 
 # Map of attributes, git format string to get the attr, and proc for postprocessing
 attrs = [
@@ -19,10 +19,13 @@ attrs = [
   [:status,    "%(upstream:track)"],
   [:author,    "%(authorname)"],
   [:committed, "%(committerdate:#{date_format})"],
-  [:accessed,  "..."], # this will be replaced later b/c I don't know how to ask the log to give me this
+  [:accessed,  "..."], # this will be filled in later b/c I don't know how to ask the log to give me this
 ]
 
-# Define a combo setter/getter for each of these
+# Define a combo setter/getter for each attribute
+# I was previously using a struct, but then keeping track of displayable vs
+# non-displayable attributes became painful, so instead I'm making methods that
+# know where in the array to look
 attribute_index = -1
 define_singleton_method :define_setter_getter do |name, display, index=(attribute_index+=1)|
   not_set = Object.new
@@ -37,7 +40,7 @@ end
 
 attrs.each { |attr| define_setter_getter attr[0], true }
 
-# Call out to `git` to get the branch values
+# Call out to `git` to get the branch data
 format = attrs.map { |a| a[1] }.join("\n")
 branches = Open3.popen3 "git", "branch", "--all", "--sort=-committerdate", "--format=#{format}" do |_, out|
   # Parse git's output into branches
@@ -62,6 +65,9 @@ end
 
 # Remove brackets from around the tracking status
 branches.each { |b| status(b).gsub! /(?:\A\[|\]\z)/, "" }
+
+# Wording for status when they're lined up
+branches.each { |b| status b, up_to_date_msg if status(b).empty? }
 
 # Use the reflog to order branches by which branches we've recently visited
 visits = Open3.popen3 "git", "reflog", "--grep-reflog", "checkout: moving from", "--date", date_format do |_, out|
@@ -122,6 +128,9 @@ if $stdout.tty?
 
     if status(branch) == 'gone'
       status(formatted).sub! /\bgone\b/, "\e[31mgone\e[39m"
+    elsif status(branch) == up_to_date_msg
+      # noop, just highlight ones that aren't up to date, no real value in
+      # making this green, as it's not something I'm typically filtering by
     else
       status(formatted).gsub! /\w+/, "\e[33m\\&\e[39m"
     end
