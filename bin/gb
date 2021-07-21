@@ -17,16 +17,20 @@ Attr = Struct.new :name, :log_format, :column_heading, :default do
     @setter ||= :"#{name.to_s.chomp("?").chomp("!")}="
   end
 
-  def get(obj)
-    obj.attrs.fetch name
+  def [](obj)
+    attrs(obj).fetch name
   end
 
-  def set(obj, value)
-    obj.attrs[name] = value
+  def []=(obj, value)
+    attrs(obj)[name] = value
   end
 
   def init(obj)
-    obj.attrs[name] = default
+    attrs(obj)[name] = default
+  end
+
+  private def attrs(obj)
+    obj.instance_variable_get(:@attrs) || obj.instance_variable_set(:@attrs, Hash.new)
   end
 end
 
@@ -38,8 +42,8 @@ class Branch
   def self.attr(name, log_format:nil, column_heading:name.to_s, default:nil)
     attr = Attr.new(name, log_format, column_heading, default)
     attrs << attr
-    define_method(attr.getter) { attr.get self }
-    define_method(attr.setter) { |*a, **k, &b| attr.set self, *a, **k, &b }
+    define_method(attr.getter) { attr[self] }
+    define_method(attr.setter) { |value| attr[self] = value }
   end
 
   attr :sha,       log_format: "%(objectname:short)"
@@ -54,10 +58,6 @@ class Branch
   def initialize
     self.class.attrs.each { |attr| attr.init self }
   end
-
-  def attrs
-    @attrs ||= {}
-  end
 end
 
 # Call out to `git` to get the branch data
@@ -66,7 +66,7 @@ format    = log_attrs.map(&:log_format).join("\n")
 branches = Open3.popen3 "git", "branch", "--all", "--sort=-committerdate", "--format=#{format}" do |_, out|
   out.each_slice(log_attrs.size).map do |slice|
     log_attrs.zip(slice).each_with_object(Branch.new) do |(attr, val), branch|
-      attr.set branch, val.chomp
+      attr[branch] = val.chomp
     end
   end
 end
@@ -107,18 +107,18 @@ end
 
 # Add a header
 display_attrs = Branch.attrs.select(&:column_heading)
-header = display_attrs.each_with_object(Branch.new) { |a, b| a.set b, a.column_heading }
+header = display_attrs.each_with_object(Branch.new) { |a, b| a[b] = a.column_heading }
 header.record = false
 branches.unshift header
 
 # Calculate column widths for padding values to the same width
 sizes = display_attrs.map do |attr|
-  branches.map { |b| attr.get(b).size }.max
+  branches.map { |b| attr[b].size }.max
 end
 
 # Add a line to delimit header from rows
 delimiter = display_attrs.zip(sizes).each_with_object(Branch.new) do |(attr, n), branch|
-  attr.set branch, '-'*n
+  attr[branch] = '-'*n
 end
 delimiter.record = false
 branches.unshift branches.shift, delimiter
@@ -178,8 +178,8 @@ end
 # Print each row
 branches.each do |branch|
   formatted = display_attrs.zip(sizes).each_with_object(Branch.new) do |(attr, n), br|
-    attr.set br, attr.get(branch).ljust(n)
+    attr[br] = attr[branch].ljust(n)
   end
   color[branch, formatted] if branch.record?
-  puts display_attrs.map { |a| a.get formatted }.join(' | ')
+  puts display_attrs.map { |a| a[formatted] }.join(' | ')
 end
