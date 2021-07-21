@@ -4,103 +4,123 @@
 # if you try it and find edge cases, LMK
 
 # These ship with Ruby, in the stdlib
-require 'open3'
-require 'io/console'
+require 'set'
+require 'open3'      # for calling out to git
+require 'io/console' # for detecting window size to decide if we should use a pager
 
-date_format = "human" # "human" and "relative" are both pretty good
-up_to_date_msg = ''   # ehh, not sure what I want it to say when they're pointing @ the same commit. I guess empty string is good enough for now
+DATE_FORMAT = 'human' # "human" and "relative" are both pretty good
 
-# Map of attributes, git format string to get the attr, and proc for postprocessing
-attrs = [
-  # [:head,    "%(HEAD)"],
-  [:sha,       "%(objectname:short)"],
-  [:local,     "%(refname)"],
-  [:remote,    "%(upstream)"],
-  [:status,    "%(upstream:track)"],
-  [:author,    "%(authorname)"],
-  [:committed, "%(committerdate:#{date_format})"],
-  [:accessed,  "..."], # this will be filled in later b/c I don't know how to ask the log to give me this
-]
+Attr = Struct.new :name, :log_format, :column_heading, :default do
+  alias getter name
 
-# Define a combo setter/getter for each attribute
-# I was previously using a struct, but then keeping track of displayable vs
-# non-displayable attributes became painful, so instead I'm making methods that
-# know where in the array to look
-attribute_index = -1
-define_singleton_method :define_setter_getter do |name, display, index=(attribute_index+=1)|
-  not_set = Object.new
-  define_singleton_method name do |branch, value=not_set|
-    value == not_set ? branch[index] : branch[index] = value
+  def setter
+    @setter ||= :"#{name.to_s.chomp("?").chomp("!")}="
   end
-  attrs[index] ||= [name, nil, index, display]
-  attrs[index][2] = index
-  attrs[index][3] = display
-  attrs[index]
+
+  def get(obj)
+    obj.attrs.fetch name
+  end
+
+  def set(obj, value)
+    obj.attrs[name] = value
+  end
+
+  def init(obj)
+    obj.attrs[name] = default
+  end
 end
 
-attrs.each { |attr| define_setter_getter attr[0], true }
+class Branch
+  def self.attrs
+    @attrs ||= []
+  end
+
+  def self.attr(name, log_format:nil, column_heading:name.to_s, default:nil)
+    attr = Attr.new(name, log_format, column_heading, default)
+    attrs << attr
+    define_method(attr.getter) { attr.get self }
+    define_method(attr.setter) { |*a, **k, &b| attr.set self, *a, **k, &b }
+  end
+
+  attr :sha,       log_format: "%(objectname:short)"
+  attr :local,     log_format: "%(refname)"
+  attr :remote,    log_format: "%(upstream)", column_heading: 'remote /tracking'
+  attr :status,    log_format: "%(upstream:track)"
+  attr :author,    log_format: "%(authorname)"
+  attr :committed, log_format: "%(committerdate:#{DATE_FORMAT})"
+  attr :accessed
+  attr :record?, column_heading: nil, default: true
+
+  def initialize
+    self.class.attrs.each { |attr| attr.init self }
+  end
+
+  def attrs
+    @attrs ||= {}
+  end
+end
 
 # Call out to `git` to get the branch data
-format = attrs.map { |a| a[1] }.join("\n")
+log_attrs = Branch.attrs.select(&:log_format)
+format    = log_attrs.map(&:log_format).join("\n")
 branches = Open3.popen3 "git", "branch", "--all", "--sort=-committerdate", "--format=#{format}" do |_, out|
-  # Parse git's output into branches
-  out.each_slice(attrs.size).map { |slice| slice.each &:chomp! }
+  out.each_slice(log_attrs.size).map do |slice|
+    log_attrs.zip(slice).each_with_object(Branch.new) do |(attr, val), branch|
+      attr.set branch, val.chomp
+    end
+  end
 end
 
-# If I have a local branch tracking a remote one, don't list the remote branch again
-remotes = branches.to_h { |b| [remote(b), true] }
-branches.reject! { |b| remotes.key?(local(b)) && local(b).start_with?("refs/remotes") }
+# If I have a local branch tracking a remote one, don't list the remote branch on its own
+remotes = Set.new branches.map(&:remote)
+branches.reject! { |b| remotes.include?(b.local) && b.local.start_with?("refs/remotes") }
 
 # List remote branches in remote column, even if no local branches are tracking them
 branches
-  .select { |b| local(b).start_with? "refs/remotes" }
-  .each { |b| remote b, local(b) }
-  .each { |b| local  b, "" }
+  .select { |b| b.local.start_with? "refs/remotes" }
+  .each { |b| b.local, b.remote = "", b.local }
 
 # Don't display directory structure prefixes
 branches.each do |b|
-  local(b).sub!  %r(^refs/heads/), ""
-  remote(b).sub! %r(^refs/(remotes|heads)/), ""
+  b.local.sub!  %r(^refs/heads/), ""
+  b.remote.sub! %r(^refs/(remotes|heads)/), ""
 end
 
 # Remove brackets from around the tracking status
-branches.each { |b| status(b).gsub! /(?:\A\[|\]\z)/, "" }
-
-# Wording for status when they're lined up
-branches.each { |b| status b, up_to_date_msg if status(b).empty? }
+branches.each { |b| b.status.gsub! /(?:\A\[|\]\z)/, "" }
 
 # Use the reflog to order branches by which branches we've recently visited
-visits = Open3.popen3 "git", "reflog", "--grep-reflog", "checkout: moving from", "--date", date_format do |_, out|
-  out.each.with_object({}).with_index { |(line, visits), index|
-    visits[line[/\S+$/]] ||= { index: index, accessed: line[/(?<=\{)[^}]*/] }
-  }
+visits = Open3.popen3 "git", "reflog", "--grep-reflog", "checkout: moving from", "--date", DATE_FORMAT do |_, out|
+  out.each.with_object({}).with_index do |(line, visits), index|
+    branch_name = line[/\S+$/]
+    access_time = line[/(?<=\{)[^}]*/]
+    visits[branch_name] ||= { index: index, accessed: access_time }
+  end
 end
-# define_setter_getter :accessed, true
+
 initial_indexes = branches.each_with_index.to_h
 branches.sort_by! do |branch|
-  visit = visits[local(branch)] || visits[remote(branch)] || { index: visits.size, accessed: nil }
-  accessed branch, visit[:accessed]
+  visit = visits[branch.local] || visits[branch.remote] || { index: visits.size, accessed: '' }
+  branch.accessed = visit[:accessed]
   [visit[:index], initial_indexes[branch]]
 end
 
-# Track an additional attribute:
-define_setter_getter :is_record, false
-branches.each { |b| is_record b, true }
-
 # Add a header
-header = attrs.map(&:first).map(&:to_s)
-is_record header, false
-remote header, 'remote / tracking'
+display_attrs = Branch.attrs.select(&:column_heading)
+header = display_attrs.each_with_object(Branch.new) { |a, b| a.set b, a.column_heading }
+header.record = false
 branches.unshift header
 
-# Calculate column widths & format strong to pad values to match
-sizes = branches.transpose.map do |col|
-  col.map { |val| val.to_s.size }.max
+# Calculate column widths for padding values to the same width
+sizes = display_attrs.map do |attr|
+  branches.map { |b| attr.get(b).size }.max
 end
 
 # Add a line to delimit header from rows
-delimiter = sizes.map { |n| '-'*n }
-is_record delimiter, false
+delimiter = display_attrs.zip(sizes).each_with_object(Branch.new) do |(attr, n), branch|
+  attr.set branch, '-'*n
+end
+delimiter.record = false
 branches.unshift branches.shift, delimiter
 
 # Add colour unless we're in a pipeline
@@ -110,32 +130,29 @@ if $stdout.tty?
   remote_regex = %r{\A(?:#{remotes.join '|'})/}
 
   color = -> branch, formatted do
-    if remote(branch) =~ remote_regex
+    if branch.remote =~ remote_regex
       prefix, bname = $&, $'
     else
-      prefix, bname = '', remote(branch)
+      prefix, bname = '', branch.remote
     end
 
-    if remote(branch) == "#{prefix}#{local(branch)}"
+    if branch.remote == "#{prefix}#{branch.local}"
       # Blue for branches whose local and remote names match
-      local(formatted).sub!  local(branch), "\e[34m#{local(branch)}\e[39m"
-      remote(formatted).sub! remote(branch), "#{prefix}\e[34m#{local(branch)}\e[39m"
+      formatted.local.sub!  branch.local, "\e[34m#{branch.local}\e[39m"
+      formatted.remote.sub! branch.remote, "#{prefix}\e[34m#{branch.local}\e[39m"
     else
       # Orange if local name doesn't match remote name or remote is untracked
-      local(formatted).sub!  local(branch), "\e[33m#{local(branch)}\e[39m"
-      remote(formatted).sub! remote(branch), "#{prefix}\e[33m#{bname}\e[39m"
+      formatted.local.sub!  branch.local, "\e[33m#{branch.local}\e[39m"
+      formatted.remote.sub! branch.remote, "#{prefix}\e[33m#{bname}\e[39m"
     end
 
-    if status(branch) == 'gone'
-      status(formatted).sub! /\bgone\b/, "\e[31mgone\e[39m"
-    elsif status(branch) == up_to_date_msg
-      # noop, just highlight ones that aren't up to date, no real value in
-      # making this green, as it's not something I'm typically filtering by
+    if branch.status == 'gone'
+      formatted.status.sub! /\bgone\b/, "\e[31mgone\e[39m"
     else
-      status(formatted).gsub! /\w+/, "\e[33m\\&\e[39m"
+      formatted.status.gsub! /\w+/, "\e[33m\\&\e[39m"
     end
 
-    author(formatted).sub! me, "\e[92m#{me}\e[0m" if author(branch) == me
+    formatted.author.sub! me, "\e[92m#{me}\e[0m" if branch.author == me
   end
 else
   color = proc { }
@@ -160,9 +177,9 @@ end
 
 # Print each row
 branches.each do |branch|
-  formatted = attrs
-    .select { |name, _, index, display| display }
-    .map { |_, _, index| branch[index].to_s.ljust(sizes[index]) }
-  color[branch, formatted] if is_record(branch)
-  puts formatted.join(' | ')
+  formatted = display_attrs.zip(sizes).each_with_object(Branch.new) do |(attr, n), br|
+    attr.set br, attr.get(branch).ljust(n)
+  end
+  color[branch, formatted] if branch.record?
+  puts display_attrs.map { |a| a.get formatted }.join(' | ')
 end
