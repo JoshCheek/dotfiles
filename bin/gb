@@ -48,7 +48,7 @@ class Branch
 
   attr :sha,       log_format: "%(objectname:short)"
   attr :local,     log_format: "%(refname)"
-  attr :remote,    log_format: "%(upstream)", column_heading: 'remote /tracking'
+  attr :remote,    log_format: "%(upstream)", column_heading: 'remote/tracking'
   attr :status,    log_format: "%(upstream:track)"
   attr :author,    log_format: "%(authorname)"
   attr :committed, log_format: "%(committerdate:#{DATE_FORMAT})"
@@ -116,12 +116,14 @@ sizes = display_attrs.map do |attr|
   branches.map { |b| attr[b].size }.max
 end
 
-# Add a line to delimit header from rows
-delimiter = display_attrs.zip(sizes).each_with_object(Branch.new) do |(attr, n), branch|
-  attr[branch] = '-'*n
+# If we're going to line-wrap, then transpose (eg like \x in postgresql)
+if $stdout.tty?
+  rows, cols = $stdout.winsize
+else
+  rows = cols = Float::INFINITY
 end
-delimiter.record = false
-branches.unshift branches.shift, delimiter
+transpose = cols < sizes.sum + 3*(sizes.size-1)
+will_wrap = transpose ? (branches.size * display_attrs.size.succ) : (rows < branches.size)
 
 # Add colour unless we're in a pipeline
 if $stdout.tty?
@@ -136,50 +138,89 @@ if $stdout.tty?
       prefix, bname = '', branch.remote
     end
 
-    if branch.remote == "#{prefix}#{branch.local}"
+    # local copies b/c `branch` and `formatted` may be the same object, which we are mutating
+    local, remote = branch.local, branch.remote
+    if remote == "#{prefix}#{local}"
       # Blue for branches whose local and remote names match
-      formatted.local.sub!  branch.local, "\e[34m#{branch.local}\e[39m"
-      formatted.remote.sub! branch.remote, "#{prefix}\e[34m#{branch.local}\e[39m"
+      formatted.local  = formatted.local.sub  local, "\e[34m#{local}\e[39m"
+      formatted.remote = formatted.remote.sub remote, "#{prefix}\e[34m#{local}\e[39m"
     else
       # Orange if local name doesn't match remote name or remote is untracked
-      formatted.local.sub!  branch.local, "\e[33m#{branch.local}\e[39m"
-      formatted.remote.sub! branch.remote, "#{prefix}\e[33m#{bname}\e[39m"
+      formatted.local  = formatted.local.sub  local, "\e[33m#{local}\e[39m"
+      unless remote.empty?
+        formatted.remote = formatted.remote.sub remote, "#{prefix}\e[33m#{bname}\e[39m"
+      end
     end
 
     if branch.status == 'gone'
-      formatted.status.sub! /\bgone\b/, "\e[31mgone\e[39m"
+      formatted.status = formatted.status.sub /\bgone\b/, "\e[31mgone\e[39m"
     else
-      formatted.status.gsub! /\w+/, "\e[33m\\&\e[39m"
+      formatted.status = formatted.status.gsub /\w+/, "\e[33m\\&\e[39m"
     end
 
-    formatted.author.sub! me, "\e[92m#{me}\e[0m" if branch.author == me
+    if branch.author == me
+      formatted.author = formatted.author.sub me, "\e[92m#{me}\e[0m"
+    end
   end
 else
   color = proc { }
 end
 
 # Use a pager if our output will scroll and we're not in a pipeline
-if $stdout.tty?
-  rows, _cols = $stdout.winsize
-  if branches.size > rows
-    read, write = IO.pipe
-    if fork
+if $stdout.tty? && will_wrap
+  read, write = IO.pipe
+  if (pid = fork)
+    # Parent writes to the pipe
+    read.close
+    $stdout = write
+    at_exit do
+      $stdout = STDOUT
       write.close
-      $stdin.reopen read
-      read.close
-      exec "less", "-R" # -R allows color codes to work
-    else
-      read.close
-      $stdout.reopen write
+      Process.wait pid
     end
+  else
+    # Child reads from the pipe and execs a pager
+    write.close
+    $stdin.reopen read
+    read.close
+    exec "less", "-R" # -R allows color codes to work
   end
 end
 
-# Print each row
-branches.each do |branch|
-  formatted = display_attrs.zip(sizes).each_with_object(Branch.new) do |(attr, n), br|
-    attr[br] = attr[branch].ljust(n)
+# Transposed output (like \x in postgrsql)
+if transpose
+  # Calculate size of key (first column), and delimiter
+  key_size = display_attrs.map(&:column_heading).map(&:size).max
+  width = 3 + key_size + branches.flat_map do |branch|
+    display_attrs.map { |attr| attr[branch].size }
+  end.max
+
+  delimiter = '-' * width
+
+  branches.select(&:record?).each_with_index do |branch, index|
+    puts delimiter unless index.zero?
+    color[branch, branch]
+    display_attrs.each do |attr|
+      next if attr[branch].empty?
+      puts "#{attr.column_heading.ljust(key_size)} | #{attr[branch]}"
+    end
   end
-  color[branch, formatted] if branch.record?
-  puts display_attrs.map { |a| a[formatted] }.join(' | ')
+
+# Tabular output
+else
+  # Add a line to delimit header from rows
+  delimiter = display_attrs.zip(sizes).each_with_object(Branch.new) do |(attr, n), branch|
+    attr[branch] = '-'*n
+  end
+  delimiter.record = false
+  branches.unshift branches.shift, delimiter
+
+  # Print each row
+  branches.each do |branch|
+    formatted = display_attrs.zip(sizes).each_with_object(Branch.new) do |(attr, n), br|
+      attr[br] = attr[branch].ljust(n)
+    end
+    color[branch, formatted] if branch.record?
+    puts display_attrs.map { |attr| attr[formatted] }.join(' | ')
+  end
 end
