@@ -27,7 +27,11 @@ function maybe_prepend_path
 end
 
 # Homebrew
-eval (/opt/homebrew/bin/brew shellenv)
+if test -x /opt/homebrew/bin/brew # Apple Silicon
+  eval (/opt/homebrew/bin/brew shellenv)
+else if test -x /usr/local/bin/brew # Intel
+  eval (/usr/local/bin/brew shellenv)
+end
 
 # Vim
 set -gx VIM_PATH $HOMEBREW_PREFIX/bin/vim
