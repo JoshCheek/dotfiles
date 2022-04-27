@@ -30,6 +30,7 @@ Plugin 'https://github.com/ctrlpvim/ctrlp.vim'              " Fuzzy Finder
 Plugin 'https://github.com/ConradIrwin/vim-bracketed-paste' " Lets vim know the difference between typing and pasting http://cirw.in/blog/bracketed-paste
 Plugin 'https://github.com/tomlion/vim-solidity'            " Etherium's language (it's some cryptocurrency)
 Plugin 'https://github.com/tpope/vim-ragtag'                " HTML(and ERB and so on) helpers https://github.com/tpope/vim-ragtag/blob/master/doc/ragtag.txt
+Plugin 'https://github.com/nicwest/vim-http'                " HTTP highlighting (can make requests and stuff, too, but I just want the highlighting)
 
 " Language Support
 Plugin 'https://github.com/vim-ruby/vim-ruby'               " Ruby       - Pretty fkn legit (eg it's generally $LOAD_PATH aware, it's got some really awesome text objects)
