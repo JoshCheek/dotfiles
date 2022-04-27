@@ -111,6 +111,17 @@ FileUtils.mkdir_p tempdir
 # Otherwise, we calculate the cache file by hashing the args that make up the command
 filepath = File.join tempdir, filename_for(command)
 
+def self.print(stream, to_print)
+  stream.print to_print
+rescue Errno::EPIPE
+  # don't fail if they close the stream (eg when piping it into `head`)
+end
+
+def self.puts(stream, to_print)
+  stream.puts to_print
+rescue Errno::EPIPE
+end
+
 
 case
 when options.help?
@@ -126,11 +137,11 @@ when options.list?
       exitstatus:    invocation[:status],
       command:       invocation[:command],
     }
-    $stdout.puts JSON.dump(summary)
+    puts $stdout, JSON.dump(summary)
   end
 when options.full_list?
   invocations = Dir[options.dir :pattern].map { |path| read_cache path }
-  $stdout.puts JSON.pretty_generate invocations
+  puts $stdout, JSON.pretty_generate(invocations)
 else
   invocation = read_cache(filepath)
 
@@ -140,7 +151,7 @@ else
     write_cache filepath, invocation
   end
 
-  $stderr.print invocation[:stderr]
-  $stdout.print invocation[:stdout]
-  exit          invocation[:status]
+  print $stderr, invocation[:stderr]
+  print $stdout, invocation[:stdout]
+  exit           invocation[:status]
 end
