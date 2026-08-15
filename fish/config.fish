@@ -39,7 +39,7 @@ set -gx EDITOR vim
 
 # Ruby environment, load it first b/c I choose the ruby in the private config
 set -gx CHRUBY_ROOT $HOMEBREW_PREFIX
-source $HOMEBREW_PREFIX/share/chruby/chruby.fish
+# source $HOMEBREW_PREFIX/share/chruby/chruby.fish
 
 maybe_prepend_path \
   $HOME/miniconda2/bin \
